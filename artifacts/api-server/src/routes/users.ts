@@ -25,7 +25,11 @@ router.get("/users", requireAuth, requireAdmin, async (_req, res): Promise<void>
 
 // POST /users/login — public, issues JWT
 router.post("/users/login", async (req, res): Promise<void> => {
-  const secret = process.env["JWT_SECRET"]!;
+  const secret = process.env["JWT_SECRET"];
+  if (!secret) {
+    res.status(500).json({ error: "Server misconfiguration" });
+    return;
+  }
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -59,7 +63,8 @@ router.post("/users/login", async (req, res): Promise<void> => {
 // POST /users — create or update (admin only)
 router.post("/users", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, password, role } = req.body;
+    const email = String(req.body.email ?? "").trim().toLowerCase();
 
     if (!name || !email || !role) {
       res.status(400).json({ error: "name, email, and role are required" });
@@ -100,7 +105,7 @@ router.post("/users", requireAuth, requireAdmin, async (req, res): Promise<void>
 // DELETE /users/:email — admin only
 router.delete("/users/:email", requireAuth, requireAdmin, async (req, res): Promise<void> => {
   try {
-    const email = decodeURIComponent(String(req.params.email));
+    const email = decodeURIComponent(String(req.params.email)).trim().toLowerCase();
     const [existing] = await db.select().from(usersTable).where(eq(usersTable.email, email));
     if (!existing) {
       res.status(404).json({ error: "User not found" });
