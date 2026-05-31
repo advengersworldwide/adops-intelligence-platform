@@ -13,10 +13,15 @@ export default function FloatingChat() {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    return () => { abortRef.current?.abort(); };
+  }, []);
 
   const send = async () => {
     const text = input.trim();
@@ -27,6 +32,10 @@ export default function FloatingChat() {
     setInput("");
     setIsStreaming(true);
 
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       const res = await fetch("/api/ai/chat", {
         method: "POST",
@@ -35,6 +44,7 @@ export default function FloatingChat() {
           Authorization: `Bearer ${getToken() ?? ""}`,
         },
         body: JSON.stringify({ message: text, history }),
+        signal: controller.signal,
       });
 
       if (!res.ok || !res.body) {
@@ -53,7 +63,7 @@ export default function FloatingChat() {
       const decoder = new TextDecoder();
       let buffer = "";
 
-      while (true) {
+      outer: while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -64,7 +74,7 @@ export default function FloatingChat() {
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
           const data = line.slice(6);
-          if (data === "[DONE]") break;
+          if (data === "[DONE]") break outer;
           try {
             const token = JSON.parse(data) as string;
             setMessages(prev => {
@@ -80,7 +90,12 @@ export default function FloatingChat() {
           }
         }
       }
-    } catch {
+      buffer += decoder.decode(); // flush any remaining bytes
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setIsStreaming(false);
+        return;
+      }
       setMessages(prev => {
         const updated = [...prev];
         updated[updated.length - 1] = {
@@ -117,7 +132,11 @@ export default function FloatingChat() {
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
               <button
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  abortRef.current?.abort();
+                  setIsStreaming(false);
+                }}
                 className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
               >
                 <X className="h-3.5 w-3.5" />
