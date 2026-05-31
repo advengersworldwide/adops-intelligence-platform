@@ -3,13 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AdOps Intelligence Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: clients
+    description: Client management
+  - name: platforms
+    description: DSP platform management
+  - name: campaigns
+    description: Campaign management
+  - name: transactions
+    description: Transaction/spend data
+  - name: analytics
+    description: Analytics and dashboard summaries
+  - name: uploads
+    description: Data upload operations
+
 paths:
   /healthz:
     get:
@@ -24,6 +37,509 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Clients ──────────────────────────────────────────────────────────────────
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: List all clients
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "400":
+          description: Validation error
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get a client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientUpdate"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      summary: Delete a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Platforms ─────────────────────────────────────────────────────────────────
+  /platforms:
+    get:
+      operationId: listPlatforms
+      tags: [platforms]
+      summary: List all DSP platforms
+      responses:
+        "200":
+          description: List of platforms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Platform"
+    post:
+      operationId: createPlatform
+      tags: [platforms]
+      summary: Create a new platform
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Platform"
+        "400":
+          description: Validation error
+
+  /platforms/{id}:
+    get:
+      operationId: getPlatform
+      tags: [platforms]
+      summary: Get a platform by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Platform
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Platform"
+        "404":
+          description: Not found
+    patch:
+      operationId: updatePlatform
+      tags: [platforms]
+      summary: Update a platform
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformUpdate"
+      responses:
+        "200":
+          description: Updated platform
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Platform"
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePlatform
+      tags: [platforms]
+      summary: Delete a platform
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Campaigns ─────────────────────────────────────────────────────────────────
+  /campaigns:
+    get:
+      operationId: listCampaigns
+      tags: [campaigns]
+      summary: List campaigns with optional filters
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: platformId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of campaigns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+    post:
+      operationId: createCampaign
+      tags: [campaigns]
+      summary: Create a new campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+        "400":
+          description: Validation error
+
+  /campaigns/{id}:
+    get:
+      operationId: getCampaign
+      tags: [campaigns]
+      summary: Get a campaign by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateCampaign
+      tags: [campaigns]
+      summary: Update a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignUpdate"
+      responses:
+        "200":
+          description: Updated campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteCampaign
+      tags: [campaigns]
+      summary: Delete a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Transactions ──────────────────────────────────────────────────────────────
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List transactions with optional filters
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: platformId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: campaignId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Create a transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Validation error
+
+  /transactions/{id}:
+    delete:
+      operationId: deleteTransaction
+      tags: [transactions]
+      summary: Delete a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  # ── Data Upload ───────────────────────────────────────────────────────────────
+  /upload:
+    post:
+      operationId: uploadData
+      tags: [uploads]
+      summary: Upload CSV/Excel data and auto-map to campaigns
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadPayload"
+      responses:
+        "200":
+          description: Upload result summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResult"
+        "400":
+          description: Validation error
+
+  # ── Analytics & Dashboard ─────────────────────────────────────────────────────
+  /analytics/dashboard:
+    get:
+      operationId: getDashboardSummary
+      tags: [analytics]
+      summary: Get top-level dashboard KPIs
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /analytics/profit-over-time:
+    get:
+      operationId: getProfitOverTime
+      tags: [analytics]
+      summary: Profit, revenue, and cost grouped by day
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Time series data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProfitTimePoint"
+
+  /analytics/by-client:
+    get:
+      operationId: getAnalyticsByClient
+      tags: [analytics]
+      summary: Spend, cost, profit, and margin grouped by client
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Per-client analytics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClientAnalytics"
+
+  /analytics/by-platform:
+    get:
+      operationId: getAnalyticsByPlatform
+      tags: [analytics]
+      summary: Spend, cost, profit, and margin grouped by platform
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Per-platform analytics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PlatformAnalytics"
+
+  /analytics/alerts:
+    get:
+      operationId: getAlerts
+      tags: [analytics]
+      summary: Get active alerts for negative profit or low margin campaigns
+      responses:
+        "200":
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Alert"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +550,326 @@ components:
       required:
         - status
 
+    # ── Client ──────────────────────────────────────────────────────────────────
+    Client:
+      type: object
+      required: [id, name, buyingHouse, pricingModel, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        buyingHouse:
+          type: string
+        pricingModel:
+          type: string
+          enum: [fixed, percentage]
+        marginValue:
+          type: ["number", "null"]
+          description: Fixed amount or % margin value
+        createdAt:
+          type: string
+
+    ClientInput:
+      type: object
+      required: [name, buyingHouse, pricingModel]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        buyingHouse:
+          type: string
+          minLength: 1
+        pricingModel:
+          type: string
+          enum: [fixed, percentage]
+        marginValue:
+          type: ["number", "null"]
+
+    ClientUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        buyingHouse:
+          type: string
+        pricingModel:
+          type: string
+          enum: [fixed, percentage]
+        marginValue:
+          type: ["number", "null"]
+
+    # ── Platform ─────────────────────────────────────────────────────────────────
+    Platform:
+      type: object
+      required: [id, name, costModel, currency, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        costModel:
+          type: string
+        currency:
+          type: string
+        createdAt:
+          type: string
+
+    PlatformInput:
+      type: object
+      required: [name, costModel, currency]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        costModel:
+          type: string
+        currency:
+          type: string
+
+    PlatformUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        costModel:
+          type: string
+        currency:
+          type: string
+
+    # ── Campaign ─────────────────────────────────────────────────────────────────
+    Campaign:
+      type: object
+      required: [id, name, clientId, platformId, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        clientId:
+          type: integer
+        platformId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        platformName:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CampaignInput:
+      type: object
+      required: [name, clientId, platformId]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        clientId:
+          type: integer
+        platformId:
+          type: integer
+
+    CampaignUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        clientId:
+          type: integer
+        platformId:
+          type: integer
+
+    # ── Transaction ───────────────────────────────────────────────────────────────
+    Transaction:
+      type: object
+      required: [id, campaignId, date, spend, cost, profit, createdAt]
+      properties:
+        id:
+          type: integer
+        campaignId:
+          type: integer
+        campaignName:
+          type: ["string", "null"]
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        platformId:
+          type: ["integer", "null"]
+        platformName:
+          type: ["string", "null"]
+        date:
+          type: string
+        spend:
+          type: number
+          description: Revenue from client
+        cost:
+          type: number
+          description: Platform cost
+        profit:
+          type: number
+          description: spend - cost
+        marginPct:
+          type: ["number", "null"]
+          description: profit / spend * 100
+        createdAt:
+          type: string
+
+    TransactionInput:
+      type: object
+      required: [campaignId, date, spend, cost]
+      properties:
+        campaignId:
+          type: integer
+        date:
+          type: string
+        spend:
+          type: number
+        cost:
+          type: number
+
+    # ── Upload ────────────────────────────────────────────────────────────────────
+    UploadRow:
+      type: object
+      required: [date, campaignName, spend, cost]
+      properties:
+        date:
+          type: string
+        campaignName:
+          type: string
+        spend:
+          type: number
+        cost:
+          type: number
+
+    UploadPayload:
+      type: object
+      required: [rows]
+      properties:
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/UploadRow"
+
+    UploadResult:
+      type: object
+      required: [imported, skipped, errors]
+      properties:
+        imported:
+          type: integer
+        skipped:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+
+    # ── Analytics ─────────────────────────────────────────────────────────────────
+    DashboardSummary:
+      type: object
+      required: [totalRevenue, totalCost, totalProfit, marginPct, clientCount, platformCount, campaignCount, transactionCount]
+      properties:
+        totalRevenue:
+          type: number
+        totalCost:
+          type: number
+        totalProfit:
+          type: number
+        marginPct:
+          type: number
+        clientCount:
+          type: integer
+        platformCount:
+          type: integer
+        campaignCount:
+          type: integer
+        transactionCount:
+          type: integer
+        revenueChange:
+          type: ["number", "null"]
+          description: Percent change vs previous period
+        profitChange:
+          type: ["number", "null"]
+        costChange:
+          type: ["number", "null"]
+
+    ProfitTimePoint:
+      type: object
+      required: [date, revenue, cost, profit]
+      properties:
+        date:
+          type: string
+        revenue:
+          type: number
+        cost:
+          type: number
+        profit:
+          type: number
+
+    ClientAnalytics:
+      type: object
+      required: [clientId, clientName, revenue, cost, profit, marginPct, transactionCount]
+      properties:
+        clientId:
+          type: integer
+        clientName:
+          type: string
+        buyingHouse:
+          type: string
+        revenue:
+          type: number
+        cost:
+          type: number
+        profit:
+          type: number
+        marginPct:
+          type: number
+        transactionCount:
+          type: integer
+
+    PlatformAnalytics:
+      type: object
+      required: [platformId, platformName, revenue, cost, profit, marginPct, transactionCount]
+      properties:
+        platformId:
+          type: integer
+        platformName:
+          type: string
+        currency:
+          type: string
+        revenue:
+          type: number
+        cost:
+          type: number
+        profit:
+          type: number
+        marginPct:
+          type: number
+        transactionCount:
+          type: integer
+
+    Alert:
+      type: object
+      required: [id, type, severity, message, campaignId, campaignName]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [negative_profit, low_margin]
+        severity:
+          type: string
+          enum: [warning, critical]
+        message:
+          type: string
+        campaignId:
+          type: integer
+        campaignName:
+          type: string
+        clientName:
+          type: ["string", "null"]
+        platformName:
+          type: ["string", "null"]
+        value:
+          type: ["number", "null"]

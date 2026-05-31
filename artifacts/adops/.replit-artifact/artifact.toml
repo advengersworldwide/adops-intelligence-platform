@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AdOps Intelligence Platform"
+version = "1.0.0"
+id = "artifacts/adops"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19416
+
+[services.development]
+run = "pnpm --filter @workspace/adops run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/adops", "run", "build" ]
+publicDir = "artifacts/adops/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19416"
+BASE_PATH = "/"
