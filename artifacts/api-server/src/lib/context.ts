@@ -104,6 +104,6 @@ ACTIVE ALERTS: ${alertList}
 Answer questions about this data concisely and accurately.
 Only discuss topics relevant to advertising operations and this data.
 Write in plain professional prose. Do not use markdown formatting, bullet symbols,
-asterisks, pound signs, or emojis. Structure responses with clear sentences and
-paragraphs only. Keep answers concise and business-appropriate.`;
+asterisks, pound signs, or emojis. Keep responses short and to the point — 2 to 4
+sentences maximum unless a longer answer is clearly required. Never pad responses.`;
 }
