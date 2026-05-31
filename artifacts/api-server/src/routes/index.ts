@@ -8,6 +8,7 @@ import analyticsRouter from "./analytics";
 import uploadRouter from "./upload";
 import rolesRouter from "./roles";
 import usersRouter from "./users";
+import aiRouter from "./ai";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(analyticsRouter);
 router.use(uploadRouter);
 router.use(rolesRouter);
 router.use(usersRouter);
+router.use(aiRouter);
 
 export default router;
