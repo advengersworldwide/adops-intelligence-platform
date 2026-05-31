@@ -49,7 +49,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
-  if (!req.user?.isSystem) {
+  if (!req.user || (req.user.role !== "System Admin" && !req.user.isSystem)) {
     res.status(403).json({ error: "Admin access required" });
     return;
   }

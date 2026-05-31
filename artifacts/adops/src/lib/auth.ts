@@ -125,6 +125,7 @@ export async function loginUser(email: string, password: string): Promise<User |
     if (!res.ok) return null;
     const { token, user } = await res.json();
     setToken(token);
+    setCurrentUser(user as User);
     return user as User;
   } catch {
     return null;
