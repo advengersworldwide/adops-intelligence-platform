@@ -4,12 +4,16 @@ import { seedDefaults } from "./lib/seed";
 
 const rawPort = process.env["PORT"];
 const jwtSecret = process.env["JWT_SECRET"];
+const groqKey = process.env["GROQ"];
 
 if (!rawPort) {
   throw new Error("PORT environment variable is required but was not provided.");
 }
 if (!jwtSecret) {
   throw new Error("JWT_SECRET environment variable is required but was not provided.");
+}
+if (!groqKey) {
+  throw new Error("GROQ environment variable is required but was not provided.");
 }
 
 const port = Number(rawPort);
