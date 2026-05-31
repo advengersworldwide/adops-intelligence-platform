@@ -2,10 +2,19 @@ import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
 import { db, usersTable } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../middlewares/auth";
 
 const router: IRouter = Router();
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  message: { error: "Too many login attempts. Please try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // GET /users — admin only
 router.get("/users", requireAuth, requireAdmin, async (_req, res): Promise<void> => {
@@ -24,7 +33,7 @@ router.get("/users", requireAuth, requireAdmin, async (_req, res): Promise<void>
 });
 
 // POST /users/login — public, issues JWT
-router.post("/users/login", async (req, res): Promise<void> => {
+router.post("/users/login", loginLimiter, async (req, res): Promise<void> => {
   const secret = process.env["JWT_SECRET"];
   if (!secret) {
     res.status(500).json({ error: "Server misconfiguration" });
