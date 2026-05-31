@@ -7,10 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-function fmt(n: number) {
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toFixed(0)}`;
+function fmt(n: number, currency = "USD") {
+  const prefix = currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : `${currency} `;
+  const isNeg = n < 0;
+  const absVal = Math.abs(n);
+  let valStr = "";
+  if (absVal >= 1_000_000) valStr = `${(absVal / 1_000_000).toFixed(1)}M`;
+  else if (absVal >= 1_000) valStr = `${(absVal / 1_000).toFixed(1)}K`;
+  else valStr = absVal.toFixed(0);
+  
+  return `${isNeg ? "-" : ""}${prefix}${valStr}`;
 }
 
 const tooltipStyle = {
@@ -34,8 +40,45 @@ export default function AnalyticsPage() {
   const { data: byClient, isLoading: clientLoading } = useGetAnalyticsByClient(params);
   const { data: byPlatform, isLoading: platformLoading } = useGetAnalyticsByPlatform(params);
 
-  const exportCSV = (data: Record<string, unknown>[], name: string) => {
-    if (!data.length) return;
+  const baseCurrency = localStorage.getItem("adops-base-currency") || "USD";
+  const rawRates = localStorage.getItem("adops-exchange-rates");
+  const exchangeRates = rawRates ? JSON.parse(rawRates) : { usd: 1.0, eur: 0.92, gbp: 0.79, inr: 83.0, jpy: 155.0, cad: 1.36, aud: 1.50, pkr: 278.0, sar: 3.75, aed: 3.67 };
+
+  const convert = (amount: number, from: string) => {
+    const fromKey = (from || "USD").toLowerCase();
+    const rate = exchangeRates[fromKey];
+    if (rate && rate > 0) {
+      return amount / rate;
+    }
+    return amount;
+  };
+
+  let convertedRevenue = 0;
+  let convertedCost = 0;
+
+  if (byPlatform && byPlatform.length > 0) {
+    byPlatform.forEach(p => {
+      convertedRevenue += convert(p.revenue, p.currency || "USD");
+      convertedCost += convert(p.cost, p.currency || "USD");
+    });
+  } else {
+    convertedRevenue = summary?.totalRevenue ?? 0;
+    convertedCost = summary?.totalCost ?? 0;
+  }
+
+  const adjustedProfit = convertedRevenue - convertedCost;
+  const adjustedMarginPct = convertedRevenue > 0 ? (adjustedProfit / convertedRevenue) * 100 : 0;
+
+  const adjustedSummary = summary ? {
+    ...summary,
+    totalRevenue: convertedRevenue,
+    totalCost: convertedCost,
+    totalProfit: adjustedProfit,
+    marginPct: adjustedMarginPct
+  } : null;
+
+  const exportCSV = (data: any[] | undefined, name: string) => {
+    if (!data || !data.length) return;
     const headers = Object.keys(data[0]);
     const rows = data.map(r => headers.map(h => r[h]).join(","));
     const csv = [headers.join(","), ...rows].join("\n");
@@ -48,25 +91,25 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-foreground">Analytics</h1>
           <p className="text-sm text-muted-foreground">Deep-dive into performance metrics</p>
         </div>
         <div className="flex items-center gap-3">
-          <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-36 text-sm" />
+          <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-32 sm:w-36 text-sm" />
           <span className="text-xs text-muted-foreground">to</span>
-          <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-36 text-sm" />
+          <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-32 sm:w-36 text-sm" />
         </div>
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Revenue", value: summary ? fmt(summary.totalRevenue) : "—" },
-          { label: "Total Cost", value: summary ? fmt(summary.totalCost) : "—" },
-          { label: "Total Profit", value: summary ? fmt(summary.totalProfit) : "—", profit: true, val: summary?.totalProfit },
-          { label: "Avg Margin", value: summary ? `${summary.marginPct.toFixed(1)}%` : "—" },
+          { label: "Total Revenue", value: adjustedSummary ? fmt(adjustedSummary.totalRevenue, baseCurrency) : "—" },
+          { label: "Total Cost", value: adjustedSummary ? fmt(adjustedSummary.totalCost, baseCurrency) : "—" },
+          { label: "Total Profit", value: adjustedSummary ? fmt(adjustedSummary.totalProfit, baseCurrency) : "—", profit: true, val: adjustedSummary?.totalProfit },
+          { label: "Avg Margin", value: adjustedSummary ? `${adjustedSummary.marginPct.toFixed(1)}%` : "—" },
         ].map(card => (
           <div key={card.label} className="rounded-2xl border border-border bg-card p-4 shadow-sm">
             <p className="text-xs text-muted-foreground">{card.label}</p>
@@ -83,7 +126,7 @@ export default function AnalyticsPage() {
       <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-foreground">Revenue, Cost & Profit Over Time</h2>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportCSV(timeSeries as Record<string, unknown>[] ?? [], "profit-over-time")} data-testid="export-timeseries-btn">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportCSV(timeSeries, "profit-over-time")} data-testid="export-timeseries-btn">
             <Download className="h-3.5 w-3.5" /> Export
           </Button>
         </div>
@@ -118,11 +161,11 @@ export default function AnalyticsPage() {
       </div>
 
       {/* By client and by platform */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">By Client</h2>
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportCSV(byClient as Record<string, unknown>[] ?? [], "analytics-by-client")} data-testid="export-client-btn">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportCSV(byClient, "analytics-by-client")} data-testid="export-client-btn">
               <Download className="h-3.5 w-3.5" /> Export
             </Button>
           </div>
@@ -143,7 +186,7 @@ export default function AnalyticsPage() {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-foreground">By Platform</h2>
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportCSV(byPlatform as Record<string, unknown>[] ?? [], "analytics-by-platform")} data-testid="export-platform-btn">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportCSV(byPlatform, "analytics-by-platform")} data-testid="export-platform-btn">
               <Download className="h-3.5 w-3.5" /> Export
             </Button>
           </div>
@@ -163,7 +206,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Breakdown tables */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
           <div className="border-b border-border px-5 py-3">
             <h2 className="text-sm font-semibold text-foreground">Client Breakdown</h2>

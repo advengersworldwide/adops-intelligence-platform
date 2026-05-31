@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import Papa from "papaparse";
 
 interface ParsedRow {
   date: string;
@@ -39,12 +40,15 @@ export default function UploadPage() {
 
   const parseCSV = useCallback((text: string, name: string) => {
     setResult(null);
-    const lines = text.split(/\r?\n/).filter(Boolean);
+    const parsed = Papa.parse<string[]>(text, {
+      skipEmptyLines: true,
+    });
+    const lines = parsed.data;
     if (lines.length < 2) {
       toast({ title: "File has no data rows", variant: "destructive" });
       return;
     }
-    const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
+    const headers = lines[0].map(h => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
     const dateIdx = headers.findIndex(h => h.includes("date"));
     const campaignIdx = headers.findIndex(h => h.includes("campaign"));
     const spendIdx = headers.findIndex(h => h.includes("spend") || h.includes("revenue"));
@@ -57,7 +61,7 @@ export default function UploadPage() {
 
     const rows: ParsedRow[] = [];
     for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(",");
+      const cols = lines[i];
       const spend = parseFloat(cols[spendIdx]?.replace(/[^0-9.-]/g, "") ?? "");
       const cost = parseFloat(cols[costIdx]?.replace(/[^0-9.-]/g, "") ?? "");
       if (!isNaN(spend) && !isNaN(cost)) {
@@ -97,7 +101,7 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-foreground">Upload Data</h1>
         <p className="text-sm text-muted-foreground">Import CSV files with spend and cost data. Campaigns are auto-matched by name.</p>
@@ -204,7 +208,7 @@ export default function UploadPage() {
       {result && (
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <h2 className="text-sm font-semibold text-foreground mb-4">Import Result</h2>
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 p-3 flex items-center gap-3">
               <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
               <div>

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { hasPermission } from "@/lib/auth";
 
 function fmt(n: number) {
   if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
@@ -109,7 +110,7 @@ export default function TransactionsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Date", "Campaign", "Client", "Platform", "Spend", "Cost", "Profit", "Margin %", ""].map(h => (
+              {["Date", "Campaign", "Client", "Platform", "Spend", "Cost", "Profit", "Margin %", hasPermission("Upload Data") ? "" : null].filter((h): h is string => h !== null).map(h => (
                 <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
               ))}
             </tr>
@@ -155,11 +156,13 @@ export default function TransactionsPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3">
-                      <button onClick={() => deleteMutation.mutate({ id: tx.id })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" data-testid={`delete-tx-${tx.id}`}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </td>
+                    {hasPermission("Upload Data") && (
+                      <td className="px-5 py-3">
+                        <button onClick={() => deleteMutation.mutate({ id: tx.id })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" data-testid={`delete-tx-${tx.id}`}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useListPlatforms, useCreatePlatform, useUpdatePlatform, useDeletePlatform, getListPlatformsQueryKey, useGetAnalyticsByPlatform } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { hasPermission } from "@/lib/auth";
 
 const platformSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -71,9 +72,11 @@ export default function PlatformsPage() {
           <h1 className="text-xl font-bold text-foreground">Platforms</h1>
           <p className="text-sm text-muted-foreground">{platforms?.length ?? 0} DSP platforms</p>
         </div>
-        <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-platform-btn">
-          <Plus className="h-3.5 w-3.5" /> Add Platform
-        </Button>
+        {hasPermission("Edit Platforms") && (
+          <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-platform-btn">
+            <Plus className="h-3.5 w-3.5" /> Add Platform
+          </Button>
+        )}
       </div>
 
       <div className="relative w-72">
@@ -85,7 +88,7 @@ export default function PlatformsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Cost Model", "Currency", "Revenue", "Cost", "Profit", "Margin %", "Actions"].map(h => (
+              {["Name", "Cost Model", "Currency", "Revenue", "Cost", "Profit", "Margin %", hasPermission("Edit Platforms") ? "Actions" : null].filter((h): h is string => h !== null).map(h => (
                 <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
               ))}
             </tr>
@@ -115,16 +118,18 @@ export default function PlatformsPage() {
                       {an ? fmt(an.profit) : "—"}
                     </td>
                     <td className="px-5 py-3 text-sm text-muted-foreground">{an ? `${an.marginPct.toFixed(1)}%` : "—"}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex gap-1">
-                        <button onClick={() => setEditPlatform(p)} className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" data-testid={`edit-platform-${p.id}`}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => deleteMutation.mutate({ id: p.id })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" data-testid={`delete-platform-${p.id}`}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
+                    {hasPermission("Edit Platforms") && (
+                      <td className="px-5 py-3">
+                        <div className="flex gap-1">
+                          <button onClick={() => setEditPlatform(p)} className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" data-testid={`edit-platform-${p.id}`}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button onClick={() => deleteMutation.mutate({ id: p.id })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" data-testid={`delete-platform-${p.id}`}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 );
               })
@@ -156,6 +161,12 @@ function PlatformDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, 
     resolver: zodResolver(platformSchema),
     defaultValues: defaultValues ?? { name: "", costModel: "CPM", currency: "USD" },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset(defaultValues ?? { name: "", costModel: "CPM", currency: "USD" });
+    }
+  }, [open, defaultValues, form]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

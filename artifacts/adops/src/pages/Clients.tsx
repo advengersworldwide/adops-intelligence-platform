@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useListClients, useCreateClient, useUpdateClient, useDeleteClient, getListClientsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { hasPermission } from "@/lib/auth";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -84,9 +85,11 @@ export default function ClientsPage() {
           <h1 className="text-xl font-bold text-foreground">Clients</h1>
           <p className="text-sm text-muted-foreground">{clients?.length ?? 0} clients total</p>
         </div>
-        <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-client-btn">
-          <Plus className="h-3.5 w-3.5" /> Add Client
-        </Button>
+        {hasPermission("Edit Clients") && (
+          <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-client-btn">
+            <Plus className="h-3.5 w-3.5" /> Add Client
+          </Button>
+        )}
       </div>
 
       <div className="relative w-72">
@@ -104,7 +107,7 @@ export default function ClientsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Buying House", "Pricing Model", "Margin Value", "Created", "Actions"].map(h => (
+              {["Name", "Buying House", "Pricing Model", "Margin Value", "Created", hasPermission("Edit Clients") ? "Actions" : null].filter((h): h is string => h !== null).map(h => (
                 <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
               ))}
             </tr>
@@ -135,24 +138,26 @@ export default function ClientsPage() {
                     {c.marginValue != null ? (c.pricingModel === "percentage" ? `${c.marginValue}%` : `$${c.marginValue}`) : "—"}
                   </td>
                   <td className="px-5 py-3 text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</td>
-                  <td className="px-5 py-3">
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => setEditClient(c as ClientRow)}
-                        className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
-                        data-testid={`edit-client-${c.id}`}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => deleteMutation.mutate({ id: c.id })}
-                        className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        data-testid={`delete-client-${c.id}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
+                  {hasPermission("Edit Clients") && (
+                    <td className="px-5 py-3">
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setEditClient(c as ClientRow)}
+                          className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                          data-testid={`edit-client-${c.id}`}
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => deleteMutation.mutate({ id: c.id })}
+                          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          data-testid={`delete-client-${c.id}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -195,6 +200,12 @@ function ClientDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, ti
     resolver: zodResolver(clientSchema),
     defaultValues: defaultValues ?? { name: "", buyingHouse: "", pricingModel: "fixed", marginValue: null },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset(defaultValues ?? { name: "", buyingHouse: "", pricingModel: "fixed", marginValue: null });
+    }
+  }, [open, defaultValues, form]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

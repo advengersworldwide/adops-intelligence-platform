@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, Search } from "lucide-react";
 import { useListCampaigns, useCreateCampaign, useUpdateCampaign, useDeleteCampaign, getListCampaignsQueryKey, useListClients, useListPlatforms } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { hasPermission } from "@/lib/auth";
 
 const campaignSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -71,9 +72,11 @@ export default function CampaignsPage() {
           <h1 className="text-xl font-bold text-foreground">Campaigns</h1>
           <p className="text-sm text-muted-foreground">{campaigns?.length ?? 0} campaigns</p>
         </div>
-        <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-campaign-btn">
-          <Plus className="h-3.5 w-3.5" /> Add Campaign
-        </Button>
+        {hasPermission("Edit Campaigns") && (
+          <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-campaign-btn">
+            <Plus className="h-3.5 w-3.5" /> Add Campaign
+          </Button>
+        )}
       </div>
 
       <div className="flex items-center gap-3">
@@ -105,7 +108,7 @@ export default function CampaignsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Campaign Name", "Client", "Platform", "Created", "Actions"].map(h => (
+              {["Campaign Name", "Client", "Platform", "Created", hasPermission("Edit Campaigns") ? "Actions" : null].filter((h): h is string => h !== null).map(h => (
                 <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
               ))}
             </tr>
@@ -134,16 +137,18 @@ export default function CampaignsPage() {
                     </span>
                   </td>
                   <td className="px-5 py-3 text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</td>
-                  <td className="px-5 py-3">
-                    <div className="flex gap-1">
-                      <button onClick={() => setEditCampaign({ id: c.id, name: c.name, clientId: c.clientId, platformId: c.platformId })} className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" data-testid={`edit-campaign-${c.id}`}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => deleteMutation.mutate({ id: c.id })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" data-testid={`delete-campaign-${c.id}`}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
+                  {hasPermission("Edit Campaigns") && (
+                    <td className="px-5 py-3">
+                      <div className="flex gap-1">
+                        <button onClick={() => setEditCampaign({ id: c.id, name: c.name, clientId: c.clientId, platformId: c.platformId })} className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" data-testid={`edit-campaign-${c.id}`}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => deleteMutation.mutate({ id: c.id })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" data-testid={`delete-campaign-${c.id}`}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
@@ -177,6 +182,12 @@ function CampaignDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, 
     resolver: zodResolver(campaignSchema),
     defaultValues: defaultValues ?? { name: "", clientId: 0, platformId: 0 },
   });
+
+  useEffect(() => {
+    if (open) {
+      form.reset(defaultValues ?? { name: "", clientId: 0, platformId: 0 });
+    }
+  }, [open, defaultValues, form]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

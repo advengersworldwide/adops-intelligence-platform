@@ -44,12 +44,33 @@ router.get("/campaigns", async (req, res): Promise<void> => {
     conditions.push(eq(campaignsTable.platformId, qp.data.platformId));
   }
 
-  const rows = await db.select().from(campaignsTable)
+  const rows = await db
+    .select({
+      id: campaignsTable.id,
+      name: campaignsTable.name,
+      clientId: campaignsTable.clientId,
+      platformId: campaignsTable.platformId,
+      createdAt: campaignsTable.createdAt,
+      clientName: clientsTable.name,
+      platformName: platformsTable.name,
+    })
+    .from(campaignsTable)
+    .leftJoin(clientsTable, eq(campaignsTable.clientId, clientsTable.id))
+    .leftJoin(platformsTable, eq(campaignsTable.platformId, platformsTable.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(campaignsTable.createdAt);
 
-  const enriched = await Promise.all(rows.map(enrichCampaign));
-  res.json(ListCampaignsResponse.parse(enriched));
+  const parsed = rows.map(r => ({
+    id: r.id,
+    name: r.name,
+    clientId: r.clientId,
+    platformId: r.platformId,
+    clientName: r.clientName ?? null,
+    platformName: r.platformName ?? null,
+    createdAt: r.createdAt.toISOString()
+  }));
+
+  res.json(ListCampaignsResponse.parse(parsed));
 });
 
 router.post("/campaigns", async (req, res): Promise<void> => {
