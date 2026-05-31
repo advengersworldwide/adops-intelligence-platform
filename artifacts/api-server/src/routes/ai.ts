@@ -66,6 +66,7 @@ router.post("/ai/chat", requireAuth, chatLimiter, async (req, res): Promise<void
       ],
       stream: true,
       temperature: 0.3,
+      max_tokens: 300,
     });
 
     res.setHeader("Content-Type", "text/event-stream");
