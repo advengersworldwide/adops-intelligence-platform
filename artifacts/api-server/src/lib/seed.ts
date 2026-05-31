@@ -44,13 +44,18 @@ export async function seedDefaults() {
   const existingAdmin = await db.select().from(usersTable)
     .then(rows => rows.find(u => u.email === "admin@advengers.com"));
   if (!existingAdmin) {
-    const hashedPassword = await bcrypt.hash("Admin@123", 12);
-    await db.insert(usersTable).values({
-      name: "System Admin",
-      email: "admin@advengers.com",
-      password: hashedPassword,
-      role: "System Admin",
-      isSystem: true,
-    });
+    const adminPassword = process.env["ADMIN_DEFAULT_PASSWORD"];
+    if (!adminPassword) {
+      console.warn("[seed] ADMIN_DEFAULT_PASSWORD not set — skipping default admin seed");
+    } else {
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
+      await db.insert(usersTable).values({
+        name: "System Admin",
+        email: "admin@advengers.com",
+        password: hashedPassword,
+        role: "System Admin",
+        isSystem: true,
+      });
+    }
   }
 }
