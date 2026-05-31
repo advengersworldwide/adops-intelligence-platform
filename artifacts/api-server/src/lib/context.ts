@@ -27,7 +27,8 @@ export async function buildContext(): Promise<string> {
     })
       .from(campaignsTable)
       .leftJoin(clientsTable, eq(campaignsTable.clientId, clientsTable.id))
-      .leftJoin(platformsTable, eq(campaignsTable.platformId, platformsTable.id)),
+      .leftJoin(platformsTable, eq(campaignsTable.platformId, platformsTable.id))
+      .limit(50),
 
     db.select({
       totalSpend: sum(transactionsTable.spend),
@@ -75,7 +76,8 @@ export async function buildContext(): Promise<string> {
     ? platforms.map(p => p.name).join(", ")
     : "None";
   const campaignList = campaigns.length
-    ? campaigns.map(c => `${c.name} [${c.clientName ?? "?"}/${c.platformName ?? "?"}]`).join(", ")
+    ? campaigns.map(c => `${c.name} [${c.clientName ?? "?"}/${c.platformName ?? "?"}]`).join(", ") +
+      (campaigns.length === 50 ? " (showing first 50)" : "")
     : "None";
   const top5List = top5.length
     ? top5.map(c => `${c.name}: ${fmt(c.profit)}`).join(", ")
