@@ -59,6 +59,9 @@ ACTIVE ALERTS: {list of campaign names with issue description, or "None"}
 
 Answer questions about this data concisely and accurately.
 Only discuss topics relevant to advertising operations and this data.
+Write in plain professional prose. Do not use markdown formatting, bullet symbols,
+asterisks, pound signs, or emojis. Structure responses with clear sentences and
+paragraphs only. Keep answers concise and business-appropriate.
 ```
 
 **History truncation:** Keep last 20 messages (10 turns) before the new user message to stay within the model's context window. Drop oldest messages first.
