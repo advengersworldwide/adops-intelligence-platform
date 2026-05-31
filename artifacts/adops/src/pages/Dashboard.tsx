@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { TrendingUp, TrendingDown, DollarSign, Target, Users, Monitor, Megaphone, AlertTriangle, Plus, X, BarChart2, Bot } from "lucide-react";
-import { useGetDashboardSummary, useGetProfitOverTime, useGetAnalyticsByClient, useGetAlerts, useListTransactions, getGetDashboardSummaryQueryKey, getGetProfitOverTimeQueryKey } from "@workspace/api-client-react";
+import { TrendingUp, TrendingDown, DollarSign, Target, Users, Monitor, Megaphone, AlertTriangle, Plus, X, BarChart2 } from "lucide-react";
+import { useGetDashboardSummary, useGetProfitOverTime, useGetAnalyticsByClient, useGetAlerts, useListTransactions, getGetDashboardSummaryQueryKey, getGetProfitOverTimeQueryKey, useGetAnalyticsByPlatform } from "@workspace/api-client-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,10 +16,16 @@ const widgetOptions = [
   { id: "platform-performance", label: "Platform Performance", description: "Breakdown by platform" },
 ];
 
-function fmt(n: number) {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toFixed(0)}`;
+function fmt(n: number, currency = "USD") {
+  const prefix = currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : `${currency} `;
+  const isNeg = n < 0;
+  const absVal = Math.abs(n);
+  let valStr = "";
+  if (absVal >= 1_000_000) valStr = `${(absVal / 1_000_000).toFixed(1)}M`;
+  else if (absVal >= 1_000) valStr = `${(absVal / 1_000).toFixed(1)}K`;
+  else valStr = absVal.toFixed(0);
+  
+  return `${isNeg ? "-" : ""}${prefix}${valStr}`;
 }
 
 function fmtPct(n: number | null | undefined) {
@@ -70,8 +76,46 @@ export default function DashboardPage() {
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary();
   const { data: profitTimeSeries, isLoading: timeLoading } = useGetProfitOverTime();
   const { data: byClient, isLoading: clientLoading } = useGetAnalyticsByClient();
+  const { data: byPlatform } = useGetAnalyticsByPlatform();
   const { data: alerts } = useGetAlerts();
   const { data: transactions, isLoading: txLoading } = useListTransactions({ limit: 10 } as never);
+
+  const baseCurrency = localStorage.getItem("adops-base-currency") || "USD";
+  const rawRates = localStorage.getItem("adops-exchange-rates");
+  const exchangeRates = rawRates ? JSON.parse(rawRates) : { usd: 1.0, eur: 0.92, gbp: 0.79, inr: 83.0, jpy: 155.0, cad: 1.36, aud: 1.50, pkr: 278.0, sar: 3.75, aed: 3.67 };
+
+  const convert = (amount: number, from: string) => {
+    const fromKey = (from || "USD").toLowerCase();
+    const rate = exchangeRates[fromKey];
+    if (rate && rate > 0) {
+      return amount / rate;
+    }
+    return amount;
+  };
+
+  let convertedRevenue = 0;
+  let convertedCost = 0;
+
+  if (byPlatform && byPlatform.length > 0) {
+    byPlatform.forEach(p => {
+      convertedRevenue += convert(p.revenue, p.currency || "USD");
+      convertedCost += convert(p.cost, p.currency || "USD");
+    });
+  } else {
+    convertedRevenue = summary?.totalRevenue ?? 0;
+    convertedCost = summary?.totalCost ?? 0;
+  }
+
+  const adjustedProfit = convertedRevenue - convertedCost;
+  const adjustedMarginPct = convertedRevenue > 0 ? (adjustedProfit / convertedRevenue) * 100 : 0;
+
+  const adjustedSummary = summary ? {
+    ...summary,
+    totalRevenue: convertedRevenue,
+    totalCost: convertedCost,
+    totalProfit: adjustedProfit,
+    marginPct: adjustedMarginPct
+  } : null;
 
   const topCampaigns = transactions?.slice(0, 8) ?? [];
 
@@ -95,73 +139,73 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Total Revenue"
-          value={summary ? fmt(summary.totalRevenue) : "$0"}
-          change={fmtPct(summary?.revenueChange)}
-          positive={(summary?.revenueChange ?? 0) >= 0}
+          value={adjustedSummary ? fmt(adjustedSummary.totalRevenue, baseCurrency) : "$0"}
+          change={fmtPct(adjustedSummary?.revenueChange)}
+          positive={(adjustedSummary?.revenueChange ?? 0) >= 0}
           icon={<DollarSign className="h-4 w-4" />}
           loading={summaryLoading}
         />
         <KpiCard
           title="Total Cost"
-          value={summary ? fmt(summary.totalCost) : "$0"}
-          change={fmtPct(summary?.costChange)}
-          positive={(summary?.costChange ?? 0) <= 0}
+          value={adjustedSummary ? fmt(adjustedSummary.totalCost, baseCurrency) : "$0"}
+          change={fmtPct(adjustedSummary?.costChange)}
+          positive={(adjustedSummary?.costChange ?? 0) <= 0}
           icon={<Target className="h-4 w-4" />}
           loading={summaryLoading}
         />
         <KpiCard
           title="Total Profit"
-          value={summary ? fmt(summary.totalProfit) : "$0"}
-          change={fmtPct(summary?.profitChange)}
-          positive={(summary?.profitChange ?? 0) >= 0}
+          value={adjustedSummary ? fmt(adjustedSummary.totalProfit, baseCurrency) : "$0"}
+          change={fmtPct(adjustedSummary?.profitChange)}
+          positive={(adjustedSummary?.profitChange ?? 0) >= 0}
           icon={<TrendingUp className="h-4 w-4" />}
           loading={summaryLoading}
         />
         <KpiCard
           title="Margin %"
-          value={summary ? `${summary.marginPct.toFixed(1)}%` : "0%"}
+          value={adjustedSummary ? `${adjustedSummary.marginPct.toFixed(1)}%` : "0%"}
           icon={<BarChart2 className="h-4 w-4" />}
           loading={summaryLoading}
         />
       </div>
 
       {/* Second row: counts */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm flex items-center gap-3">
           <div className="rounded-xl bg-blue-50 dark:bg-blue-950 p-2.5 text-blue-600"><Users className="h-4 w-4" /></div>
           <div>
             <p className="text-xs text-muted-foreground">Clients</p>
-            {summaryLoading ? <Skeleton className="h-5 w-8 mt-1" /> : <p className="font-bold text-lg text-foreground">{summary?.clientCount ?? 0}</p>}
+            {summaryLoading ? <Skeleton className="h-5 w-8 mt-1" /> : <p className="font-bold text-lg text-foreground">{adjustedSummary?.clientCount ?? 0}</p>}
           </div>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm flex items-center gap-3">
           <div className="rounded-xl bg-purple-50 dark:bg-purple-950 p-2.5 text-purple-600"><Monitor className="h-4 w-4" /></div>
           <div>
             <p className="text-xs text-muted-foreground">Platforms</p>
-            {summaryLoading ? <Skeleton className="h-5 w-8 mt-1" /> : <p className="font-bold text-lg text-foreground">{summary?.platformCount ?? 0}</p>}
+            {summaryLoading ? <Skeleton className="h-5 w-8 mt-1" /> : <p className="font-bold text-lg text-foreground">{adjustedSummary?.platformCount ?? 0}</p>}
           </div>
         </div>
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm flex items-center gap-3">
           <div className="rounded-xl bg-orange-50 dark:bg-orange-950 p-2.5 text-orange-600"><Megaphone className="h-4 w-4" /></div>
           <div>
             <p className="text-xs text-muted-foreground">Campaigns</p>
-            {summaryLoading ? <Skeleton className="h-5 w-8 mt-1" /> : <p className="font-bold text-lg text-foreground">{summary?.campaignCount ?? 0}</p>}
+            {summaryLoading ? <Skeleton className="h-5 w-8 mt-1" /> : <p className="font-bold text-lg text-foreground">{adjustedSummary?.campaignCount ?? 0}</p>}
           </div>
         </div>
       </div>
 
       {/* Main charts row */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profit over time chart */}
-        <div className="col-span-2 rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-sm font-semibold text-foreground">Total Profit</h2>
-              {summary && (
-                <p className="text-2xl font-bold text-foreground mt-0.5">{fmt(summary.totalProfit)}</p>
+              {adjustedSummary && (
+                <p className="text-2xl font-bold text-foreground mt-0.5">{fmt(adjustedSummary.totalProfit, baseCurrency)}</p>
               )}
             </div>
           </div>
@@ -224,27 +268,6 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* AI Assistant */}
-          <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Bot className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-semibold text-foreground">AI Assistant</h3>
-              </div>
-              <Badge variant="secondary" className="text-[10px]">Beta</Badge>
-            </div>
-            <div className="mb-2 rounded-lg bg-muted/50 p-2.5 text-xs text-muted-foreground">
-              Ask anything about your ad operations, campaigns, or performance trends.
-            </div>
-            <div className="flex gap-2">
-              <input
-                placeholder="Ask me anything..."
-                className="flex-1 rounded-lg border border-border bg-muted/30 px-3 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-                data-testid="ai-input"
-              />
-              <button className="rounded-lg bg-primary px-2.5 py-1.5 text-xs text-primary-foreground font-medium">Ask</button>
-            </div>
-          </div>
         </div>
       </div>
 
