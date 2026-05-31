@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import FloatingChat from "../FloatingChat";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,7 +19,6 @@ export default function Layout({ children }: LayoutProps) {
       }
     };
 
-    // Set initial value
     handleResize();
 
     window.addEventListener("resize", handleResize);
@@ -27,7 +27,6 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Backdrop overlay on mobile when sidebar is open */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/40 md:hidden backdrop-blur-xs transition-opacity cursor-pointer"
@@ -42,6 +41,8 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </main>
       </div>
+
+      <FloatingChat />
     </div>
   );
 }
