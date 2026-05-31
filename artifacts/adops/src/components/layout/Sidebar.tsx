@@ -90,14 +90,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
         })}
       </nav>
 
-      {/* Toggle btn */}
-      <button
-        onClick={onToggle}
-        className="absolute -right-3 top-20 hidden md:flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm hover:bg-accent hover:text-accent-foreground"
-        data-testid="sidebar-toggle"
-      >
-        {open ? <ChevronLeft className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-      </button>
 
       {/* Bottom section */}
       <div className="border-t border-border p-3 space-y-1.5">

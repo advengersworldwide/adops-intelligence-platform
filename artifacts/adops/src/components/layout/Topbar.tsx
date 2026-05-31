@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { Menu, Search, Bell, Sun, Moon, LogOut } from "lucide-react";
+import { Menu, Search, Bell, Sun, Moon, LogOut, AlertTriangle, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useTheme } from "@/components/theme-provider";
 import { getCurrentUser, logout } from "@/lib/auth";
+import { useGetAlerts } from "@workspace/api-client-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface TopbarProps {
   onMenuToggle: () => void;
@@ -11,6 +15,7 @@ interface TopbarProps {
 export default function Topbar({ onMenuToggle }: TopbarProps) {
   const { theme, setTheme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const { data: alerts } = useGetAlerts();
   const user = getCurrentUser();
   const userInitials = user?.name
     ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
@@ -45,10 +50,59 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
           {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
 
-        <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent" data-testid="notifications-btn">
-          <Bell className="h-4 w-4" />
-          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="relative rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors" data-testid="notifications-btn">
+              <Bell className="h-4 w-4" />
+              {alerts && alerts.length > 0 && (
+                <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="end" sideOffset={8}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-muted/20">
+              <h4 className="text-sm font-semibold">Notifications</h4>
+              {alerts && alerts.length > 0 && (
+                <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {alerts.length} New
+                </span>
+              )}
+            </div>
+            <ScrollArea className="max-h-[400px]">
+              {alerts && alerts.length > 0 ? (
+                <div className="flex flex-col">
+                  {alerts.map((alert) => (
+                    <div 
+                      key={alert.id} 
+                      className="flex gap-3 items-start p-4 border-b border-border/50 last:border-0 hover:bg-muted/50 transition-colors"
+                    >
+                      <div className={cn(
+                        "rounded-full p-2 shrink-0 mt-0.5",
+                        alert.severity === "critical" ? "bg-red-100 text-red-600 dark:bg-red-950/50 dark:text-red-400" : "bg-amber-100 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400"
+                      )}>
+                        {alert.severity === "critical" ? <AlertCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <p className="text-sm font-semibold leading-none">{alert.campaignName}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{alert.message}</p>
+                        <p className="text-[10px] text-muted-foreground/70 font-medium pt-1">
+                          {alert.platformName} {alert.clientName ? `• ${alert.clientName}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-sm text-muted-foreground flex flex-col items-center justify-center space-y-3">
+                  <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
+                    <Bell className="h-6 w-6 text-muted-foreground/50" />
+                  </div>
+                  <p>You're all caught up!</p>
+                </div>
+              )}
+            </ScrollArea>
+          </PopoverContent>
+        </Popover>
 
         {/* Profile Dropdown */}
         <div className="relative">
