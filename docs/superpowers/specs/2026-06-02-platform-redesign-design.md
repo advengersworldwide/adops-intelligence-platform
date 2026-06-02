@@ -62,6 +62,7 @@ One platform can have many cost models. Each cost model has an independent margi
 | `appsflyer_pins` | integer NOT NULL | Raw pin count from Appsflyer |
 | `fraud_pins` | integer NOT NULL | Fraud/invalid pins |
 | `payout_rate` | numeric NOT NULL | USD per pin |
+| `cost_model_id` | integer FK → platform_cost_models | Which cost model's margin % applies to this record |
 | `created_at` | timestamp | |
 
 All financial columns are **computed at display time** — nothing else is stored:
@@ -75,7 +76,7 @@ All financial columns are **computed at display time** — nothing else is store
 | Gross Amount (PKR) | `net_amount_pkr / (1 - margin_pct/100)` using platform's applicable cost model margin |
 | Sales Tax | `gross_amount_pkr × (platform.sales_tax_pct / 100)` |
 | Total Amount (PKR) | `gross_amount_pkr + sales_tax` |
-| Receivable (PKR) | `total_amount_pkr - sales_tax` (i.e. gross_amount_pkr, confirmed from data) |
+| Receivable (PKR) | Exact formula to be confirmed during implementation — observed from data to be distinct from both Gross Amount and Total Amount. Likely a client-agreed net figure. |
 | Net Payable (USD) | `net_amount_usd × (1 - margin_pct/100)` |
 | Remittance Tax | `net_payable_usd × (platform.remittance_tax_pct / 100)` |
 | Total Payable (USD) | `net_payable_usd + remittance_tax` |
@@ -210,6 +211,7 @@ Dynamic list. Each row:
 **Add Record** button opens a small dialog with raw inputs only:
 - Billing Entity (client dropdown, required)
 - Period (month/year picker, required)
+- Cost Model (dropdown of this platform's cost models, required — determines margin %)
 - Appsflyer Pins (integer, required)
 - Fraud Pins (integer, required)
 - Payout Rate (numeric, required)
