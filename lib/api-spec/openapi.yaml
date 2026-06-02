@@ -230,6 +230,161 @@ paths:
         "404":
           description: Not found
 
+  /platforms/{id}/cost-models:
+    post:
+      operationId: createPlatformCostModel
+      tags: [platforms]
+      summary: Add a cost model to a platform
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformCostModelInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformCostModel"
+        "400":
+          description: Validation error
+
+  /platforms/{id}/cost-models/{cmId}:
+    patch:
+      operationId: updatePlatformCostModel
+      tags: [platforms]
+      summary: Update a cost model
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: cmId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlatformCostModelUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformCostModel"
+        "404":
+          description: Not found
+    delete:
+      operationId: deletePlatformCostModel
+      tags: [platforms]
+      summary: Delete a cost model
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: cmId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /platforms/{id}/billing-records:
+    get:
+      operationId: listBillingRecords
+      tags: [platforms]
+      summary: List billing records for a platform
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: period
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: clientId
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of billing records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BillingRecord"
+    post:
+      operationId: createBillingRecord
+      tags: [platforms]
+      summary: Add a billing record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingRecordInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingRecord"
+        "400":
+          description: Validation error
+
+  /platforms/{id}/billing-records/{recordId}:
+    delete:
+      operationId: deleteBillingRecord
+      tags: [platforms]
+      summary: Delete a billing record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
   # ── Campaigns ─────────────────────────────────────────────────────────────────
   /campaigns:
     get:
@@ -603,40 +758,189 @@ components:
     # ── Platform ─────────────────────────────────────────────────────────────────
     Platform:
       type: object
-      required: [id, name, costModel, currency, createdAt]
+      required: [id, name, createdAt]
       properties:
         id:
           type: integer
         name:
           type: string
-        costModel:
-          type: string
-        currency:
-          type: string
+        address:
+          type: ["string", "null"]
+        pocName:
+          type: ["string", "null"]
+        pocNumber:
+          type: ["string", "null"]
+        pocEmail:
+          type: ["string", "null"]
+        companyEmail:
+          type: ["string", "null"]
+        companyNumber:
+          type: ["string", "null"]
+        bankName:
+          type: ["string", "null"]
+        bankAccountNumber:
+          type: ["string", "null"]
+        bankAddress:
+          type: ["string", "null"]
+        swiftCode:
+          type: ["string", "null"]
+        iban:
+          type: ["string", "null"]
+        salesTaxNumber:
+          type: ["string", "null"]
+        ntnNumber:
+          type: ["string", "null"]
+        paymentTerms:
+          type: ["string", "null"]
+        salesTaxPct:
+          type: ["number", "null"]
+        remittanceTaxPct:
+          type: ["number", "null"]
+        costModels:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlatformCostModel"
         createdAt:
           type: string
 
     PlatformInput:
       type: object
-      required: [name, costModel, currency]
+      required: [name]
       properties:
         name:
           type: string
           minLength: 1
-        costModel:
-          type: string
-        currency:
-          type: string
+        address:
+          type: ["string", "null"]
+        pocName:
+          type: ["string", "null"]
+        pocNumber:
+          type: ["string", "null"]
+        pocEmail:
+          type: ["string", "null"]
+        companyEmail:
+          type: ["string", "null"]
+        companyNumber:
+          type: ["string", "null"]
+        paymentTerms:
+          type: ["string", "null"]
 
     PlatformUpdate:
       type: object
       properties:
         name:
           type: string
-        costModel:
+        address:
+          type: ["string", "null"]
+        pocName:
+          type: ["string", "null"]
+        pocNumber:
+          type: ["string", "null"]
+        pocEmail:
+          type: ["string", "null"]
+        companyEmail:
+          type: ["string", "null"]
+        companyNumber:
+          type: ["string", "null"]
+        bankName:
+          type: ["string", "null"]
+        bankAccountNumber:
+          type: ["string", "null"]
+        bankAddress:
+          type: ["string", "null"]
+        swiftCode:
+          type: ["string", "null"]
+        iban:
+          type: ["string", "null"]
+        salesTaxNumber:
+          type: ["string", "null"]
+        ntnNumber:
+          type: ["string", "null"]
+        paymentTerms:
+          type: ["string", "null"]
+        salesTaxPct:
+          type: ["number", "null"]
+        remittanceTaxPct:
+          type: ["number", "null"]
+
+    PlatformCostModel:
+      type: object
+      required: [id, platformId, name, marginPct, createdAt]
+      properties:
+        id:
+          type: integer
+        platformId:
+          type: integer
+        name:
           type: string
-        currency:
+        marginPct:
+          type: number
+        createdAt:
           type: string
+
+    PlatformCostModelInput:
+      type: object
+      required: [name, marginPct]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        marginPct:
+          type: number
+
+    PlatformCostModelUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        marginPct:
+          type: number
+
+    BillingRecord:
+      type: object
+      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, createdAt]
+      properties:
+        id:
+          type: integer
+        platformId:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        costModelId:
+          type: integer
+        costModelName:
+          type: ["string", "null"]
+        costModelMarginPct:
+          type: ["number", "null"]
+        period:
+          type: string
+        appsflyerPins:
+          type: integer
+        fraudPins:
+          type: integer
+        payoutRate:
+          type: number
+        createdAt:
+          type: string
+
+    BillingRecordInput:
+      type: object
+      required: [clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate]
+      properties:
+        clientId:
+          type: integer
+        costModelId:
+          type: integer
+        period:
+          type: string
+        appsflyerPins:
+          type: integer
+        fraudPins:
+          type: integer
+        payoutRate:
+          type: number
 
     # ── Campaign ─────────────────────────────────────────────────────────────────
     Campaign:
@@ -835,8 +1139,6 @@ components:
         platformId:
           type: integer
         platformName:
-          type: string
-        currency:
           type: string
         revenue:
           type: number
