@@ -17,9 +17,9 @@ async function seed() {
   ]).returning();
 
   const [ttd, dv360, amazon] = await db.insert(platformsTable).values([
-    { name: "The Trade Desk", costModel: "CPM", currency: "USD" },
-    { name: "DV360", costModel: "CPM", currency: "USD" },
-    { name: "Amazon DSP", costModel: "CPM", currency: "USD" },
+    { name: "The Trade Desk" },
+    { name: "DV360" },
+    { name: "Amazon DSP" },
   ]).returning();
 
   const [c1, c2, c3, c4, c5] = await db.insert(campaignsTable).values([

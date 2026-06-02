@@ -162,7 +162,6 @@ router.get("/analytics/by-platform", async (req, res): Promise<void> => {
     .select({
       platformId: platformsTable.id,
       platformName: platformsTable.name,
-      currency: platformsTable.currency,
       revenue: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
       cost: sql<string>`coalesce(sum(${transactionsTable.cost}), 0)`,
       profit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
@@ -174,7 +173,7 @@ router.get("/analytics/by-platform", async (req, res): Promise<void> => {
       eq(transactionsTable.campaignId, campaignsTable.id),
       whereClause,
     ))
-    .groupBy(platformsTable.id, platformsTable.name, platformsTable.currency)
+    .groupBy(platformsTable.id, platformsTable.name)
     .orderBy(sql`sum(${transactionsTable.profit}) desc nulls last`);
 
   res.json(GetAnalyticsByPlatformResponse.parse(rows.map(r => {
@@ -184,7 +183,6 @@ router.get("/analytics/by-platform", async (req, res): Promise<void> => {
     return {
       platformId: r.platformId,
       platformName: r.platformName,
-      currency: r.currency,
       revenue,
       cost: parseFloat(r.cost ?? "0"),
       profit,
