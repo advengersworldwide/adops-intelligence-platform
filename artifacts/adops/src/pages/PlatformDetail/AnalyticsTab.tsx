@@ -63,7 +63,7 @@ export default function PlatformAnalyticsTab({ platformId, platform }: { platfor
 
   const allComputed = (records ?? []).map(r => ({
     ...r,
-    ...computeNetMargin(r.appsflyerPins, r.fraudPins, r.payoutRate, r.costModelMarginPct ?? 0, salesTaxPct, remittanceTaxPct, forexRate),
+    ...computeNetMargin(r.appsflyerPins, r.fraudPins, r.costModelPayoutRate ?? 0, r.marginPct, salesTaxPct, remittanceTaxPct, forexRate),
   }));
 
   const filtered = allComputed.filter(r => {

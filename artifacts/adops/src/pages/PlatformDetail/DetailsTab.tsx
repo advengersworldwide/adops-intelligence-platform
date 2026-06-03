@@ -30,7 +30,7 @@ const PAYMENT_LABEL: Record<string, string> = {
   net_150: "Net 150",
 };
 
-type CostModelRow = { id?: number; name: string; marginPct: string; isNew?: boolean };
+type CostModelRow = { id?: number; name: string; payoutRate: string; isNew?: boolean };
 
 type FormState = {
   name: string;
@@ -86,7 +86,7 @@ function buildCostModelRows(platform: Platform): CostModelRow[] {
   return (platform.costModels ?? []).map((cm) => ({
     id: cm.id,
     name: cm.name,
-    marginPct: String(cm.marginPct),
+    payoutRate: String(cm.payoutRate),
   }));
 }
 
@@ -165,7 +165,7 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
     setForm((prev) => ({ ...prev, [key]: v }));
 
   const addCostModel = () =>
-    setCostModels((prev) => [...prev, { name: "", marginPct: "", isNew: true }]);
+    setCostModels((prev) => [...prev, { name: "", payoutRate: "", isNew: true }]);
 
   const updateCostModelRow = (index: number, patch: Partial<CostModelRow>) =>
     setCostModels((prev) =>
@@ -218,7 +218,7 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
           ops.push(
             createCostModel.mutateAsync({
               id: platform.id,
-              data: { name, marginPct: Number(cm.marginPct) || 0 },
+              data: { name, payoutRate: Number(cm.payoutRate) || 0 },
             }),
           );
         }
@@ -230,13 +230,13 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
         const prev = original.find((o) => o.id === cm.id);
         if (!prev) continue;
         const newName = cm.name.trim();
-        const newMargin = Number(cm.marginPct) || 0;
-        if (prev.name !== newName || prev.marginPct !== newMargin) {
+        const newPayoutRate = Number(cm.payoutRate) || 0;
+        if (prev.name !== newName || prev.payoutRate !== newPayoutRate) {
           ops.push(
             updateCostModel.mutateAsync({
               id: platform.id,
               cmId: cm.id,
-              data: { name: newName, marginPct: newMargin },
+              data: { name: newName, payoutRate: newPayoutRate },
             }),
           );
         }
@@ -374,11 +374,11 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
               />
               <Input
                 type="number"
-                placeholder="Margin %"
+                placeholder="USD/pin"
                 className="w-32"
-                value={cm.marginPct}
+                value={cm.payoutRate}
                 disabled={!canEdit}
-                onChange={(e) => updateCostModelRow(i, { marginPct: e.target.value })}
+                onChange={(e) => updateCostModelRow(i, { payoutRate: e.target.value })}
               />
               {canEdit && (
                 <Button

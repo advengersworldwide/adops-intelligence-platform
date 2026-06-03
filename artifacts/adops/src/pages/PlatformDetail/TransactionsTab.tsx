@@ -25,7 +25,7 @@ const addRecordSchema = z.object({
   period: z.string().min(1, "Period is required"),
   appsflyerPins: z.number().int().min(0),
   fraudPins: z.number().int().min(0),
-  payoutRate: z.number().min(0),
+  marginPct: z.number().min(0).max(100),
 });
 type AddRecordForm = z.infer<typeof addRecordSchema>;
 
@@ -112,8 +112,8 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
   const computed = (records ?? []).map(r => ({
     ...r,
     ...computeRow(
-      r.appsflyerPins, r.fraudPins, r.payoutRate,
-      r.costModelMarginPct ?? 0,
+      r.appsflyerPins, r.fraudPins, r.costModelPayoutRate ?? 0,
+      r.marginPct,
       salesTaxPct, remittanceTaxPct, forexRate
     ),
   }));
@@ -138,7 +138,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
   const exportCSV = () => {
     if (!computed.length) return;
     const headers = ["S#","Billing Entity","Appsflyer Pins","Fraud Pins","Actual Pins","Payout Rate","Net Amount (USD)","Forex Rate","Net Amount (PKR)","Gross Amount (PKR)",`Sales Tax (${salesTaxPct}%)`,"Total Amount (PKR)","Receivable (PKR)","Net Payable (USD)",`Remittance Tax (${remittanceTaxPct}%)`,"Total Payable (USD)","Forex Rate","Total Payable (PKR)","Net Margin (PKR)"];
-    const rows = computed.map((r, i) => [i+1,r.clientName??"",r.appsflyerPins,r.fraudPins,r.actualPins,r.payoutRate.toFixed(2),r.netAmtUsd.toFixed(2),forexRate,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),forexRate,r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2)]);
+    const rows = computed.map((r, i) => [i+1,r.clientName??"",r.appsflyerPins,r.fraudPins,r.actualPins,(r.costModelPayoutRate??0).toFixed(2),r.netAmtUsd.toFixed(2),forexRate,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),forexRate,r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2)]);
     const csv = [headers,...rows].map(r=>r.join(",")).join("\n");
     const blob = new Blob([csv],{type:"text/csv"});
     const url = URL.createObjectURL(blob);
@@ -203,7 +203,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
                     <TD>{r.appsflyerPins.toLocaleString()}</TD>
                     <TD>{r.fraudPins.toLocaleString()}</TD>
                     <TD bold>{r.actualPins.toLocaleString()}</TD>
-                    <TD>{fmtNum(r.payoutRate)}</TD>
+                    <TD>{fmtNum(r.costModelPayoutRate ?? 0)}</TD>
                     <TD>{fmtNum(r.netAmtUsd)}</TD>
                     <TD>{fmtNum(forexRate)}</TD>
                     <TD>{fmtNum(r.netAmtPkr)}</TD>
@@ -270,7 +270,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
 function AddRecordDialog({ open, onClose, platformId, costModels }: {
   open: boolean; onClose: () => void;
   platformId: number;
-  costModels: { id: number; name: string; marginPct: number }[];
+  costModels: { id: number; name: string; payoutRate: number }[];
 }) {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -311,7 +311,7 @@ function AddRecordDialog({ open, onClose, platformId, costModels }: {
                 <Select onValueChange={v => field.onChange(parseInt(v))} value={field.value ? String(field.value) : ""}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select cost model" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    {costModels.map(cm => <SelectItem key={cm.id} value={String(cm.id)}>{cm.name} ({cm.marginPct}%)</SelectItem>)}
+                    {costModels.map(cm => <SelectItem key={cm.id} value={String(cm.id)}>{cm.name} (${cm.payoutRate}/pin)</SelectItem>)}
                   </SelectContent>
                 </Select><FormMessage />
               </FormItem>
@@ -327,8 +327,8 @@ function AddRecordDialog({ open, onClose, platformId, costModels }: {
                 <FormItem><FormLabel>Fraud Pins</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
-            <FormField control={form.control} name="payoutRate" render={({ field }) => (
-              <FormItem><FormLabel>Payout Rate (USD)</FormLabel><FormControl><Input type="number" step="0.01" min={0} {...field} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
+            <FormField control={form.control} name="marginPct" render={({ field }) => (
+              <FormItem><FormLabel>Margin %</FormLabel><FormControl><Input type="number" step="0.01" min={0} max={100} {...field} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
             )} />
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
