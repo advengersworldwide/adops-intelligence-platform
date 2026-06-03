@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, platformsTable } from "@workspace/db";
+import { db, platformsTable, platformCostModelsTable } from "@workspace/db";
 import {
   CreatePlatformBody,
   UpdatePlatformBody,
@@ -14,19 +14,47 @@ import {
 
 const router: IRouter = Router();
 
-function mapRow(r: typeof platformsTable.$inferSelect) {
+async function mapRow(r: typeof platformsTable.$inferSelect) {
+  const costModels = await db
+    .select()
+    .from(platformCostModelsTable)
+    .where(eq(platformCostModelsTable.platformId, r.id))
+    .orderBy(platformCostModelsTable.createdAt);
+
   return {
     id: r.id,
     name: r.name,
-    costModel: r.costModel,
-    currency: r.currency,
+    address: r.address,
+    pocName: r.pocName,
+    pocNumber: r.pocNumber,
+    pocEmail: r.pocEmail,
+    companyEmail: r.companyEmail,
+    companyNumber: r.companyNumber,
+    bankName: r.bankName,
+    bankAccountNumber: r.bankAccountNumber,
+    bankAddress: r.bankAddress,
+    swiftCode: r.swiftCode,
+    iban: r.iban,
+    salesTaxNumber: r.salesTaxNumber,
+    ntnNumber: r.ntnNumber,
+    paymentTerms: r.paymentTerms,
+    salesTaxPct: r.salesTaxPct !== null ? Number(r.salesTaxPct) : null,
+    remittanceTaxPct: r.remittanceTaxPct !== null ? Number(r.remittanceTaxPct) : null,
+    costModels: costModels.map(cm => ({
+      id: cm.id,
+      platformId: cm.platformId,
+      name: cm.name,
+      marginPct: Number(cm.marginPct),
+      createdAt: cm.createdAt.toISOString(),
+    })),
     createdAt: r.createdAt.toISOString(),
   };
 }
 
 router.get("/platforms", async (req, res): Promise<void> => {
   const rows = await db.select().from(platformsTable).orderBy(platformsTable.createdAt);
-  res.json(ListPlatformsResponse.parse(rows.map(mapRow)));
+  const mapped = await Promise.all(rows.map(mapRow));
+  res.json(ListPlatformsResponse.parse(mapped));
 });
 
 router.post("/platforms", async (req, res): Promise<void> => {
@@ -36,7 +64,7 @@ router.post("/platforms", async (req, res): Promise<void> => {
     return;
   }
   const [row] = await db.insert(platformsTable).values(parsed.data).returning();
-  res.status(201).json(GetPlatformResponse.parse(mapRow(row)));
+  res.status(201).json(GetPlatformResponse.parse(await mapRow(row)));
 });
 
 router.get("/platforms/:id", async (req, res): Promise<void> => {
@@ -50,7 +78,7 @@ router.get("/platforms/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Platform not found" });
     return;
   }
-  res.json(GetPlatformResponse.parse(mapRow(row)));
+  res.json(GetPlatformResponse.parse(await mapRow(row)));
 });
 
 router.patch("/platforms/:id", async (req, res): Promise<void> => {
@@ -64,12 +92,24 @@ router.patch("/platforms/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [row] = await db.update(platformsTable).set(parsed.data).where(eq(platformsTable.id, params.data.id)).returning();
+  const { salesTaxPct, remittanceTaxPct, ...rest } = parsed.data;
+  const updates: Partial<typeof platformsTable.$inferInsert> = { ...rest };
+  if (salesTaxPct !== undefined) {
+    updates.salesTaxPct = salesTaxPct !== null ? String(salesTaxPct) : null;
+  }
+  if (remittanceTaxPct !== undefined) {
+    updates.remittanceTaxPct = remittanceTaxPct !== null ? String(remittanceTaxPct) : null;
+  }
+  const [row] = await db
+    .update(platformsTable)
+    .set(updates)
+    .where(eq(platformsTable.id, params.data.id))
+    .returning();
   if (!row) {
     res.status(404).json({ error: "Platform not found" });
     return;
   }
-  res.json(UpdatePlatformResponse.parse(mapRow(row)));
+  res.json(UpdatePlatformResponse.parse(await mapRow(row)));
 });
 
 router.delete("/platforms/:id", async (req, res): Promise<void> => {
@@ -78,7 +118,10 @@ router.delete("/platforms/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: params.error.message });
     return;
   }
-  const [row] = await db.delete(platformsTable).where(eq(platformsTable.id, params.data.id)).returning();
+  const [row] = await db
+    .delete(platformsTable)
+    .where(eq(platformsTable.id, params.data.id))
+    .returning();
   if (!row) {
     res.status(404).json({ error: "Platform not found" });
     return;
