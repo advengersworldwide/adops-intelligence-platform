@@ -15,7 +15,7 @@ function getGroq(): Groq {
 const chatLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 20,
-  keyGenerator: (req) => String((req as typeof req & { user?: { id: number } }).user?.id ?? ipKeyGenerator(req)),
+  keyGenerator: (req) => String((req as typeof req & { user?: { id: number } }).user?.id ?? ipKeyGenerator(req.ip ?? "")),
   message: { error: "Too many requests. Please wait before sending another message." },
   standardHeaders: true,
   legacyHeaders: false,
