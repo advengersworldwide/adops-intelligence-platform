@@ -58,8 +58,8 @@ export default function AnalyticsPage() {
 
   if (byPlatform && byPlatform.length > 0) {
     byPlatform.forEach(p => {
-      convertedRevenue += convert(p.revenue, p.currency || "USD");
-      convertedCost += convert(p.cost, p.currency || "USD");
+      convertedRevenue += convert(p.revenue, "USD");
+      convertedCost += convert(p.cost, "USD");
     });
   } else {
     convertedRevenue = summary?.totalRevenue ?? 0;
