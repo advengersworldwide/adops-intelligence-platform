@@ -21,6 +21,8 @@ import type {
 
 import type {
   Alert,
+  BillingRecord,
+  BillingRecordInput,
   Campaign,
   CampaignInput,
   CampaignUpdate,
@@ -34,10 +36,14 @@ import type {
   GetDashboardSummaryParams,
   GetProfitOverTimeParams,
   HealthStatus,
+  ListBillingRecordsParams,
   ListCampaignsParams,
   ListTransactionsParams,
   Platform,
   PlatformAnalytics,
+  PlatformCostModel,
+  PlatformCostModelInput,
+  PlatformCostModelUpdate,
   PlatformInput,
   PlatformUpdate,
   ProfitTimePoint,
@@ -869,6 +875,457 @@ export const useDeletePlatform = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeletePlatformMutationOptions(options));
+    }
+
+export const getCreatePlatformCostModelUrl = (id: number,) => {
+
+
+
+
+  return `/api/platforms/${id}/cost-models`
+}
+
+/**
+ * @summary Add a cost model to a platform
+ */
+export const createPlatformCostModel = async (id: number,
+    platformCostModelInput: PlatformCostModelInput, options?: RequestInit): Promise<PlatformCostModel> => {
+
+  return customFetch<PlatformCostModel>(getCreatePlatformCostModelUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      platformCostModelInput,)
+  }
+);}
+
+
+
+
+export const getCreatePlatformCostModelMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPlatformCostModel>>, TError,{id: number;data: BodyType<PlatformCostModelInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPlatformCostModel>>, TError,{id: number;data: BodyType<PlatformCostModelInput>}, TContext> => {
+
+const mutationKey = ['createPlatformCostModel'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPlatformCostModel>>, {id: number;data: BodyType<PlatformCostModelInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createPlatformCostModel(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePlatformCostModelMutationResult = NonNullable<Awaited<ReturnType<typeof createPlatformCostModel>>>
+    export type CreatePlatformCostModelMutationBody = BodyType<PlatformCostModelInput>
+    export type CreatePlatformCostModelMutationError = ErrorType<void>
+
+    /**
+ * @summary Add a cost model to a platform
+ */
+export const useCreatePlatformCostModel = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPlatformCostModel>>, TError,{id: number;data: BodyType<PlatformCostModelInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPlatformCostModel>>,
+        TError,
+        {id: number;data: BodyType<PlatformCostModelInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePlatformCostModelMutationOptions(options));
+    }
+
+export const getUpdatePlatformCostModelUrl = (id: number,
+    cmId: number,) => {
+
+
+
+
+  return `/api/platforms/${id}/cost-models/${cmId}`
+}
+
+/**
+ * @summary Update a cost model
+ */
+export const updatePlatformCostModel = async (id: number,
+    cmId: number,
+    platformCostModelUpdate: PlatformCostModelUpdate, options?: RequestInit): Promise<PlatformCostModel> => {
+
+  return customFetch<PlatformCostModel>(getUpdatePlatformCostModelUrl(id,cmId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      platformCostModelUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdatePlatformCostModelMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePlatformCostModel>>, TError,{id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePlatformCostModel>>, TError,{id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>}, TContext> => {
+
+const mutationKey = ['updatePlatformCostModel'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePlatformCostModel>>, {id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>}> = (props) => {
+          const {id,cmId,data} = props ?? {};
+
+          return  updatePlatformCostModel(id,cmId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePlatformCostModelMutationResult = NonNullable<Awaited<ReturnType<typeof updatePlatformCostModel>>>
+    export type UpdatePlatformCostModelMutationBody = BodyType<PlatformCostModelUpdate>
+    export type UpdatePlatformCostModelMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a cost model
+ */
+export const useUpdatePlatformCostModel = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePlatformCostModel>>, TError,{id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePlatformCostModel>>,
+        TError,
+        {id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdatePlatformCostModelMutationOptions(options));
+    }
+
+export const getDeletePlatformCostModelUrl = (id: number,
+    cmId: number,) => {
+
+
+
+
+  return `/api/platforms/${id}/cost-models/${cmId}`
+}
+
+/**
+ * @summary Delete a cost model
+ */
+export const deletePlatformCostModel = async (id: number,
+    cmId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeletePlatformCostModelUrl(id,cmId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePlatformCostModelMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePlatformCostModel>>, TError,{id: number;cmId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePlatformCostModel>>, TError,{id: number;cmId: number}, TContext> => {
+
+const mutationKey = ['deletePlatformCostModel'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePlatformCostModel>>, {id: number;cmId: number}> = (props) => {
+          const {id,cmId} = props ?? {};
+
+          return  deletePlatformCostModel(id,cmId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePlatformCostModelMutationResult = NonNullable<Awaited<ReturnType<typeof deletePlatformCostModel>>>
+
+    export type DeletePlatformCostModelMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a cost model
+ */
+export const useDeletePlatformCostModel = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePlatformCostModel>>, TError,{id: number;cmId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePlatformCostModel>>,
+        TError,
+        {id: number;cmId: number},
+        TContext
+      > => {
+      return useMutation(getDeletePlatformCostModelMutationOptions(options));
+    }
+
+export const getListBillingRecordsUrl = (id: number,
+    params?: ListBillingRecordsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/platforms/${id}/billing-records?${stringifiedParams}` : `/api/platforms/${id}/billing-records`
+}
+
+/**
+ * @summary List billing records for a platform
+ */
+export const listBillingRecords = async (id: number,
+    params?: ListBillingRecordsParams, options?: RequestInit): Promise<BillingRecord[]> => {
+
+  return customFetch<BillingRecord[]>(getListBillingRecordsUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListBillingRecordsQueryKey = (id: number,
+    params?: ListBillingRecordsParams,) => {
+    return [
+    `/api/platforms/${id}/billing-records`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListBillingRecordsQueryOptions = <TData = Awaited<ReturnType<typeof listBillingRecords>>, TError = ErrorType<unknown>>(id: number,
+    params?: ListBillingRecordsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBillingRecords>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListBillingRecordsQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listBillingRecords>>> = ({ signal }) => listBillingRecords(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listBillingRecords>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListBillingRecordsQueryResult = NonNullable<Awaited<ReturnType<typeof listBillingRecords>>>
+export type ListBillingRecordsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List billing records for a platform
+ */
+
+export function useListBillingRecords<TData = Awaited<ReturnType<typeof listBillingRecords>>, TError = ErrorType<unknown>>(
+ id: number,
+    params?: ListBillingRecordsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listBillingRecords>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListBillingRecordsQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateBillingRecordUrl = (id: number,) => {
+
+
+
+
+  return `/api/platforms/${id}/billing-records`
+}
+
+/**
+ * @summary Add a billing record
+ */
+export const createBillingRecord = async (id: number,
+    billingRecordInput: BillingRecordInput, options?: RequestInit): Promise<BillingRecord> => {
+
+  return customFetch<BillingRecord>(getCreateBillingRecordUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      billingRecordInput,)
+  }
+);}
+
+
+
+
+export const getCreateBillingRecordMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingRecord>>, TError,{id: number;data: BodyType<BillingRecordInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createBillingRecord>>, TError,{id: number;data: BodyType<BillingRecordInput>}, TContext> => {
+
+const mutationKey = ['createBillingRecord'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createBillingRecord>>, {id: number;data: BodyType<BillingRecordInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createBillingRecord(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateBillingRecordMutationResult = NonNullable<Awaited<ReturnType<typeof createBillingRecord>>>
+    export type CreateBillingRecordMutationBody = BodyType<BillingRecordInput>
+    export type CreateBillingRecordMutationError = ErrorType<void>
+
+    /**
+ * @summary Add a billing record
+ */
+export const useCreateBillingRecord = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createBillingRecord>>, TError,{id: number;data: BodyType<BillingRecordInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createBillingRecord>>,
+        TError,
+        {id: number;data: BodyType<BillingRecordInput>},
+        TContext
+      > => {
+      return useMutation(getCreateBillingRecordMutationOptions(options));
+    }
+
+export const getDeleteBillingRecordUrl = (id: number,
+    recordId: number,) => {
+
+
+
+
+  return `/api/platforms/${id}/billing-records/${recordId}`
+}
+
+/**
+ * @summary Delete a billing record
+ */
+export const deleteBillingRecord = async (id: number,
+    recordId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteBillingRecordUrl(id,recordId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteBillingRecordMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBillingRecord>>, TError,{id: number;recordId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteBillingRecord>>, TError,{id: number;recordId: number}, TContext> => {
+
+const mutationKey = ['deleteBillingRecord'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteBillingRecord>>, {id: number;recordId: number}> = (props) => {
+          const {id,recordId} = props ?? {};
+
+          return  deleteBillingRecord(id,recordId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteBillingRecordMutationResult = NonNullable<Awaited<ReturnType<typeof deleteBillingRecord>>>
+
+    export type DeleteBillingRecordMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a billing record
+ */
+export const useDeleteBillingRecord = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteBillingRecord>>, TError,{id: number;recordId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteBillingRecord>>,
+        TError,
+        {id: number;recordId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteBillingRecordMutationOptions(options));
     }
 
 export const getListCampaignsUrl = (params?: ListCampaignsParams,) => {

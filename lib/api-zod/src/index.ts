@@ -1,2 +1,31 @@
 export * from "./generated/api";
-export * from "./generated/types";
+// TypeScript interface types — export selectively to avoid naming collisions with Zod schemas
+export type {
+  Alert,
+  AlertSeverity,
+  AlertType,
+  BillingRecord,
+  BillingRecordInput,
+  Campaign,
+  CampaignInput,
+  CampaignUpdate,
+  Client,
+  ClientAnalytics,
+  ClientInput,
+  ClientUpdate,
+  DashboardSummary,
+  HealthStatus,
+  Platform,
+  PlatformAnalytics,
+  PlatformCostModel,
+  PlatformCostModelInput,
+  PlatformCostModelUpdate,
+  PlatformInput,
+  PlatformUpdate,
+  ProfitTimePoint,
+  Transaction,
+  TransactionInput,
+  UploadPayload,
+  UploadResult,
+  UploadRow,
+} from "./generated/types";

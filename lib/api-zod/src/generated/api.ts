@@ -104,8 +104,29 @@ export const DeleteClientParams = zod.object({
 export const ListPlatformsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "costModel": zod.string(),
-  "currency": zod.string(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
+  "salesTaxPct": zod.number().nullish(),
+  "remittanceTaxPct": zod.number().nullish(),
+  "costModels": zod.array(zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "name": zod.string(),
+  "marginPct": zod.number(),
+  "createdAt": zod.string()
+})).optional(),
   "createdAt": zod.string()
 })
 export const ListPlatformsResponse = zod.array(ListPlatformsResponseItem)
@@ -119,8 +140,13 @@ export const ListPlatformsResponse = zod.array(ListPlatformsResponseItem)
 
 export const CreatePlatformBody = zod.object({
   "name": zod.string().min(1),
-  "costModel": zod.string(),
-  "currency": zod.string()
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish()
 })
 
 
@@ -134,8 +160,29 @@ export const GetPlatformParams = zod.object({
 export const GetPlatformResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "costModel": zod.string(),
-  "currency": zod.string(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
+  "salesTaxPct": zod.number().nullish(),
+  "remittanceTaxPct": zod.number().nullish(),
+  "costModels": zod.array(zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "name": zod.string(),
+  "marginPct": zod.number(),
+  "createdAt": zod.string()
+})).optional(),
   "createdAt": zod.string()
 })
 
@@ -149,15 +196,50 @@ export const UpdatePlatformParams = zod.object({
 
 export const UpdatePlatformBody = zod.object({
   "name": zod.string().optional(),
-  "costModel": zod.string().optional(),
-  "currency": zod.string().optional()
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
+  "salesTaxPct": zod.number().nullish(),
+  "remittanceTaxPct": zod.number().nullish()
 })
 
 export const UpdatePlatformResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "costModel": zod.string(),
-  "currency": zod.string(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
+  "salesTaxPct": zod.number().nullish(),
+  "remittanceTaxPct": zod.number().nullish(),
+  "costModels": zod.array(zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "name": zod.string(),
+  "marginPct": zod.number(),
+  "createdAt": zod.string()
+})).optional(),
   "createdAt": zod.string()
 })
 
@@ -167,6 +249,108 @@ export const UpdatePlatformResponse = zod.object({
  */
 export const DeletePlatformParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Add a cost model to a platform
+ */
+export const CreatePlatformCostModelParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const CreatePlatformCostModelBody = zod.object({
+  "name": zod.string().min(1),
+  "marginPct": zod.number()
+})
+
+
+/**
+ * @summary Update a cost model
+ */
+export const UpdatePlatformCostModelParams = zod.object({
+  "id": zod.coerce.number(),
+  "cmId": zod.coerce.number()
+})
+
+export const UpdatePlatformCostModelBody = zod.object({
+  "name": zod.string().optional(),
+  "marginPct": zod.number().optional()
+})
+
+export const UpdatePlatformCostModelResponse = zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "name": zod.string(),
+  "marginPct": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a cost model
+ */
+export const DeletePlatformCostModelParams = zod.object({
+  "id": zod.coerce.number(),
+  "cmId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List billing records for a platform
+ */
+export const ListBillingRecordsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListBillingRecordsQueryParams = zod.object({
+  "period": zod.coerce.string().nullish(),
+  "clientId": zod.coerce.number().nullish()
+})
+
+export const ListBillingRecordsResponseItem = zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "clientId": zod.number(),
+  "clientName": zod.string().nullish(),
+  "costModelId": zod.number(),
+  "costModelName": zod.string().nullish(),
+  "costModelMarginPct": zod.number().nullish(),
+  "period": zod.string(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "payoutRate": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListBillingRecordsResponse = zod.array(ListBillingRecordsResponseItem)
+
+
+/**
+ * @summary Add a billing record
+ */
+export const CreateBillingRecordParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const CreateBillingRecordBody = zod.object({
+  "clientId": zod.number(),
+  "costModelId": zod.number(),
+  "period": zod.string(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "payoutRate": zod.number()
+})
+
+
+/**
+ * @summary Delete a billing record
+ */
+export const DeleteBillingRecordParams = zod.object({
+  "id": zod.coerce.number(),
+  "recordId": zod.coerce.number()
 })
 
 
@@ -392,7 +576,6 @@ export const GetAnalyticsByPlatformQueryParams = zod.object({
 export const GetAnalyticsByPlatformResponseItem = zod.object({
   "platformId": zod.number(),
   "platformName": zod.string(),
-  "currency": zod.string().optional(),
   "revenue": zod.number(),
   "cost": zod.number(),
   "profit": zod.number(),

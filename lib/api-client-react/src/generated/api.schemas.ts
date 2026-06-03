@@ -65,25 +65,144 @@ export interface ClientUpdate {
   marginValue?: number | null;
 }
 
+export interface PlatformCostModel {
+  id: number;
+  platformId: number;
+  name: string;
+  marginPct: number;
+  createdAt: string;
+}
+
 export interface Platform {
   id: number;
   name: string;
-  costModel: string;
-  currency: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  pocName?: string | null;
+  /** @nullable */
+  pocNumber?: string | null;
+  /** @nullable */
+  pocEmail?: string | null;
+  /** @nullable */
+  companyEmail?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  bankAccountNumber?: string | null;
+  /** @nullable */
+  bankAddress?: string | null;
+  /** @nullable */
+  swiftCode?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /** @nullable */
+  salesTaxNumber?: string | null;
+  /** @nullable */
+  ntnNumber?: string | null;
+  /** @nullable */
+  paymentTerms?: string | null;
+  /** @nullable */
+  salesTaxPct?: number | null;
+  /** @nullable */
+  remittanceTaxPct?: number | null;
+  costModels?: PlatformCostModel[];
   createdAt: string;
 }
 
 export interface PlatformInput {
   /** @minLength 1 */
   name: string;
-  costModel: string;
-  currency: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  pocName?: string | null;
+  /** @nullable */
+  pocNumber?: string | null;
+  /** @nullable */
+  pocEmail?: string | null;
+  /** @nullable */
+  companyEmail?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  paymentTerms?: string | null;
 }
 
 export interface PlatformUpdate {
   name?: string;
-  costModel?: string;
-  currency?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  pocName?: string | null;
+  /** @nullable */
+  pocNumber?: string | null;
+  /** @nullable */
+  pocEmail?: string | null;
+  /** @nullable */
+  companyEmail?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  bankAccountNumber?: string | null;
+  /** @nullable */
+  bankAddress?: string | null;
+  /** @nullable */
+  swiftCode?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /** @nullable */
+  salesTaxNumber?: string | null;
+  /** @nullable */
+  ntnNumber?: string | null;
+  /** @nullable */
+  paymentTerms?: string | null;
+  /** @nullable */
+  salesTaxPct?: number | null;
+  /** @nullable */
+  remittanceTaxPct?: number | null;
+}
+
+export interface PlatformCostModelInput {
+  /** @minLength 1 */
+  name: string;
+  marginPct: number;
+}
+
+export interface PlatformCostModelUpdate {
+  name?: string;
+  marginPct?: number;
+}
+
+export interface BillingRecord {
+  id: number;
+  platformId: number;
+  clientId: number;
+  /** @nullable */
+  clientName?: string | null;
+  costModelId: number;
+  /** @nullable */
+  costModelName?: string | null;
+  /** @nullable */
+  costModelMarginPct?: number | null;
+  period: string;
+  appsflyerPins: number;
+  fraudPins: number;
+  payoutRate: number;
+  createdAt: string;
+}
+
+export interface BillingRecordInput {
+  clientId: number;
+  costModelId: number;
+  period: string;
+  appsflyerPins: number;
+  fraudPins: number;
+  payoutRate: number;
 }
 
 export interface Campaign {
@@ -204,7 +323,6 @@ export interface ClientAnalytics {
 export interface PlatformAnalytics {
   platformId: number;
   platformName: string;
-  currency?: string;
   revenue: number;
   cost: number;
   profit: number;
@@ -242,6 +360,17 @@ export interface Alert {
   /** @nullable */
   value?: number | null;
 }
+
+export type ListBillingRecordsParams = {
+/**
+ * @nullable
+ */
+period?: string | null;
+/**
+ * @nullable
+ */
+clientId?: number | null;
+};
 
 export type ListCampaignsParams = {
 /**

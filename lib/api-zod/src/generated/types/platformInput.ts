@@ -9,6 +9,18 @@
 export interface PlatformInput {
   /** @minLength 1 */
   name: string;
-  costModel: string;
-  currency: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  pocName?: string | null;
+  /** @nullable */
+  pocNumber?: string | null;
+  /** @nullable */
+  pocEmail?: string | null;
+  /** @nullable */
+  companyEmail?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  paymentTerms?: string | null;
 }

@@ -6,12 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PlatformAnalytics {
-  platformId: number;
-  platformName: string;
-  revenue: number;
-  cost: number;
-  profit: number;
+export interface PlatformCostModelInput {
+  /** @minLength 1 */
+  name: string;
   marginPct: number;
-  transactionCount: number;
 }

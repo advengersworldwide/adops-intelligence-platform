@@ -5,11 +5,43 @@
  * AdOps Intelligence Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { PlatformCostModel } from './platformCostModel';
 
 export interface Platform {
   id: number;
   name: string;
-  costModel: string;
-  currency: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  pocName?: string | null;
+  /** @nullable */
+  pocNumber?: string | null;
+  /** @nullable */
+  pocEmail?: string | null;
+  /** @nullable */
+  companyEmail?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  bankAccountNumber?: string | null;
+  /** @nullable */
+  bankAddress?: string | null;
+  /** @nullable */
+  swiftCode?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /** @nullable */
+  salesTaxNumber?: string | null;
+  /** @nullable */
+  ntnNumber?: string | null;
+  /** @nullable */
+  paymentTerms?: string | null;
+  /** @nullable */
+  salesTaxPct?: number | null;
+  /** @nullable */
+  remittanceTaxPct?: number | null;
+  costModels?: PlatformCostModel[];
   createdAt: string;
 }
