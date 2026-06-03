@@ -125,6 +125,7 @@ export const ListPlatformsResponseItem = zod.object({
   "platformId": zod.number(),
   "name": zod.string(),
   "payoutRate": zod.number(),
+  "marginPct": zod.number(),
   "createdAt": zod.string()
 })).optional(),
   "createdAt": zod.string()
@@ -181,6 +182,7 @@ export const GetPlatformResponse = zod.object({
   "platformId": zod.number(),
   "name": zod.string(),
   "payoutRate": zod.number(),
+  "marginPct": zod.number(),
   "createdAt": zod.string()
 })).optional(),
   "createdAt": zod.string()
@@ -238,6 +240,7 @@ export const UpdatePlatformResponse = zod.object({
   "platformId": zod.number(),
   "name": zod.string(),
   "payoutRate": zod.number(),
+  "marginPct": zod.number(),
   "createdAt": zod.string()
 })).optional(),
   "createdAt": zod.string()
@@ -264,7 +267,8 @@ export const CreatePlatformCostModelParams = zod.object({
 
 export const CreatePlatformCostModelBody = zod.object({
   "name": zod.string().min(1),
-  "payoutRate": zod.number()
+  "payoutRate": zod.number(),
+  "marginPct": zod.number()
 })
 
 
@@ -278,7 +282,8 @@ export const UpdatePlatformCostModelParams = zod.object({
 
 export const UpdatePlatformCostModelBody = zod.object({
   "name": zod.string().optional(),
-  "payoutRate": zod.number().optional()
+  "payoutRate": zod.number().optional(),
+  "marginPct": zod.number().optional()
 })
 
 export const UpdatePlatformCostModelResponse = zod.object({
@@ -286,6 +291,7 @@ export const UpdatePlatformCostModelResponse = zod.object({
   "platformId": zod.number(),
   "name": zod.string(),
   "payoutRate": zod.number(),
+  "marginPct": zod.number(),
   "createdAt": zod.string()
 })
 
@@ -319,10 +325,10 @@ export const ListBillingRecordsResponseItem = zod.object({
   "costModelId": zod.number(),
   "costModelName": zod.string().nullish(),
   "costModelPayoutRate": zod.number().nullish(),
+  "costModelMarginPct": zod.number().nullish(),
   "period": zod.string(),
   "appsflyerPins": zod.number(),
   "fraudPins": zod.number(),
-  "marginPct": zod.number(),
   "createdAt": zod.string()
 })
 export const ListBillingRecordsResponse = zod.array(ListBillingRecordsResponseItem)
@@ -340,8 +346,7 @@ export const CreateBillingRecordBody = zod.object({
   "costModelId": zod.number(),
   "period": zod.string(),
   "appsflyerPins": zod.number(),
-  "fraudPins": zod.number(),
-  "marginPct": zod.number()
+  "fraudPins": zod.number()
 })
 
 

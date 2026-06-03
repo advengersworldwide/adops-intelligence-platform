@@ -9,4 +9,5 @@
 export interface PlatformCostModelUpdate {
   name?: string;
   payoutRate?: number;
+  marginPct?: number;
 }
