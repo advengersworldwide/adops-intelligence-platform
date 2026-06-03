@@ -865,7 +865,7 @@ components:
 
     PlatformCostModel:
       type: object
-      required: [id, platformId, name, payoutRate, createdAt]
+      required: [id, platformId, name, payoutRate, marginPct, createdAt]
       properties:
         id:
           type: integer
@@ -875,17 +875,21 @@ components:
           type: string
         payoutRate:
           type: number
+        marginPct:
+          type: number
         createdAt:
           type: string
 
     PlatformCostModelInput:
       type: object
-      required: [name, payoutRate]
+      required: [name, payoutRate, marginPct]
       properties:
         name:
           type: string
           minLength: 1
         payoutRate:
+          type: number
+        marginPct:
           type: number
 
     PlatformCostModelUpdate:
@@ -895,10 +899,12 @@ components:
           type: string
         payoutRate:
           type: number
+        marginPct:
+          type: number
 
     BillingRecord:
       type: object
-      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, marginPct, createdAt]
+      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, createdAt]
       properties:
         id:
           type: integer
@@ -914,20 +920,20 @@ components:
           type: ["string", "null"]
         costModelPayoutRate:
           type: ["number", "null"]
+        costModelMarginPct:
+          type: ["number", "null"]
         period:
           type: string
         appsflyerPins:
           type: integer
         fraudPins:
           type: integer
-        marginPct:
-          type: number
         createdAt:
           type: string
 
     BillingRecordInput:
       type: object
-      required: [clientId, costModelId, period, appsflyerPins, fraudPins, marginPct]
+      required: [clientId, costModelId, period, appsflyerPins, fraudPins]
       properties:
         clientId:
           type: integer
@@ -939,8 +945,6 @@ components:
           type: integer
         fraudPins:
           type: integer
-        marginPct:
-          type: number
 
     # ── Campaign ─────────────────────────────────────────────────────────────────
     Campaign:
