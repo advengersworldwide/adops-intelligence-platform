@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import Groq from "groq-sdk";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { requireAuth } from "../middlewares/auth";
 import { buildContext } from "../lib/context";
 
@@ -15,7 +15,7 @@ function getGroq(): Groq {
 const chatLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 20,
-  keyGenerator: (req) => String((req as typeof req & { user?: { id: number } }).user?.id ?? req.ip),
+  keyGenerator: (req) => String((req as typeof req & { user?: { id: number } }).user?.id ?? ipKeyGenerator(req)),
   message: { error: "Too many requests. Please wait before sending another message." },
   standardHeaders: true,
   legacyHeaders: false,
