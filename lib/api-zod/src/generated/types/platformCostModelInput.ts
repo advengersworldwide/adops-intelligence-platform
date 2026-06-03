@@ -9,5 +9,5 @@
 export interface PlatformCostModelInput {
   /** @minLength 1 */
   name: string;
-  marginPct: number;
+  payoutRate: number;
 }

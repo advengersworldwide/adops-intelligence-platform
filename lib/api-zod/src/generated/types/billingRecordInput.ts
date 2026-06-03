@@ -12,5 +12,5 @@ export interface BillingRecordInput {
   period: string;
   appsflyerPins: number;
   fraudPins: number;
-  payoutRate: number;
+  marginPct: number;
 }

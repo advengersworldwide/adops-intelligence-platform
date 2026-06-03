@@ -16,10 +16,10 @@ export interface BillingRecord {
   /** @nullable */
   costModelName?: string | null;
   /** @nullable */
-  costModelMarginPct?: number | null;
+  costModelPayoutRate?: number | null;
   period: string;
   appsflyerPins: number;
   fraudPins: number;
-  payoutRate: number;
+  marginPct: number;
   createdAt: string;
 }

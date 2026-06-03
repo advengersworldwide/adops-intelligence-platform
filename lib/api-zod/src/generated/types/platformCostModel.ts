@@ -10,6 +10,6 @@ export interface PlatformCostModel {
   id: number;
   platformId: number;
   name: string;
-  marginPct: number;
+  payoutRate: number;
   createdAt: string;
 }

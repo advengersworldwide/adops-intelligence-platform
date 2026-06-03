@@ -69,7 +69,7 @@ export interface PlatformCostModel {
   id: number;
   platformId: number;
   name: string;
-  marginPct: number;
+  payoutRate: number;
   createdAt: string;
 }
 
@@ -170,12 +170,12 @@ export interface PlatformUpdate {
 export interface PlatformCostModelInput {
   /** @minLength 1 */
   name: string;
-  marginPct: number;
+  payoutRate: number;
 }
 
 export interface PlatformCostModelUpdate {
   name?: string;
-  marginPct?: number;
+  payoutRate?: number;
 }
 
 export interface BillingRecord {
@@ -188,11 +188,11 @@ export interface BillingRecord {
   /** @nullable */
   costModelName?: string | null;
   /** @nullable */
-  costModelMarginPct?: number | null;
+  costModelPayoutRate?: number | null;
   period: string;
   appsflyerPins: number;
   fraudPins: number;
-  payoutRate: number;
+  marginPct: number;
   createdAt: string;
 }
 
@@ -202,7 +202,7 @@ export interface BillingRecordInput {
   period: string;
   appsflyerPins: number;
   fraudPins: number;
-  payoutRate: number;
+  marginPct: number;
 }
 
 export interface Campaign {
