@@ -8,6 +8,7 @@ export const platformCostModelsTable = pgTable("platform_cost_models", {
     .references(() => platformsTable.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   payoutRate: numeric("payout_rate", { precision: 12, scale: 4 }).notNull(),
+  marginPct: numeric("margin_pct", { precision: 6, scale: 2 }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
