@@ -44,7 +44,7 @@ async function mapRow(r: typeof platformsTable.$inferSelect) {
       id: cm.id,
       platformId: cm.platformId,
       name: cm.name,
-      marginPct: Number(cm.marginPct),
+      payoutRate: Number(cm.payoutRate),
       createdAt: cm.createdAt.toISOString(),
     })),
     createdAt: r.createdAt.toISOString(),

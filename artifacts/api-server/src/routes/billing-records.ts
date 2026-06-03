@@ -26,11 +26,11 @@ async function mapRecord(r: typeof billingRecordsTable.$inferSelect) {
     clientName: client?.name ?? null,
     costModelId: r.costModelId,
     costModelName: cm?.name ?? null,
-    costModelMarginPct: cm ? Number(cm.marginPct) : null,
+    costModelPayoutRate: cm ? Number(cm.payoutRate) : null,
     period: r.period,
     appsflyerPins: r.appsflyerPins,
     fraudPins: r.fraudPins,
-    payoutRate: Number(r.payoutRate),
+    marginPct: Number(r.marginPct),
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -84,7 +84,7 @@ router.post("/platforms/:id/billing-records", async (req, res): Promise<void> =>
       period: parsed.data.period,
       appsflyerPins: parsed.data.appsflyerPins,
       fraudPins: parsed.data.fraudPins,
-      payoutRate: String(parsed.data.payoutRate),
+      marginPct: String(parsed.data.marginPct),
     })
     .returning();
   res.status(201).json(ListBillingRecordsResponseItem.parse(await mapRecord(row)));

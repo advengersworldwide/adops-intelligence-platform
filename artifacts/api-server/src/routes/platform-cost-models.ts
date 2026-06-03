@@ -17,7 +17,7 @@ function mapCm(cm: typeof platformCostModelsTable.$inferSelect) {
     id: cm.id,
     platformId: cm.platformId,
     name: cm.name,
-    marginPct: Number(cm.marginPct),
+    payoutRate: Number(cm.payoutRate),
     createdAt: cm.createdAt.toISOString(),
   };
 }
@@ -38,7 +38,7 @@ router.post("/platforms/:id/cost-models", async (req, res): Promise<void> => {
     .values({
       platformId: params.data.id,
       name: parsed.data.name,
-      marginPct: String(parsed.data.marginPct),
+      payoutRate: String(parsed.data.payoutRate),
     })
     .returning();
   res.status(201).json(UpdatePlatformCostModelResponse.parse(mapCm(row)));
@@ -60,7 +60,7 @@ router.patch("/platforms/:id/cost-models/:cmId", async (req, res): Promise<void>
   }
   const updates: Partial<typeof platformCostModelsTable.$inferInsert> = {};
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;
-  if (parsed.data.marginPct !== undefined) updates.marginPct = String(parsed.data.marginPct);
+  if (parsed.data.payoutRate !== undefined) updates.payoutRate = String(parsed.data.payoutRate);
 
   const [row] = await db
     .update(platformCostModelsTable)
