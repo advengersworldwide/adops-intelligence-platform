@@ -25,7 +25,6 @@ const addRecordSchema = z.object({
   period: z.string().min(1, "Period is required"),
   appsflyerPins: z.number().int().min(0),
   fraudPins: z.number().int().min(0),
-  marginPct: z.number().min(0).max(100),
 });
 type AddRecordForm = z.infer<typeof addRecordSchema>;
 
@@ -113,7 +112,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
     ...r,
     ...computeRow(
       r.appsflyerPins, r.fraudPins, r.costModelPayoutRate ?? 0,
-      r.marginPct,
+      r.costModelMarginPct ?? 0,
       salesTaxPct, remittanceTaxPct, forexRate
     ),
   }));
@@ -270,7 +269,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
 function AddRecordDialog({ open, onClose, platformId, costModels }: {
   open: boolean; onClose: () => void;
   platformId: number;
-  costModels: { id: number; name: string; payoutRate: number }[];
+  costModels: { id: number; name: string; payoutRate: number; marginPct: number }[];
 }) {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -311,7 +310,7 @@ function AddRecordDialog({ open, onClose, platformId, costModels }: {
                 <Select onValueChange={v => field.onChange(parseInt(v))} value={field.value ? String(field.value) : ""}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select cost model" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    {costModels.map(cm => <SelectItem key={cm.id} value={String(cm.id)}>{cm.name} (${cm.payoutRate}/pin)</SelectItem>)}
+                    {costModels.map(cm => <SelectItem key={cm.id} value={String(cm.id)}>{cm.name} (${cm.payoutRate}/pin · {cm.marginPct}% margin)</SelectItem>)}
                   </SelectContent>
                 </Select><FormMessage />
               </FormItem>
@@ -327,9 +326,6 @@ function AddRecordDialog({ open, onClose, platformId, costModels }: {
                 <FormItem><FormLabel>Fraud Pins</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
-            <FormField control={form.control} name="marginPct" render={({ field }) => (
-              <FormItem><FormLabel>Margin %</FormLabel><FormControl><Input type="number" step="0.01" min={0} max={100} {...field} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
-            )} />
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
               <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Adding..." : "Add Record"}</Button>

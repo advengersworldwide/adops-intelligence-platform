@@ -30,7 +30,7 @@ const PAYMENT_LABEL: Record<string, string> = {
   net_150: "Net 150",
 };
 
-type CostModelRow = { id?: number; name: string; payoutRate: string; isNew?: boolean };
+type CostModelRow = { id?: number; name: string; payoutRate: string; marginPct: string; isNew?: boolean };
 
 type FormState = {
   name: string;
@@ -87,6 +87,7 @@ function buildCostModelRows(platform: Platform): CostModelRow[] {
     id: cm.id,
     name: cm.name,
     payoutRate: String(cm.payoutRate),
+    marginPct: String(cm.marginPct),
   }));
 }
 
@@ -165,7 +166,7 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
     setForm((prev) => ({ ...prev, [key]: v }));
 
   const addCostModel = () =>
-    setCostModels((prev) => [...prev, { name: "", payoutRate: "", isNew: true }]);
+    setCostModels((prev) => [...prev, { name: "", payoutRate: "", marginPct: "", isNew: true }]);
 
   const updateCostModelRow = (index: number, patch: Partial<CostModelRow>) =>
     setCostModels((prev) =>
@@ -218,7 +219,11 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
           ops.push(
             createCostModel.mutateAsync({
               id: platform.id,
-              data: { name, payoutRate: Number(cm.payoutRate) || 0 },
+              data: {
+                name,
+                payoutRate: Number(cm.payoutRate) || 0,
+                marginPct: Number(cm.marginPct) || 0,
+              },
             }),
           );
         }
@@ -231,12 +236,17 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
         if (!prev) continue;
         const newName = cm.name.trim();
         const newPayoutRate = Number(cm.payoutRate) || 0;
-        if (prev.name !== newName || prev.payoutRate !== newPayoutRate) {
+        const newMarginPct = Number(cm.marginPct) || 0;
+        if (
+          prev.name !== newName ||
+          prev.payoutRate !== newPayoutRate ||
+          prev.marginPct !== newMarginPct
+        ) {
           ops.push(
             updateCostModel.mutateAsync({
               id: platform.id,
               cmId: cm.id,
-              data: { name: newName, payoutRate: newPayoutRate },
+              data: { name: newName, payoutRate: newPayoutRate, marginPct: newMarginPct },
             }),
           );
         }
@@ -289,7 +299,7 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
       <Section title="Point of Contact">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="POC Name" value={form.pocName} onChange={set("pocName")} disabled={!canEdit} />
-          <Field label="POC Number" value={form.pocNumber} onChange={set("pocNumber")} disabled={!canEdit} />
+          <Field label="POC Number" type="tel" value={form.pocNumber} onChange={set("pocNumber")} disabled={!canEdit} />
           <Field
             label="POC Email"
             type="email"
@@ -379,6 +389,14 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
                 value={cm.payoutRate}
                 disabled={!canEdit}
                 onChange={(e) => updateCostModelRow(i, { payoutRate: e.target.value })}
+              />
+              <Input
+                type="number"
+                placeholder="Margin %"
+                className="w-28"
+                value={cm.marginPct}
+                disabled={!canEdit}
+                onChange={(e) => updateCostModelRow(i, { marginPct: e.target.value })}
               />
               {canEdit && (
                 <Button
