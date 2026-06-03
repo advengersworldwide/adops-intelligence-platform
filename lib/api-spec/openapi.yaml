@@ -865,7 +865,7 @@ components:
 
     PlatformCostModel:
       type: object
-      required: [id, platformId, name, marginPct, createdAt]
+      required: [id, platformId, name, payoutRate, createdAt]
       properties:
         id:
           type: integer
@@ -873,19 +873,19 @@ components:
           type: integer
         name:
           type: string
-        marginPct:
+        payoutRate:
           type: number
         createdAt:
           type: string
 
     PlatformCostModelInput:
       type: object
-      required: [name, marginPct]
+      required: [name, payoutRate]
       properties:
         name:
           type: string
           minLength: 1
-        marginPct:
+        payoutRate:
           type: number
 
     PlatformCostModelUpdate:
@@ -893,12 +893,12 @@ components:
       properties:
         name:
           type: string
-        marginPct:
+        payoutRate:
           type: number
 
     BillingRecord:
       type: object
-      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, createdAt]
+      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, marginPct, createdAt]
       properties:
         id:
           type: integer
@@ -912,7 +912,7 @@ components:
           type: integer
         costModelName:
           type: ["string", "null"]
-        costModelMarginPct:
+        costModelPayoutRate:
           type: ["number", "null"]
         period:
           type: string
@@ -920,14 +920,14 @@ components:
           type: integer
         fraudPins:
           type: integer
-        payoutRate:
+        marginPct:
           type: number
         createdAt:
           type: string
 
     BillingRecordInput:
       type: object
-      required: [clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate]
+      required: [clientId, costModelId, period, appsflyerPins, fraudPins, marginPct]
       properties:
         clientId:
           type: integer
@@ -939,7 +939,7 @@ components:
           type: integer
         fraudPins:
           type: integer
-        payoutRate:
+        marginPct:
           type: number
 
     # ── Campaign ─────────────────────────────────────────────────────────────────
