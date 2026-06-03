@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Search } from "lucide-react";
-import { useListPlatforms, useCreatePlatform, useUpdatePlatform, useDeletePlatform, getListPlatformsQueryKey, useGetAnalyticsByPlatform } from "@workspace/api-client-react";
+import { Plus, Trash2, Search } from "lucide-react";
+import { Link } from "wouter";
+import {
+  useListPlatforms, useCreatePlatform, useDeletePlatform,
+  getListPlatformsQueryKey, useGetAnalyticsByPlatform,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,12 +19,22 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { hasPermission } from "@/lib/auth";
 
-const platformSchema = z.object({
+const PAYMENT_TERMS = ["net_30", "net_60", "net_90", "net_120", "net_150"] as const;
+const PAYMENT_LABEL: Record<string, string> = {
+  net_30: "Net 30", net_60: "Net 60", net_90: "Net 90", net_120: "Net 120", net_150: "Net 150",
+};
+
+const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  costModel: z.string().min(1, "Cost model is required"),
-  currency: z.string().min(1, "Currency is required"),
+  address: z.string().optional(),
+  pocName: z.string().optional(),
+  pocNumber: z.string().optional(),
+  pocEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  companyEmail: z.string().email("Invalid email").optional().or(z.literal("")),
+  companyNumber: z.string().optional(),
+  paymentTerms: z.enum(PAYMENT_TERMS).optional(),
 });
-type PlatformForm = z.infer<typeof platformSchema>;
+type CreateForm = z.infer<typeof createSchema>;
 
 function fmt(n: number) {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
@@ -29,40 +44,37 @@ function fmt(n: number) {
 
 export default function PlatformsPage() {
   const [search, setSearch] = useState("");
-  const [editPlatform, setEditPlatform] = useState<{ id: number; name: string; costModel: string; currency: string } | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
 
   const { data: platforms, isLoading } = useListPlatforms();
   const { data: platformAnalytics } = useGetAnalyticsByPlatform();
-
   const analyticsMap = new Map((platformAnalytics ?? []).map(p => [p.platformId, p]));
 
   const createMutation = useCreatePlatform({
     mutation: {
-      onSuccess: () => { qc.invalidateQueries({ queryKey: getListPlatformsQueryKey() }); setCreateOpen(false); toast({ title: "Platform created" }); },
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getListPlatformsQueryKey() });
+        setCreateOpen(false);
+        toast({ title: "Platform created" });
+      },
       onError: () => toast({ title: "Failed to create platform", variant: "destructive" }),
-    },
-  });
-
-  const updateMutation = useUpdatePlatform({
-    mutation: {
-      onSuccess: () => { qc.invalidateQueries({ queryKey: getListPlatformsQueryKey() }); setEditPlatform(null); toast({ title: "Platform updated" }); },
-      onError: () => toast({ title: "Failed to update platform", variant: "destructive" }),
     },
   });
 
   const deleteMutation = useDeletePlatform({
     mutation: {
-      onSuccess: () => { qc.invalidateQueries({ queryKey: getListPlatformsQueryKey() }); toast({ title: "Platform deleted" }); },
+      onSuccess: () => {
+        qc.invalidateQueries({ queryKey: getListPlatformsQueryKey() });
+        toast({ title: "Platform deleted" });
+      },
       onError: () => toast({ title: "Failed to delete platform", variant: "destructive" }),
     },
   });
 
   const filtered = platforms?.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.costModel.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase())
   ) ?? [];
 
   return (
@@ -88,9 +100,11 @@ export default function PlatformsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Cost Model", "Currency", "Revenue", "Cost", "Profit", "Margin %", hasPermission("Edit Platforms") ? "Actions" : null].filter((h): h is string => h !== null).map(h => (
-                <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
-              ))}
+              {["Name", "Payment Terms", "Cost Models", "Revenue", "Cost", "Profit", "Margin %", hasPermission("Edit Platforms") ? "Actions" : null]
+                .filter((h): h is string => h !== null)
+                .map(h => (
+                  <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
+                ))}
             </tr>
           </thead>
           <tbody>
@@ -107,10 +121,16 @@ export default function PlatformsPage() {
                 const an = analyticsMap.get(p.id);
                 return (
                   <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors" data-testid={`platform-row-${p.id}`}>
-                    <td className="px-5 py-3 text-sm font-medium text-foreground">{p.name}</td>
-                    <td className="px-5 py-3 text-sm text-muted-foreground">{p.costModel}</td>
-                    <td className="px-5 py-3">
-                      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">{p.currency}</span>
+                    <td className="px-5 py-3 text-sm font-medium">
+                      <Link href={`/platforms/${p.id}`} className="text-foreground hover:text-primary hover:underline">
+                        {p.name}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3 text-sm text-muted-foreground">
+                      {p.paymentTerms ? PAYMENT_LABEL[p.paymentTerms] ?? p.paymentTerms : "—"}
+                    </td>
+                    <td className="px-5 py-3 text-sm text-muted-foreground">
+                      {p.costModels?.length ? p.costModels.map(cm => cm.name).join(", ") : "—"}
                     </td>
                     <td className="px-5 py-3 text-sm font-medium">{an ? fmt(an.revenue) : "—"}</td>
                     <td className="px-5 py-3 text-sm text-muted-foreground">{an ? fmt(an.cost) : "—"}</td>
@@ -120,14 +140,13 @@ export default function PlatformsPage() {
                     <td className="px-5 py-3 text-sm text-muted-foreground">{an ? `${an.marginPct.toFixed(1)}%` : "—"}</td>
                     {hasPermission("Edit Platforms") && (
                       <td className="px-5 py-3">
-                        <div className="flex gap-1">
-                          <button onClick={() => setEditPlatform(p)} className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground" data-testid={`edit-platform-${p.id}`}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <button onClick={() => deleteMutation.mutate({ id: p.id })} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" data-testid={`delete-platform-${p.id}`}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => deleteMutation.mutate({ id: p.id })}
+                          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          data-testid={`delete-platform-${p.id}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </td>
                     )}
                   </tr>
@@ -138,55 +157,75 @@ export default function PlatformsPage() {
         </table>
       </div>
 
-      <PlatformDialog
-        open={createOpen || !!editPlatform}
-        onClose={() => { setCreateOpen(false); setEditPlatform(null); }}
-        defaultValues={editPlatform ? { name: editPlatform.name, costModel: editPlatform.costModel, currency: editPlatform.currency } : undefined}
-        onSubmit={(data) => {
-          if (editPlatform) updateMutation.mutate({ id: editPlatform.id, data });
-          else createMutation.mutate({ data });
-        }}
-        isSubmitting={createMutation.isPending || updateMutation.isPending}
-        title={editPlatform ? "Edit Platform" : "Add Platform"}
+      <CreatePlatformDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSubmit={(data) => createMutation.mutate({ data })}
+        isSubmitting={createMutation.isPending}
       />
     </div>
   );
 }
 
-function PlatformDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, title }: {
-  open: boolean; onClose: () => void; defaultValues?: PlatformForm;
-  onSubmit: (data: PlatformForm) => void; isSubmitting: boolean; title: string;
+function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
+  open: boolean; onClose: () => void;
+  onSubmit: (data: CreateForm) => void; isSubmitting: boolean;
 }) {
-  const form = useForm<PlatformForm>({
-    resolver: zodResolver(platformSchema),
-    defaultValues: defaultValues ?? { name: "", costModel: "CPM", currency: "USD" },
+  const form = useForm<CreateForm>({
+    resolver: zodResolver(createSchema),
+    defaultValues: { name: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" },
   });
 
   useEffect(() => {
-    if (open) {
-      form.reset(defaultValues ?? { name: "", costModel: "CPM", currency: "USD" });
-    }
-  }, [open, defaultValues, form]);
+    if (open) form.reset({ name: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" });
+  }, [open, form]);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-lg">
+        <DialogHeader><DialogTitle>Add Platform</DialogTitle></DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField control={form.control} name="name" render={({ field }) => (
-              <FormItem><FormLabel>Name</FormLabel><FormControl><Input placeholder="e.g. The Trade Desk" {...field} data-testid="platform-name-input" /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Name <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g. The Trade Desk" {...field} data-testid="platform-name-input" /></FormControl><FormMessage /></FormItem>
             )} />
-            <FormField control={form.control} name="costModel" render={({ field }) => (
-              <FormItem><FormLabel>Cost Model</FormLabel><FormControl><Input placeholder="e.g. CPM, CPC, CPA" {...field} /></FormControl><FormMessage /></FormItem>
+            <FormField control={form.control} name="address" render={({ field }) => (
+              <FormItem><FormLabel>Address</FormLabel><FormControl><Input placeholder="Company address" {...field} /></FormControl><FormMessage /></FormItem>
             )} />
-            <FormField control={form.control} name="currency" render={({ field }) => (
-              <FormItem><FormLabel>Currency</FormLabel><FormControl><Input placeholder="e.g. USD" {...field} /></FormControl><FormMessage /></FormItem>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="pocName" render={({ field }) => (
+                <FormItem><FormLabel>POC Name</FormLabel><FormControl><Input placeholder="Contact name" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="pocNumber" render={({ field }) => (
+                <FormItem><FormLabel>POC Number</FormLabel><FormControl><Input placeholder="+1 555 000" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="pocEmail" render={({ field }) => (
+              <FormItem><FormLabel>POC Email</FormLabel><FormControl><Input type="email" placeholder="poc@platform.com" {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="companyEmail" render={({ field }) => (
+                <FormItem><FormLabel>Company Email</FormLabel><FormControl><Input type="email" placeholder="billing@platform.com" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="companyNumber" render={({ field }) => (
+                <FormItem><FormLabel>Company Number</FormLabel><FormControl><Input placeholder="Reg. number" {...field} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="paymentTerms" render={({ field }) => (
+              <FormItem><FormLabel>Payment Terms</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select terms" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    {PAYMENT_TERMS.map(t => <SelectItem key={t} value={t}>{PAYMENT_LABEL[t]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
             )} />
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting} data-testid="submit-platform-btn">
-                {isSubmitting ? "Saving..." : "Save"}
+                {isSubmitting ? "Creating..." : "Create Platform"}
               </Button>
             </div>
           </form>
