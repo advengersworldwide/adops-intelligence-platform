@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,6 +8,7 @@ import Layout from "@/components/layout/Layout";
 import DashboardPage from "@/pages/Dashboard";
 import ClientsPage from "@/pages/Clients";
 import PlatformsPage from "@/pages/Platforms";
+import PlatformDetailPage from "@/pages/PlatformDetail";
 import CampaignsPage from "@/pages/Campaigns";
 import TransactionsPage from "@/pages/Transactions";
 import UploadPage from "@/pages/Upload";
@@ -62,10 +63,14 @@ function PermissionGuard({ permission, component: Component }: GuardProps) {
 
 function Router() {
   const user = getCurrentUser();
+  const [rolesLoaded, setRolesLoaded] = useState(false);
 
   // Populate the roles cache so hasPermission() works synchronously
   useEffect(() => {
-    getRoles().then(setCachedRoles);
+    getRoles().then((roles) => {
+      setCachedRoles(roles);
+      setRolesLoaded(true);
+    });
   }, []);
 
   if (!user) {
@@ -76,6 +81,15 @@ function Router() {
           <Redirect to="/login" />
         </Route>
       </Switch>
+    );
+  }
+
+  // Wait for roles to load before evaluating PermissionGuards for non-admins
+  if (!rolesLoaded && user.role !== "System Admin") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
 
@@ -97,7 +111,13 @@ function Router() {
         <Route path="/platforms">
           <PermissionGuard permission="View Platforms" component={PlatformsPage} />
         </Route>
-        
+
+        <Route path="/platforms/:id">
+          {(params) => (
+            <PermissionGuard permission="View Platforms" component={() => <PlatformDetailPage id={parseInt(params.id!, 10)} />} />
+          )}
+        </Route>
+
         <Route path="/campaigns">
           <PermissionGuard permission="View Campaigns" component={CampaignsPage} />
         </Route>
