@@ -28,10 +28,10 @@ const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
   address: z.string().optional(),
   pocName: z.string().optional(),
-  pocNumber: z.string().optional(),
+  pocNumber: z.string().regex(/^[+\d\s()\-]*$/, "Invalid phone number").optional().or(z.literal("")),
   pocEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   companyEmail: z.string().email("Invalid email").optional().or(z.literal("")),
-  companyNumber: z.string().optional(),
+  companyNumber: z.string().regex(/^[+\d\s()\-]*$/, "Invalid phone number").optional().or(z.literal("")),
   paymentTerms: z.enum(PAYMENT_TERMS).optional(),
 });
 type CreateForm = z.infer<typeof createSchema>;
@@ -197,7 +197,7 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
                 <FormItem><FormLabel>POC Name</FormLabel><FormControl><Input placeholder="Contact name" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="pocNumber" render={({ field }) => (
-                <FormItem><FormLabel>POC Number</FormLabel><FormControl><Input placeholder="+1 555 000" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>POC Number</FormLabel><FormControl><Input type="tel" placeholder="+1 555 000" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
             <FormField control={form.control} name="pocEmail" render={({ field }) => (
@@ -208,7 +208,7 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
                 <FormItem><FormLabel>Company Email</FormLabel><FormControl><Input type="email" placeholder="billing@platform.com" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="companyNumber" render={({ field }) => (
-                <FormItem><FormLabel>Company Number</FormLabel><FormControl><Input placeholder="Reg. number" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Company Number</FormLabel><FormControl><Input type="tel" placeholder="Reg. number" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
             <FormField control={form.control} name="paymentTerms" render={({ field }) => (
