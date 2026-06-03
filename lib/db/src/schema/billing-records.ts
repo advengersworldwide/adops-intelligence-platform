@@ -17,7 +17,7 @@ export const billingRecordsTable = pgTable("billing_records", {
   period: text("period").notNull(),         // "YYYY-MM"
   appsflyerPins: integer("appsflyer_pins").notNull(),
   fraudPins: integer("fraud_pins").notNull(),
-  payoutRate: numeric("payout_rate", { precision: 12, scale: 4 }).notNull(),
+  marginPct: numeric("margin_pct", { precision: 6, scale: 2 }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
