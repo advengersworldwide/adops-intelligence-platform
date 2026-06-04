@@ -20,6 +20,9 @@ export const billingRecordsTable = pgTable("billing_records", {
   payoutRate: numeric("payout_rate", { precision: 12, scale: 4 }).notNull(),
   marginPct: numeric("margin_pct", { precision: 6, scale: 2 }).notNull(),
   forexRate: numeric("forex_rate", { precision: 10, scale: 4 }).notNull(),
+  salesTaxPct: numeric("sales_tax_pct", { precision: 6, scale: 2 }).notNull(),
+  remittanceTaxPct: numeric("remittance_tax_pct", { precision: 6, scale: 2 }).notNull(),
+  withholdingTaxPct: numeric("withholding_tax_pct", { precision: 6, scale: 2 }).notNull(),
   createdBy: text("created_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

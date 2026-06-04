@@ -22,6 +22,7 @@ export const platformsTable = pgTable("platforms", {
   paymentTerms: text("payment_terms"),   // "net_30" | "net_60" | "net_90" | "net_120" | "net_150"
   salesTaxPct: numeric("sales_tax_pct", { precision: 6, scale: 2 }),
   remittanceTaxPct: numeric("remittance_tax_pct", { precision: 6, scale: 2 }),
+  withholdingTaxPct: numeric("withholding_tax_pct", { precision: 6, scale: 2 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
