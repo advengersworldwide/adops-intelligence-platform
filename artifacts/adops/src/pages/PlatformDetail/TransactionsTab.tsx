@@ -68,7 +68,8 @@ function computeRow(
   };
 }
 
-function fmtNum(n: number, d = 2) {
+function fmtNum(n: number | null | undefined, d = 2) {
+  if (n == null || isNaN(n)) return "—";
   return n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
@@ -113,9 +114,9 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
   const computed = (records ?? []).map(r => ({
     ...r,
     ...computeRow(
-      r.appsflyerPins, r.fraudPins, r.payoutRate,
-      r.marginPct,
-      salesTaxPct, remittanceTaxPct, r.forexRate
+      r.appsflyerPins, r.fraudPins, r.payoutRate ?? 0,
+      r.marginPct ?? 0,
+      salesTaxPct, remittanceTaxPct, r.forexRate ?? 278
     ),
   }));
 
