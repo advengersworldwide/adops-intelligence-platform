@@ -49,6 +49,7 @@ type FormState = {
   ntnNumber: string;
   salesTaxPct: string;
   remittanceTaxPct: string;
+  withholdingTaxPct: string;
   paymentTerms: string;
 };
 
@@ -78,6 +79,7 @@ function buildFormState(platform: Platform): FormState {
     ntnNumber: s(platform.ntnNumber),
     salesTaxPct: numToStr(platform.salesTaxPct),
     remittanceTaxPct: numToStr(platform.remittanceTaxPct),
+    withholdingTaxPct: numToStr(platform.withholdingTaxPct),
     paymentTerms: s(platform.paymentTerms),
   };
 }
@@ -204,6 +206,7 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
           paymentTerms: strOrNull(form.paymentTerms),
           salesTaxPct: numOrNull(form.salesTaxPct),
           remittanceTaxPct: numOrNull(form.remittanceTaxPct),
+          withholdingTaxPct: numOrNull(form.withholdingTaxPct),
         },
       });
 
@@ -347,6 +350,13 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
             type="number"
             value={form.remittanceTaxPct}
             onChange={set("remittanceTaxPct")}
+            disabled={!canEdit}
+          />
+          <Field
+            label="Withholding Tax %"
+            type="number"
+            value={form.withholdingTaxPct}
+            onChange={set("withholdingTaxPct")}
             disabled={!canEdit}
           />
         </div>

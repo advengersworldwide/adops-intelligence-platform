@@ -28,6 +28,9 @@ const addRecordSchema = z.object({
   payoutRate: z.number().min(0),
   marginPct: z.number().min(0).max(100),
   forexRate: z.number().min(0),
+  salesTaxPct: z.number().min(0),
+  remittanceTaxPct: z.number().min(0),
+  withholdingTaxPct: z.number().min(0),
 });
 type AddRecordForm = z.infer<typeof addRecordSchema>;
 
@@ -47,7 +50,8 @@ function computeRow(
   marginPct: number,
   salesTaxPct: number,
   remittanceTaxPct: number,
-  forexRate: number
+  forexRate: number,
+  withholdingTaxPct: number
 ) {
   const actualPins = appsflyerPins - fraudPins;
   const netAmtUsd = actualPins * payoutRate;
@@ -55,7 +59,7 @@ function computeRow(
   const grossAmtPkr = marginPct > 0 ? netAmtPkr / (1 - marginPct / 100) : netAmtPkr;
   const salesTax = grossAmtPkr * (salesTaxPct / 100);
   const totalAmtPkr = grossAmtPkr + salesTax;
-  const receivablePkr = grossAmtPkr; // formula placeholder — update when exact formula confirmed
+  const receivablePkr = totalAmtPkr - (totalAmtPkr * withholdingTaxPct / 100) - salesTax; // Total Amount - WHT - Sales Tax
   const netPayableUsd = netAmtUsd * (1 - marginPct / 100);
   const remittanceTax = netPayableUsd * (remittanceTaxPct / 100);
   const totalPayableUsd = netPayableUsd + remittanceTax;
@@ -108,6 +112,8 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
     },
   });
 
+  // Platform's *current* tax rates — used only for column headers and pre-filling
+  // the Add Record form. Per-row calculations use each record's frozen snapshot.
   const salesTaxPct = Number(platform.salesTaxPct ?? 0);
   const remittanceTaxPct = Number(platform.remittanceTaxPct ?? 0);
 
@@ -115,8 +121,8 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
     ...r,
     ...computeRow(
       r.appsflyerPins, r.fraudPins, r.payoutRate ?? 0,
-      r.marginPct ?? 0,
-      salesTaxPct, remittanceTaxPct, r.forexRate ?? 278
+      r.marginPct ?? 0, r.salesTaxPct ?? 0, r.remittanceTaxPct ?? 0,
+      r.forexRate ?? 278, r.withholdingTaxPct ?? 0
     ),
   }));
 
@@ -267,15 +273,17 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
         open={addOpen}
         onClose={() => setAddOpen(false)}
         platformId={platformId}
+        platform={platform}
         costModels={platform.costModels ?? []}
       />
     </div>
   );
 }
 
-function AddRecordDialog({ open, onClose, platformId, costModels }: {
+function AddRecordDialog({ open, onClose, platformId, platform, costModels }: {
   open: boolean; onClose: () => void;
   platformId: number;
+  platform: Platform;
   costModels: { id: number; name: string; payoutRate: number; marginPct: number }[];
 }) {
   const qc = useQueryClient();
@@ -284,9 +292,15 @@ function AddRecordDialog({ open, onClose, platformId, costModels }: {
 
   const form = useForm<AddRecordForm>({ resolver: zodResolver(addRecordSchema) });
 
-  // Pre-fill forex rate from Settings (localStorage) when the dialog opens.
+  // Pre-fill forex rate from Settings (localStorage) and snapshot the platform's
+  // current tax rates into the form when the dialog opens.
   useEffect(() => {
-    if (open) form.setValue("forexRate", getForexRate());
+    if (open) {
+      form.setValue("forexRate", getForexRate());
+      form.setValue("salesTaxPct", Number(platform.salesTaxPct ?? 0));
+      form.setValue("remittanceTaxPct", Number(platform.remittanceTaxPct ?? 0));
+      form.setValue("withholdingTaxPct", Number(platform.withholdingTaxPct ?? 0));
+    }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-fill payout rate + margin from the selected cost model.
@@ -359,6 +373,17 @@ function AddRecordDialog({ open, onClose, platformId, costModels }: {
             <FormField control={form.control} name="forexRate" render={({ field }) => (
               <FormItem><FormLabel>Forex Rate (PKR)</FormLabel><FormControl><Input type="number" step="0.0001" min={0} {...field} value={field.value ?? ""} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
             )} />
+            <div className="grid grid-cols-3 gap-3">
+              <FormField control={form.control} name="salesTaxPct" render={({ field }) => (
+                <FormItem><FormLabel>Sales Tax %</FormLabel><FormControl><Input type="number" step="0.01" min={0} {...field} value={field.value ?? ""} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="remittanceTaxPct" render={({ field }) => (
+                <FormItem><FormLabel>Remittance Tax %</FormLabel><FormControl><Input type="number" step="0.01" min={0} {...field} value={field.value ?? ""} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="withholdingTaxPct" render={({ field }) => (
+                <FormItem><FormLabel>Withholding Tax %</FormLabel><FormControl><Input type="number" step="0.01" min={0} {...field} value={field.value ?? ""} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
               <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Adding..." : "Add Record"}</Button>

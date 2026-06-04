@@ -10,13 +10,16 @@ import {
 
 function computeNetMargin(
   appsflyerPins: number, fraudPins: number, payoutRate: number,
-  marginPct: number, salesTaxPct: number, remittanceTaxPct: number, forexRate: number
+  marginPct: number, salesTaxPct: number, remittanceTaxPct: number, forexRate: number,
+  withholdingTaxPct: number
 ) {
   const actualPins = appsflyerPins - fraudPins;
   const netAmtUsd = actualPins * payoutRate;
   const netAmtPkr = netAmtUsd * forexRate;
   const grossAmtPkr = marginPct > 0 ? netAmtPkr / (1 - marginPct / 100) : netAmtPkr;
-  const receivablePkr = grossAmtPkr;
+  const salesTax = grossAmtPkr * (salesTaxPct / 100);
+  const totalAmtPkr = grossAmtPkr + salesTax;
+  const receivablePkr = totalAmtPkr - (totalAmtPkr * withholdingTaxPct / 100) - salesTax;
   const netPayableUsd = netAmtUsd * (1 - marginPct / 100);
   const remittanceTax = netPayableUsd * (remittanceTaxPct / 100);
   const totalPayableUsd = netPayableUsd + remittanceTax;
@@ -50,12 +53,12 @@ export default function PlatformAnalyticsTab({ platformId, platform }: { platfor
 
   const { data: records, isLoading } = useListBillingRecords(platformId, {});
 
-  const salesTaxPct = Number(platform.salesTaxPct ?? 0);
-  const remittanceTaxPct = Number(platform.remittanceTaxPct ?? 0);
-
   const allComputed = (records ?? []).map(r => ({
     ...r,
-    ...computeNetMargin(r.appsflyerPins, r.fraudPins, r.payoutRate ?? 0, r.marginPct ?? 0, salesTaxPct, remittanceTaxPct, r.forexRate ?? 278),
+    ...computeNetMargin(
+      r.appsflyerPins, r.fraudPins, r.payoutRate ?? 0, r.marginPct ?? 0,
+      r.salesTaxPct ?? 0, r.remittanceTaxPct ?? 0, r.forexRate ?? 278, r.withholdingTaxPct ?? 0
+    ),
   }));
 
   const filtered = allComputed.filter(r => {
