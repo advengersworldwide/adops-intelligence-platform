@@ -1,7 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
 import { db, billingRecordsTable, clientsTable, platformCostModelsTable, usersTable } from "@workspace/db";
-import { requireAuth } from "../middlewares/auth";
 import {
   ListBillingRecordsParams,
   ListBillingRecordsQueryParams,
@@ -69,7 +68,7 @@ router.get("/platforms/:id/billing-records", async (req, res): Promise<void> => 
   res.json(ListBillingRecordsResponse.parse(mapped));
 });
 
-router.post("/platforms/:id/billing-records", requireAuth, async (req, res): Promise<void> => {
+router.post("/platforms/:id/billing-records", async (req, res): Promise<void> => {
   const params = CreateBillingRecordParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
