@@ -57,7 +57,7 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction): 
   if (secret && authHeader?.startsWith("Bearer ")) {
     try {
       const payload = jwt.verify(authHeader.slice(7), secret) as unknown as JWTPayload;
-      req.user = { id: payload.sub, email: payload.email, role: payload.role, isSystem: payload.isSystem };
+      req.user = { id: payload.sub, name: payload.name, email: payload.email, role: payload.role, isSystem: payload.isSystem };
     } catch {
       // Invalid token — continue without user
     }
