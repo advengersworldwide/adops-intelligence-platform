@@ -114,18 +114,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+const phoneFilter = (v: string) => v.replace(/[^+\d\s()\-]/g, "");
+
 function Field({
   label,
   value,
   onChange,
   disabled,
   type = "text",
+  filterFn,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   disabled: boolean;
   type?: string;
+  filterFn?: (v: string) => string;
 }) {
   return (
     <label className="block space-y-1.5">
@@ -134,7 +138,7 @@ function Field({
         type={type}
         value={value}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(filterFn ? filterFn(e.target.value) : e.target.value)}
       />
     </label>
   );
@@ -289,9 +293,11 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
           />
           <Field
             label="Company Number"
+            type="tel"
             value={form.companyNumber}
             onChange={set("companyNumber")}
             disabled={!canEdit}
+            filterFn={phoneFilter}
           />
         </div>
       </Section>
@@ -299,7 +305,7 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
       <Section title="Point of Contact">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="POC Name" value={form.pocName} onChange={set("pocName")} disabled={!canEdit} />
-          <Field label="POC Number" type="tel" value={form.pocNumber} onChange={set("pocNumber")} disabled={!canEdit} />
+          <Field label="POC Number" type="tel" value={form.pocNumber} onChange={set("pocNumber")} disabled={!canEdit} filterFn={phoneFilter} />
           <Field
             label="POC Email"
             type="email"
