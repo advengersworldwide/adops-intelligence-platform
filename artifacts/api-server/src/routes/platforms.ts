@@ -40,6 +40,7 @@ async function mapRow(r: typeof platformsTable.$inferSelect) {
     paymentTerms: r.paymentTerms,
     salesTaxPct: r.salesTaxPct !== null ? Number(r.salesTaxPct) : null,
     remittanceTaxPct: r.remittanceTaxPct !== null ? Number(r.remittanceTaxPct) : null,
+    withholdingTaxPct: r.withholdingTaxPct !== null ? Number(r.withholdingTaxPct) : null,
     costModels: costModels.map(cm => ({
       id: cm.id,
       platformId: cm.platformId,
@@ -93,13 +94,16 @@ router.patch("/platforms/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { salesTaxPct, remittanceTaxPct, ...rest } = parsed.data;
+  const { salesTaxPct, remittanceTaxPct, withholdingTaxPct, ...rest } = parsed.data;
   const updates: Partial<typeof platformsTable.$inferInsert> = { ...rest };
   if (salesTaxPct !== undefined) {
     updates.salesTaxPct = salesTaxPct !== null ? String(salesTaxPct) : null;
   }
   if (remittanceTaxPct !== undefined) {
     updates.remittanceTaxPct = remittanceTaxPct !== null ? String(remittanceTaxPct) : null;
+  }
+  if (withholdingTaxPct !== undefined) {
+    updates.withholdingTaxPct = withholdingTaxPct !== null ? String(withholdingTaxPct) : null;
   }
   const [row] = await db
     .update(platformsTable)

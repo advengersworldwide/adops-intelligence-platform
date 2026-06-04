@@ -35,6 +35,9 @@ async function mapRecord(r: typeof billingRecordsTable.$inferSelect) {
     payoutRate: Number(r.payoutRate),
     marginPct: Number(r.marginPct),
     forexRate: Number(r.forexRate),
+    salesTaxPct: Number(r.salesTaxPct),
+    remittanceTaxPct: Number(r.remittanceTaxPct),
+    withholdingTaxPct: Number(r.withholdingTaxPct),
     createdBy: r.createdBy,
     createdAt: r.createdAt.toISOString(),
   };
@@ -96,6 +99,9 @@ router.post("/platforms/:id/billing-records", optionalAuth, async (req, res): Pr
         payoutRate: String(parsed.data.payoutRate),
         marginPct: String(parsed.data.marginPct),
         forexRate: String(parsed.data.forexRate),
+        salesTaxPct: String(parsed.data.salesTaxPct),
+        remittanceTaxPct: String(parsed.data.remittanceTaxPct),
+        withholdingTaxPct: String(parsed.data.withholdingTaxPct),
         createdBy,
       })
       .returning();

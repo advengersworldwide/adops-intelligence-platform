@@ -1,15 +1,17 @@
 import jwt from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 
-declare module "express" {
-  interface Request {
-    user?: {
-      id: number;
-      name: string;
-      email: string;
-      role: string;
-      isSystem: boolean;
-    };
+declare global {
+  namespace Express {
+    interface Request {
+      user?: {
+        id: number;
+        name: string;
+        email: string;
+        role: string;
+        isSystem: boolean;
+      };
+    }
   }
 }
 
