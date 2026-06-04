@@ -81,33 +81,38 @@ router.post("/platforms/:id/billing-records", requireAuth, async (req, res): Pro
     return;
   }
 
-  // Resolve the logged-in user's display name server-side (JWT only carries id/email).
-  const authUser = (req as { user?: { id: number; email: string } }).user;
-  let createdBy: string | null = authUser?.email ?? null;
-  if (authUser?.id !== undefined) {
-    const [user] = await db
-      .select({ name: usersTable.name })
-      .from(usersTable)
-      .where(eq(usersTable.id, authUser.id));
-    if (user?.name) createdBy = user.name;
-  }
+  try {
+    // Resolve the logged-in user's display name (JWT only carries id/email).
+    const authUser = req.user;
+    let createdBy: string | null = authUser?.email ?? null;
+    if (authUser?.id !== undefined) {
+      const [user] = await db
+        .select({ name: usersTable.name })
+        .from(usersTable)
+        .where(eq(usersTable.id, authUser.id));
+      if (user?.name) createdBy = user.name;
+    }
 
-  const [row] = await db
-    .insert(billingRecordsTable)
-    .values({
-      platformId: params.data.id,
-      clientId: parsed.data.clientId,
-      costModelId: parsed.data.costModelId,
-      period: parsed.data.period,
-      appsflyerPins: parsed.data.appsflyerPins,
-      fraudPins: parsed.data.fraudPins,
-      payoutRate: String(parsed.data.payoutRate),
-      marginPct: String(parsed.data.marginPct),
-      forexRate: String(parsed.data.forexRate),
-      createdBy,
-    })
-    .returning();
-  res.status(201).json(ListBillingRecordsResponseItem.parse(await mapRecord(row)));
+    const [row] = await db
+      .insert(billingRecordsTable)
+      .values({
+        platformId: params.data.id,
+        clientId: parsed.data.clientId,
+        costModelId: parsed.data.costModelId,
+        period: parsed.data.period,
+        appsflyerPins: parsed.data.appsflyerPins,
+        fraudPins: parsed.data.fraudPins,
+        payoutRate: String(parsed.data.payoutRate),
+        marginPct: String(parsed.data.marginPct),
+        forexRate: String(parsed.data.forexRate),
+        createdBy,
+      })
+      .returning();
+    res.status(201).json(ListBillingRecordsResponseItem.parse(await mapRecord(row)));
+  } catch (err) {
+    console.error("[billing-records POST]", err);
+    res.status(500).json({ error: err instanceof Error ? err.message : "Failed to create billing record" });
+  }
 });
 
 router.delete("/platforms/:id/billing-records/:recordId", async (req, res): Promise<void> => {
