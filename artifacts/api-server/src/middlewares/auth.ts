@@ -5,6 +5,7 @@ declare module "express" {
   interface Request {
     user?: {
       id: number;
+      name: string;
       email: string;
       role: string;
       isSystem: boolean;
@@ -14,6 +15,7 @@ declare module "express" {
 
 interface JWTPayload {
   sub: number;
+  name: string;
   email: string;
   role: string;
   isSystem: boolean;
@@ -38,6 +40,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     const payload = jwt.verify(token, secret) as unknown as JWTPayload;
     req.user = {
       id: payload.sub,
+      name: payload.name,
       email: payload.email,
       role: payload.role,
       isSystem: payload.isSystem,

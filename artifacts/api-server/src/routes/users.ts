@@ -55,7 +55,7 @@ router.post("/users/login", loginLimiter, async (req, res): Promise<void> => {
     }
 
     const token = jwt.sign(
-      { sub: user.id, email: user.email, role: user.role, isSystem: user.isSystem },
+      { sub: user.id, name: user.name, email: user.email, role: user.role, isSystem: user.isSystem },
       secret,
       { expiresIn: "24h" },
     );

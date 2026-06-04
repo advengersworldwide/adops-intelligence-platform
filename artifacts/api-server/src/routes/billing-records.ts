@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
-import { db, billingRecordsTable, clientsTable, platformCostModelsTable, usersTable } from "@workspace/db";
+import { db, billingRecordsTable, clientsTable, platformCostModelsTable } from "@workspace/db";
 import { optionalAuth } from "../middlewares/auth";
 import {
   ListBillingRecordsParams,
@@ -82,16 +82,7 @@ router.post("/platforms/:id/billing-records", optionalAuth, async (req, res): Pr
   }
 
   try {
-    // Resolve the logged-in user's display name (JWT only carries id/email).
-    const authUser = req.user;
-    let createdBy: string | null = authUser?.email ?? null;
-    if (authUser?.id !== undefined) {
-      const [user] = await db
-        .select({ name: usersTable.name })
-        .from(usersTable)
-        .where(eq(usersTable.id, authUser.id));
-      if (user?.name) createdBy = user.name;
-    }
+    const createdBy: string | null = req.user?.name ?? req.user?.email ?? null;
 
     const [row] = await db
       .insert(billingRecordsTable)
