@@ -796,6 +796,8 @@ components:
           type: ["number", "null"]
         remittanceTaxPct:
           type: ["number", "null"]
+        withholdingTaxPct:
+          type: ["number", "null"]
         costModels:
           type: array
           items:
@@ -862,6 +864,8 @@ components:
           type: ["number", "null"]
         remittanceTaxPct:
           type: ["number", "null"]
+        withholdingTaxPct:
+          type: ["number", "null"]
 
     PlatformCostModel:
       type: object
@@ -904,7 +908,7 @@ components:
 
     BillingRecord:
       type: object
-      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, createdAt]
+      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, salesTaxPct, remittanceTaxPct, withholdingTaxPct, createdAt]
       properties:
         id:
           type: integer
@@ -934,6 +938,12 @@ components:
           type: number
         forexRate:
           type: number
+        salesTaxPct:
+          type: number
+        remittanceTaxPct:
+          type: number
+        withholdingTaxPct:
+          type: number
         createdBy:
           type: ["string", "null"]
         createdAt:
@@ -941,7 +951,7 @@ components:
 
     BillingRecordInput:
       type: object
-      required: [clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate]
+      required: [clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, salesTaxPct, remittanceTaxPct, withholdingTaxPct]
       properties:
         clientId:
           type: integer
@@ -958,6 +968,12 @@ components:
         marginPct:
           type: number
         forexRate:
+          type: number
+        salesTaxPct:
+          type: number
+        remittanceTaxPct:
+          type: number
+        withholdingTaxPct:
           type: number
 
     # ── Campaign ─────────────────────────────────────────────────────────────────
