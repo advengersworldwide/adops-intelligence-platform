@@ -904,7 +904,7 @@ components:
 
     BillingRecord:
       type: object
-      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, createdAt]
+      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, createdAt]
       properties:
         id:
           type: integer
@@ -928,12 +928,20 @@ components:
           type: integer
         fraudPins:
           type: integer
+        payoutRate:
+          type: number
+        marginPct:
+          type: number
+        forexRate:
+          type: number
+        createdBy:
+          type: ["string", "null"]
         createdAt:
           type: string
 
     BillingRecordInput:
       type: object
-      required: [clientId, costModelId, period, appsflyerPins, fraudPins]
+      required: [clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate]
       properties:
         clientId:
           type: integer
@@ -945,6 +953,12 @@ components:
           type: integer
         fraudPins:
           type: integer
+        payoutRate:
+          type: number
+        marginPct:
+          type: number
+        forexRate:
+          type: number
 
     # ── Campaign ─────────────────────────────────────────────────────────────────
     Campaign:
