@@ -197,6 +197,11 @@ export interface BillingRecord {
   period: string;
   appsflyerPins: number;
   fraudPins: number;
+  payoutRate: number;
+  marginPct: number;
+  forexRate: number;
+  /** @nullable */
+  createdBy?: string | null;
   createdAt: string;
 }
 
@@ -206,6 +211,9 @@ export interface BillingRecordInput {
   period: string;
   appsflyerPins: number;
   fraudPins: number;
+  payoutRate: number;
+  marginPct: number;
+  forexRate: number;
 }
 
 export interface Campaign {
