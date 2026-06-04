@@ -48,6 +48,20 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
   }
 }
 
+export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
+  const secret = process.env["JWT_SECRET"];
+  const authHeader = req.headers.authorization;
+  if (secret && authHeader?.startsWith("Bearer ")) {
+    try {
+      const payload = jwt.verify(authHeader.slice(7), secret) as unknown as JWTPayload;
+      req.user = { id: payload.sub, email: payload.email, role: payload.role, isSystem: payload.isSystem };
+    } catch {
+      // Invalid token — continue without user
+    }
+  }
+  next();
+}
+
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
   if (!req.user || (req.user.role !== "System Admin" && !req.user.isSystem)) {
     res.status(403).json({ error: "Admin access required" });
