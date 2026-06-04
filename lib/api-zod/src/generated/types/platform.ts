@@ -42,6 +42,8 @@ export interface Platform {
   salesTaxPct?: number | null;
   /** @nullable */
   remittanceTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
   costModels?: PlatformCostModel[];
   createdAt: string;
 }

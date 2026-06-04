@@ -120,6 +120,7 @@ export const ListPlatformsResponseItem = zod.object({
   "paymentTerms": zod.string().nullish(),
   "salesTaxPct": zod.number().nullish(),
   "remittanceTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
   "costModels": zod.array(zod.object({
   "id": zod.number(),
   "platformId": zod.number(),
@@ -177,6 +178,7 @@ export const GetPlatformResponse = zod.object({
   "paymentTerms": zod.string().nullish(),
   "salesTaxPct": zod.number().nullish(),
   "remittanceTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
   "costModels": zod.array(zod.object({
   "id": zod.number(),
   "platformId": zod.number(),
@@ -213,7 +215,8 @@ export const UpdatePlatformBody = zod.object({
   "ntnNumber": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
   "salesTaxPct": zod.number().nullish(),
-  "remittanceTaxPct": zod.number().nullish()
+  "remittanceTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish()
 })
 
 export const UpdatePlatformResponse = zod.object({
@@ -235,6 +238,7 @@ export const UpdatePlatformResponse = zod.object({
   "paymentTerms": zod.string().nullish(),
   "salesTaxPct": zod.number().nullish(),
   "remittanceTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
   "costModels": zod.array(zod.object({
   "id": zod.number(),
   "platformId": zod.number(),
@@ -332,6 +336,9 @@ export const ListBillingRecordsResponseItem = zod.object({
   "payoutRate": zod.number(),
   "marginPct": zod.number(),
   "forexRate": zod.number(),
+  "salesTaxPct": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
   "createdBy": zod.string().nullish(),
   "createdAt": zod.string()
 })
@@ -353,7 +360,10 @@ export const CreateBillingRecordBody = zod.object({
   "fraudPins": zod.number(),
   "payoutRate": zod.number(),
   "marginPct": zod.number(),
-  "forexRate": zod.number()
+  "forexRate": zod.number(),
+  "salesTaxPct": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number()
 })
 
 

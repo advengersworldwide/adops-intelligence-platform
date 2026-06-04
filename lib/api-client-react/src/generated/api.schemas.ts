@@ -109,6 +109,8 @@ export interface Platform {
   salesTaxPct?: number | null;
   /** @nullable */
   remittanceTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
   costModels?: PlatformCostModel[];
   createdAt: string;
 }
@@ -166,6 +168,8 @@ export interface PlatformUpdate {
   salesTaxPct?: number | null;
   /** @nullable */
   remittanceTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
 }
 
 export interface PlatformCostModelInput {
@@ -200,6 +204,9 @@ export interface BillingRecord {
   payoutRate: number;
   marginPct: number;
   forexRate: number;
+  salesTaxPct: number;
+  remittanceTaxPct: number;
+  withholdingTaxPct: number;
   /** @nullable */
   createdBy?: string | null;
   createdAt: string;
@@ -214,6 +221,9 @@ export interface BillingRecordInput {
   payoutRate: number;
   marginPct: number;
   forexRate: number;
+  salesTaxPct: number;
+  remittanceTaxPct: number;
+  withholdingTaxPct: number;
 }
 
 export interface Campaign {

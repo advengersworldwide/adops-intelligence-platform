@@ -15,4 +15,7 @@ export interface BillingRecordInput {
   payoutRate: number;
   marginPct: number;
   forexRate: number;
+  salesTaxPct: number;
+  remittanceTaxPct: number;
+  withholdingTaxPct: number;
 }

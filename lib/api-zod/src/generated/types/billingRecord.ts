@@ -25,6 +25,9 @@ export interface BillingRecord {
   payoutRate: number;
   marginPct: number;
   forexRate: number;
+  salesTaxPct: number;
+  remittanceTaxPct: number;
+  withholdingTaxPct: number;
   /** @nullable */
   createdBy?: string | null;
   createdAt: string;

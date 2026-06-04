@@ -40,4 +40,6 @@ export interface PlatformUpdate {
   salesTaxPct?: number | null;
   /** @nullable */
   remittanceTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
 }
