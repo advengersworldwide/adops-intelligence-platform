@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash2, Download } from "lucide-react";
 import {
   useListBillingRecords, useCreateBillingRecord, useDeleteBillingRecord,
@@ -25,6 +25,9 @@ const addRecordSchema = z.object({
   period: z.string().min(1, "Period is required"),
   appsflyerPins: z.number().int().min(0),
   fraudPins: z.number().int().min(0),
+  payoutRate: z.number().min(0),
+  marginPct: z.number().min(0).max(100),
+  forexRate: z.number().min(0),
 });
 type AddRecordForm = z.infer<typeof addRecordSchema>;
 
@@ -104,16 +107,15 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
     },
   });
 
-  const forexRate = getForexRate();
   const salesTaxPct = Number(platform.salesTaxPct ?? 0);
   const remittanceTaxPct = Number(platform.remittanceTaxPct ?? 0);
 
   const computed = (records ?? []).map(r => ({
     ...r,
     ...computeRow(
-      r.appsflyerPins, r.fraudPins, r.costModelPayoutRate ?? 0,
-      r.costModelMarginPct ?? 0,
-      salesTaxPct, remittanceTaxPct, forexRate
+      r.appsflyerPins, r.fraudPins, r.payoutRate,
+      r.marginPct,
+      salesTaxPct, remittanceTaxPct, r.forexRate
     ),
   }));
 
@@ -136,8 +138,8 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
 
   const exportCSV = () => {
     if (!computed.length) return;
-    const headers = ["S#","Billing Entity","Appsflyer Pins","Fraud Pins","Actual Pins","Payout Rate","Net Amount (USD)","Forex Rate","Net Amount (PKR)","Gross Amount (PKR)",`Sales Tax (${salesTaxPct}%)`,"Total Amount (PKR)","Receivable (PKR)","Net Payable (USD)",`Remittance Tax (${remittanceTaxPct}%)`,"Total Payable (USD)","Forex Rate","Total Payable (PKR)","Net Margin (PKR)"];
-    const rows = computed.map((r, i) => [i+1,r.clientName??"",r.appsflyerPins,r.fraudPins,r.actualPins,(r.costModelPayoutRate??0).toFixed(2),r.netAmtUsd.toFixed(2),forexRate,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),forexRate,r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2)]);
+    const headers = ["S#","Billing Entity","Appsflyer Pins","Fraud Pins","Actual Pins","Payout Rate","Net Amount (USD)","Forex Rate","Net Amount (PKR)","Gross Amount (PKR)",`Sales Tax (${salesTaxPct}%)`,"Total Amount (PKR)","Receivable (PKR)","Net Payable (USD)",`Remittance Tax (${remittanceTaxPct}%)`,"Total Payable (USD)","Forex Rate","Total Payable (PKR)","Net Margin (PKR)","Logged By","Logged At"];
+    const rows = computed.map((r, i) => [i+1,r.clientName??"",r.appsflyerPins,r.fraudPins,r.actualPins,r.payoutRate.toFixed(2),r.netAmtUsd.toFixed(2),r.forexRate,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexRate,r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2),r.createdBy??"",`"${new Date(r.createdAt).toLocaleString()}"`]);
     const csv = [headers,...rows].map(r=>r.join(",")).join("\n");
     const blob = new Blob([csv],{type:"text/csv"});
     const url = URL.createObjectURL(blob);
@@ -181,6 +183,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
               <TH>Remittance Tax ({fmtNum(remittanceTaxPct, 0)}%)</TH>
               <TH>Total Payable (USD)</TH><TH>Forex Rate</TH><TH>Total Payable (PKR)</TH>
               <TH>Net Margin (PKR)</TH>
+              <TH>Logged By</TH><TH>Logged At</TH>
               {hasPermission("Edit Platforms") && <TH></TH>}
             </tr>
           </thead>
@@ -188,11 +191,11 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
             {isLoading ? (
               [...Array(3)].map((_, i) => (
                 <tr key={i} className="border-b border-border">
-                  {[...Array(20)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
+                  {[...Array(22)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
                 </tr>
               ))
             ) : computed.length === 0 ? (
-              <tr><td colSpan={20} className="px-5 py-10 text-center text-sm text-muted-foreground">No billing records</td></tr>
+              <tr><td colSpan={22} className="px-5 py-10 text-center text-sm text-muted-foreground">No billing records</td></tr>
             ) : (
               <>
                 {computed.map((r, i) => (
@@ -202,9 +205,9 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
                     <TD>{r.appsflyerPins.toLocaleString()}</TD>
                     <TD>{r.fraudPins.toLocaleString()}</TD>
                     <TD bold>{r.actualPins.toLocaleString()}</TD>
-                    <TD>{fmtNum(r.costModelPayoutRate ?? 0)}</TD>
+                    <TD>{fmtNum(r.payoutRate)}</TD>
                     <TD>{fmtNum(r.netAmtUsd)}</TD>
-                    <TD>{fmtNum(forexRate)}</TD>
+                    <TD>{fmtNum(r.forexRate)}</TD>
                     <TD>{fmtNum(r.netAmtPkr)}</TD>
                     <TD>{fmtNum(r.grossAmtPkr)}</TD>
                     <TD>{fmtNum(r.salesTax)}</TD>
@@ -213,11 +216,13 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
                     <TD>{fmtNum(r.netPayableUsd)}</TD>
                     <TD>{fmtNum(r.remittanceTax)}</TD>
                     <TD>{fmtNum(r.totalPayableUsd)}</TD>
-                    <TD>{fmtNum(forexRate)}</TD>
+                    <TD>{fmtNum(r.forexRate)}</TD>
                     <TD>{fmtNum(r.totalPayablePkr)}</TD>
                     <TD bold className={r.netMarginPkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
                       {fmtNum(r.netMarginPkr)}
                     </TD>
+                    <TD>{r.createdBy ?? "—"}</TD>
+                    <TD>{new Date(r.createdAt).toLocaleDateString()} {new Date(r.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</TD>
                     {hasPermission("Edit Platforms") && (
                       <TD>
                         <button onClick={() => deleteMutation.mutate({ id: platformId, recordId: r.id })} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
@@ -248,6 +253,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
                   <TD bold className={totals.netMarginPkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
                     {fmtNum(totals.netMarginPkr)}
                   </TD>
+                  <TD></TD><TD></TD>
                   {hasPermission("Edit Platforms") && <TD></TD>}
                 </tr>
               </>
@@ -276,6 +282,21 @@ function AddRecordDialog({ open, onClose, platformId, costModels }: {
   const { data: clients } = useListClients();
 
   const form = useForm<AddRecordForm>({ resolver: zodResolver(addRecordSchema) });
+
+  // Pre-fill forex rate from Settings (localStorage) when the dialog opens.
+  useEffect(() => {
+    if (open) form.setValue("forexRate", getForexRate());
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-fill payout rate + margin from the selected cost model.
+  const selectedCostModelId = form.watch("costModelId");
+  useEffect(() => {
+    const cm = costModels.find(c => c.id === selectedCostModelId);
+    if (cm) {
+      form.setValue("payoutRate", cm.payoutRate);
+      form.setValue("marginPct", cm.marginPct);
+    }
+  }, [selectedCostModelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const createMutation = useCreateBillingRecord({
     mutation: {
@@ -326,6 +347,17 @@ function AddRecordDialog({ open, onClose, platformId, costModels }: {
                 <FormItem><FormLabel>Fraud Pins</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <FormField control={form.control} name="payoutRate" render={({ field }) => (
+                <FormItem><FormLabel>Payout Rate (USD/pin)</FormLabel><FormControl><Input type="number" step="0.0001" min={0} {...field} value={field.value ?? ""} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="marginPct" render={({ field }) => (
+                <FormItem><FormLabel>Margin %</FormLabel><FormControl><Input type="number" step="0.01" min={0} max={100} {...field} value={field.value ?? ""} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+            <FormField control={form.control} name="forexRate" render={({ field }) => (
+              <FormItem><FormLabel>Forex Rate (PKR)</FormLabel><FormControl><Input type="number" step="0.0001" min={0} {...field} value={field.value ?? ""} onChange={e => field.onChange(parseFloat(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
+            )} />
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
               <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? "Adding..." : "Add Record"}</Button>

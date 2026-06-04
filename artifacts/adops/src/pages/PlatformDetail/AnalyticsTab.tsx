@@ -8,13 +8,6 @@ import {
   Tooltip, ResponsiveContainer,
 } from "recharts";
 
-function getForexRate(): number {
-  try {
-    const rates = JSON.parse(localStorage.getItem("adops-exchange-rates") ?? "{}");
-    return (rates["pkr"] as number) ?? 278;
-  } catch { return 278; }
-}
-
 function computeNetMargin(
   appsflyerPins: number, fraudPins: number, payoutRate: number,
   marginPct: number, salesTaxPct: number, remittanceTaxPct: number, forexRate: number
@@ -57,13 +50,12 @@ export default function PlatformAnalyticsTab({ platformId, platform }: { platfor
 
   const { data: records, isLoading } = useListBillingRecords(platformId, {});
 
-  const forexRate = getForexRate();
   const salesTaxPct = Number(platform.salesTaxPct ?? 0);
   const remittanceTaxPct = Number(platform.remittanceTaxPct ?? 0);
 
   const allComputed = (records ?? []).map(r => ({
     ...r,
-    ...computeNetMargin(r.appsflyerPins, r.fraudPins, r.costModelPayoutRate ?? 0, r.costModelMarginPct ?? 0, salesTaxPct, remittanceTaxPct, forexRate),
+    ...computeNetMargin(r.appsflyerPins, r.fraudPins, r.payoutRate, r.marginPct, salesTaxPct, remittanceTaxPct, r.forexRate),
   }));
 
   const filtered = allComputed.filter(r => {
