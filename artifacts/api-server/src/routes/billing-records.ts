@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
-import { db, billingRecordsTable, clientsTable, platformCostModelsTable } from "@workspace/db";
+import { db, billingRecordsTable, clientsTable, platformCostModelsTable, usersTable } from "@workspace/db";
+import { requireAuth } from "../middlewares/auth";
 import {
   ListBillingRecordsParams,
   ListBillingRecordsQueryParams,
@@ -31,6 +32,10 @@ async function mapRecord(r: typeof billingRecordsTable.$inferSelect) {
     period: r.period,
     appsflyerPins: r.appsflyerPins,
     fraudPins: r.fraudPins,
+    payoutRate: Number(r.payoutRate),
+    marginPct: Number(r.marginPct),
+    forexRate: Number(r.forexRate),
+    createdBy: r.createdBy,
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -64,7 +69,7 @@ router.get("/platforms/:id/billing-records", async (req, res): Promise<void> => 
   res.json(ListBillingRecordsResponse.parse(mapped));
 });
 
-router.post("/platforms/:id/billing-records", async (req, res): Promise<void> => {
+router.post("/platforms/:id/billing-records", requireAuth, async (req, res): Promise<void> => {
   const params = CreateBillingRecordParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) {
     res.status(400).json({ error: params.error.message });
@@ -75,6 +80,18 @@ router.post("/platforms/:id/billing-records", async (req, res): Promise<void> =>
     res.status(400).json({ error: parsed.error.message });
     return;
   }
+
+  // Resolve the logged-in user's display name server-side (JWT only carries id/email).
+  const authUser = (req as { user?: { id: number; email: string } }).user;
+  let createdBy: string | null = authUser?.email ?? null;
+  if (authUser?.id !== undefined) {
+    const [user] = await db
+      .select({ name: usersTable.name })
+      .from(usersTable)
+      .where(eq(usersTable.id, authUser.id));
+    if (user?.name) createdBy = user.name;
+  }
+
   const [row] = await db
     .insert(billingRecordsTable)
     .values({
@@ -84,6 +101,10 @@ router.post("/platforms/:id/billing-records", async (req, res): Promise<void> =>
       period: parsed.data.period,
       appsflyerPins: parsed.data.appsflyerPins,
       fraudPins: parsed.data.fraudPins,
+      payoutRate: String(parsed.data.payoutRate),
+      marginPct: String(parsed.data.marginPct),
+      forexRate: String(parsed.data.forexRate),
+      createdBy,
     })
     .returning();
   res.status(201).json(ListBillingRecordsResponseItem.parse(await mapRecord(row)));
