@@ -1,6 +1,6 @@
 import { pgTable, serial, integer, text, numeric, timestamp } from "drizzle-orm/pg-core";
 import { platformsTable } from "./platforms";
-import { clientsTable } from "./clients";
+import { buyingHousesTable } from "./buying-houses";
 import { platformCostModelsTable } from "./platform-cost-models";
 
 export const billingRecordsTable = pgTable("billing_records", {
@@ -8,13 +8,13 @@ export const billingRecordsTable = pgTable("billing_records", {
   platformId: integer("platform_id")
     .notNull()
     .references(() => platformsTable.id, { onDelete: "cascade" }),
-  clientId: integer("client_id")
+  buyingHouseId: integer("buying_house_id")
     .notNull()
-    .references(() => clientsTable.id),
+    .references(() => buyingHousesTable.id),
   costModelId: integer("cost_model_id")
     .notNull()
     .references(() => platformCostModelsTable.id),
-  period: text("period").notNull(),         // "YYYY-MM"
+  period: text("period").notNull(),
   appsflyerPins: integer("appsflyer_pins").notNull(),
   fraudPins: integer("fraud_pins").notNull(),
   payoutRate: numeric("payout_rate", { precision: 12, scale: 4 }).notNull(),
