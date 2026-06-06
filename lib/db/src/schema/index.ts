@@ -1,3 +1,4 @@
+export * from "./buying-houses";
 export * from "./clients";
 export * from "./platforms";
 export * from "./campaigns";
