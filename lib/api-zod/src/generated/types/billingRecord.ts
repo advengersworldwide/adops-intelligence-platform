@@ -9,9 +9,9 @@
 export interface BillingRecord {
   id: number;
   platformId: number;
-  clientId: number;
+  buyingHouseId: number;
   /** @nullable */
-  clientName?: string | null;
+  buyingHouseName?: string | null;
   costModelId: number;
   /** @nullable */
   costModelName?: string | null;

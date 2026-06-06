@@ -6,13 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListBillingRecordsParams = {
-/**
- * @nullable
- */
-period?: string | null;
-/**
- * @nullable
- */
-buyingHouseId?: number | null;
-};
+export interface BuyingHouse {
+  id: number;
+  name: string;
+  clientCount: number;
+  netMarginPkr: number;
+  createdAt: string;
+}

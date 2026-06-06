@@ -6,13 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListBillingRecordsParams = {
-/**
- * @nullable
- */
-period?: string | null;
-/**
- * @nullable
- */
-buyingHouseId?: number | null;
-};
+export interface BuyingHouseTrendPoint {
+  period: string;
+  receivablePkr: number;
+  payablePkr: number;
+  netMarginPkr: number;
+}

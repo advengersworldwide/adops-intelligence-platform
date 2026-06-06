@@ -10,7 +10,10 @@ import type { ClientPricingModel } from './clientPricingModel';
 export interface Client {
   id: number;
   name: string;
-  buyingHouse: string;
+  /** @nullable */
+  buyingHouseId?: number | null;
+  /** @nullable */
+  buyingHouseName?: string | null;
   pricingModel: ClientPricingModel;
   /**
      * Fixed amount or % margin value

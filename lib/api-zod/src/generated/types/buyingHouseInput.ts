@@ -6,13 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListCampaignsParams = {
-/**
- * @nullable
- */
-clientId?: number | null;
-/**
- * @nullable
- */
-platformId?: number | null;
-};
+export interface BuyingHouseInput {
+  /** @minLength 1 */
+  name: string;
+}

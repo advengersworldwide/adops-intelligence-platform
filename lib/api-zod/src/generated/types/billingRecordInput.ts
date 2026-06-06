@@ -7,7 +7,7 @@
  */
 
 export interface BillingRecordInput {
-  clientId: number;
+  buyingHouseId: number;
   costModelId: number;
   period: string;
   appsflyerPins: number;

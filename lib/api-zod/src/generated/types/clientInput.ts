@@ -10,8 +10,8 @@ import type { ClientInputPricingModel } from './clientInputPricingModel';
 export interface ClientInput {
   /** @minLength 1 */
   name: string;
-  /** @minLength 1 */
-  buyingHouse: string;
+  /** @nullable */
+  buyingHouseId?: number | null;
   pricingModel: ClientInputPricingModel;
   /** @nullable */
   marginValue?: number | null;

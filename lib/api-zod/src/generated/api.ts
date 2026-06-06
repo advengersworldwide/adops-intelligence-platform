@@ -23,7 +23,8 @@ export const HealthCheckResponse = zod.object({
 export const ListClientsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "buyingHouse": zod.string(),
+  "buyingHouseId": zod.number().nullish(),
+  "buyingHouseName": zod.string().nullish(),
   "pricingModel": zod.enum(['fixed', 'percentage']),
   "marginValue": zod.number().nullish().describe('Fixed amount or % margin value'),
   "createdAt": zod.string()
@@ -37,10 +38,9 @@ export const ListClientsResponse = zod.array(ListClientsResponseItem)
 
 
 
-
 export const CreateClientBody = zod.object({
   "name": zod.string().min(1),
-  "buyingHouse": zod.string().min(1),
+  "buyingHouseId": zod.number().nullish(),
   "pricingModel": zod.enum(['fixed', 'percentage']),
   "marginValue": zod.number().nullish()
 })
@@ -56,7 +56,8 @@ export const GetClientParams = zod.object({
 export const GetClientResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "buyingHouse": zod.string(),
+  "buyingHouseId": zod.number().nullish(),
+  "buyingHouseName": zod.string().nullish(),
   "pricingModel": zod.enum(['fixed', 'percentage']),
   "marginValue": zod.number().nullish().describe('Fixed amount or % margin value'),
   "createdAt": zod.string()
@@ -75,7 +76,7 @@ export const UpdateClientParams = zod.object({
 
 export const UpdateClientBody = zod.object({
   "name": zod.string().min(1).optional(),
-  "buyingHouse": zod.string().optional(),
+  "buyingHouseId": zod.number().nullish(),
   "pricingModel": zod.enum(['fixed', 'percentage']).optional(),
   "marginValue": zod.number().nullish()
 })
@@ -83,7 +84,8 @@ export const UpdateClientBody = zod.object({
 export const UpdateClientResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
-  "buyingHouse": zod.string(),
+  "buyingHouseId": zod.number().nullish(),
+  "buyingHouseName": zod.string().nullish(),
   "pricingModel": zod.enum(['fixed', 'percentage']),
   "marginValue": zod.number().nullish().describe('Fixed amount or % margin value'),
   "createdAt": zod.string()
@@ -318,14 +320,14 @@ export const ListBillingRecordsParams = zod.object({
 
 export const ListBillingRecordsQueryParams = zod.object({
   "period": zod.coerce.string().nullish(),
-  "clientId": zod.coerce.number().nullish()
+  "buyingHouseId": zod.coerce.number().nullish()
 })
 
 export const ListBillingRecordsResponseItem = zod.object({
   "id": zod.number(),
   "platformId": zod.number(),
-  "clientId": zod.number(),
-  "clientName": zod.string().nullish(),
+  "buyingHouseId": zod.number(),
+  "buyingHouseName": zod.string().nullish(),
   "costModelId": zod.number(),
   "costModelName": zod.string().nullish(),
   "costModelPayoutRate": zod.number().nullish(),
@@ -353,7 +355,7 @@ export const CreateBillingRecordParams = zod.object({
 })
 
 export const CreateBillingRecordBody = zod.object({
-  "clientId": zod.number(),
+  "buyingHouseId": zod.number(),
   "costModelId": zod.number(),
   "period": zod.string(),
   "appsflyerPins": zod.number(),
@@ -373,89 +375,6 @@ export const CreateBillingRecordBody = zod.object({
 export const DeleteBillingRecordParams = zod.object({
   "id": zod.coerce.number(),
   "recordId": zod.coerce.number()
-})
-
-
-/**
- * @summary List campaigns with optional filters
- */
-export const ListCampaignsQueryParams = zod.object({
-  "clientId": zod.coerce.number().nullish(),
-  "platformId": zod.coerce.number().nullish()
-})
-
-export const ListCampaignsResponseItem = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "clientId": zod.number(),
-  "platformId": zod.number(),
-  "clientName": zod.string().nullish(),
-  "platformName": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-export const ListCampaignsResponse = zod.array(ListCampaignsResponseItem)
-
-
-/**
- * @summary Create a new campaign
- */
-
-
-
-export const CreateCampaignBody = zod.object({
-  "name": zod.string().min(1),
-  "clientId": zod.number(),
-  "platformId": zod.number()
-})
-
-
-/**
- * @summary Get a campaign by ID
- */
-export const GetCampaignParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const GetCampaignResponse = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "clientId": zod.number(),
-  "platformId": zod.number(),
-  "clientName": zod.string().nullish(),
-  "platformName": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
-
-/**
- * @summary Update a campaign
- */
-export const UpdateCampaignParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const UpdateCampaignBody = zod.object({
-  "name": zod.string().optional(),
-  "clientId": zod.number().optional(),
-  "platformId": zod.number().optional()
-})
-
-export const UpdateCampaignResponse = zod.object({
-  "id": zod.number(),
-  "name": zod.string(),
-  "clientId": zod.number(),
-  "platformId": zod.number(),
-  "clientName": zod.string().nullish(),
-  "platformName": zod.string().nullish(),
-  "createdAt": zod.string()
-})
-
-
-/**
- * @summary Delete a campaign
- */
-export const DeleteCampaignParams = zod.object({
-  "id": zod.coerce.number()
 })
 
 
@@ -622,5 +541,124 @@ export const GetAlertsResponseItem = zod.object({
   "value": zod.number().nullish()
 })
 export const GetAlertsResponse = zod.array(GetAlertsResponseItem)
+
+
+/**
+ * @summary List all buying houses with aggregate stats
+ */
+export const ListBuyingHousesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "clientCount": zod.number(),
+  "netMarginPkr": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListBuyingHousesResponse = zod.array(ListBuyingHousesResponseItem)
+
+
+/**
+ * @summary Create a buying house
+ */
+
+
+
+export const CreateBuyingHouseBody = zod.object({
+  "name": zod.string().min(1)
+})
+
+
+/**
+ * @summary Get a buying house by ID
+ */
+export const GetBuyingHouseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetBuyingHouseResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "clientCount": zod.number(),
+  "netMarginPkr": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a buying house name
+ */
+export const UpdateBuyingHouseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const UpdateBuyingHouseBody = zod.object({
+  "name": zod.string().min(1)
+})
+
+export const UpdateBuyingHouseResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "clientCount": zod.number(),
+  "netMarginPkr": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a buying house
+ */
+export const DeleteBuyingHouseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary KPIs, monthly trend, and client list for a buying house
+ */
+export const GetBuyingHouseAnalyticsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetBuyingHouseAnalyticsResponse = zod.object({
+  "totalReceivablePkr": zod.number(),
+  "totalPayablePkr": zod.number(),
+  "netMarginPkr": zod.number(),
+  "marginPct": zod.number(),
+  "monthlyTrend": zod.array(zod.object({
+  "period": zod.string(),
+  "receivablePkr": zod.number(),
+  "payablePkr": zod.number(),
+  "netMarginPkr": zod.number()
+})),
+  "clients": zod.array(zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "pricingModel": zod.string(),
+  "marginValue": zod.number().nullish()
+}))
+})
+
+
+/**
+ * @summary List computed billing records for a buying house
+ */
+export const ListBuyingHouseBillingRecordsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListBuyingHouseBillingRecordsResponseItem = zod.object({
+  "id": zod.number(),
+  "period": zod.string(),
+  "platformId": zod.number(),
+  "platformName": zod.string().nullish(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "actualPins": zod.number(),
+  "netMarginPkr": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListBuyingHouseBillingRecordsResponse = zod.array(ListBuyingHouseBillingRecordsResponseItem)
 
 

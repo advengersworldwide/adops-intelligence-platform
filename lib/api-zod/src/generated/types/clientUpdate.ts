@@ -10,7 +10,8 @@ import type { ClientUpdatePricingModel } from './clientUpdatePricingModel';
 export interface ClientUpdate {
   /** @minLength 1 */
   name?: string;
-  buyingHouse?: string;
+  /** @nullable */
+  buyingHouseId?: number | null;
   pricingModel?: ClientUpdatePricingModel;
   /** @nullable */
   marginValue?: number | null;

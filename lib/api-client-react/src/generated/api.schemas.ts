@@ -20,7 +20,10 @@ export const ClientPricingModel = {
 export interface Client {
   id: number;
   name: string;
-  buyingHouse: string;
+  /** @nullable */
+  buyingHouseId?: number | null;
+  /** @nullable */
+  buyingHouseName?: string | null;
   pricingModel: ClientPricingModel;
   /**
      * Fixed amount or % margin value
@@ -41,8 +44,8 @@ export const ClientInputPricingModel = {
 export interface ClientInput {
   /** @minLength 1 */
   name: string;
-  /** @minLength 1 */
-  buyingHouse: string;
+  /** @nullable */
+  buyingHouseId?: number | null;
   pricingModel: ClientInputPricingModel;
   /** @nullable */
   marginValue?: number | null;
@@ -59,10 +62,61 @@ export const ClientUpdatePricingModel = {
 export interface ClientUpdate {
   /** @minLength 1 */
   name?: string;
-  buyingHouse?: string;
+  /** @nullable */
+  buyingHouseId?: number | null;
   pricingModel?: ClientUpdatePricingModel;
   /** @nullable */
   marginValue?: number | null;
+}
+
+export interface BuyingHouse {
+  id: number;
+  name: string;
+  clientCount: number;
+  netMarginPkr: number;
+  createdAt: string;
+}
+
+export interface BuyingHouseInput {
+  /** @minLength 1 */
+  name: string;
+}
+
+export interface BuyingHouseTrendPoint {
+  period: string;
+  receivablePkr: number;
+  payablePkr: number;
+  netMarginPkr: number;
+}
+
+export interface BuyingHouseClientItem {
+  id: number;
+  name: string;
+  pricingModel: string;
+  /** @nullable */
+  marginValue?: number | null;
+}
+
+export interface BuyingHouseAnalytics {
+  totalReceivablePkr: number;
+  totalPayablePkr: number;
+  netMarginPkr: number;
+  marginPct: number;
+  monthlyTrend: BuyingHouseTrendPoint[];
+  clients: BuyingHouseClientItem[];
+}
+
+export interface BuyingHouseBillingRecord {
+  id: number;
+  period: string;
+  platformId: number;
+  /** @nullable */
+  platformName?: string | null;
+  appsflyerPins: number;
+  fraudPins: number;
+  actualPins: number;
+  netMarginPkr: number;
+  createdAt: string;
 }
 
 export interface PlatformCostModel {
@@ -188,9 +242,9 @@ export interface PlatformCostModelUpdate {
 export interface BillingRecord {
   id: number;
   platformId: number;
-  clientId: number;
+  buyingHouseId: number;
   /** @nullable */
-  clientName?: string | null;
+  buyingHouseName?: string | null;
   costModelId: number;
   /** @nullable */
   costModelName?: string | null;
@@ -213,7 +267,7 @@ export interface BillingRecord {
 }
 
 export interface BillingRecordInput {
-  clientId: number;
+  buyingHouseId: number;
   costModelId: number;
   period: string;
   appsflyerPins: number;
@@ -390,18 +444,7 @@ period?: string | null;
 /**
  * @nullable
  */
-clientId?: number | null;
-};
-
-export type ListCampaignsParams = {
-/**
- * @nullable
- */
-clientId?: number | null;
-/**
- * @nullable
- */
-platformId?: number | null;
+buyingHouseId?: number | null;
 };
 
 export type ListTransactionsParams = {
