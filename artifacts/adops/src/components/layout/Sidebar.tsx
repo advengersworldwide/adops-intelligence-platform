@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Users,
   Monitor,
-  Megaphone,
+  Building2,
   ArrowLeftRight,
   Upload,
   BarChart3,
@@ -24,8 +24,8 @@ interface SidebarProps {
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, permission: "View Dashboard" },
   { href: "/clients", label: "Clients", icon: Users, permission: "View Clients" },
+  { href: "/buying-houses", label: "Buying Houses", icon: Building2, permission: "View Buying Houses" },
   { href: "/platforms", label: "Platforms", icon: Monitor, permission: "View Platforms" },
-  { href: "/campaigns", label: "Campaigns", icon: Megaphone, permission: "View Campaigns" },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight, permission: "View Transactions" },
   { href: "/upload", label: "Upload Data", icon: Upload, permission: "Upload Data" },
   { href: "/analytics", label: "Analytics", icon: BarChart3, permission: "View Analytics" },

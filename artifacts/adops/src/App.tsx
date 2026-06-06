@@ -9,7 +9,9 @@ import DashboardPage from "@/pages/Dashboard";
 import ClientsPage from "@/pages/Clients";
 import PlatformsPage from "@/pages/Platforms";
 import PlatformDetailPage from "@/pages/PlatformDetail";
-import CampaignsPage from "@/pages/Campaigns";
+import BuyingHousesPage from "@/pages/BuyingHouses";
+import BuyingHouseDetailPage from "@/pages/BuyingHouseDetail";
+import ClientDetailPage from "@/pages/ClientDetail";
 import TransactionsPage from "@/pages/Transactions";
 import UploadPage from "@/pages/Upload";
 import AnalyticsPage from "@/pages/Analytics";
@@ -99,15 +101,31 @@ function Router() {
         <Route path="/login">
           <Redirect to="/" />
         </Route>
-        
+
         <Route path="/">
           <PermissionGuard permission="View Dashboard" component={DashboardPage} />
         </Route>
-        
+
         <Route path="/clients">
           <PermissionGuard permission="View Clients" component={ClientsPage} />
         </Route>
-        
+
+        <Route path="/clients/:id">
+          {(params) => (
+            <PermissionGuard permission="View Clients" component={() => <ClientDetailPage id={parseInt(params.id!, 10)} />} />
+          )}
+        </Route>
+
+        <Route path="/buying-houses">
+          <PermissionGuard permission="View Buying Houses" component={BuyingHousesPage} />
+        </Route>
+
+        <Route path="/buying-houses/:id">
+          {(params) => (
+            <PermissionGuard permission="View Buying Houses" component={() => <BuyingHouseDetailPage id={parseInt(params.id!, 10)} />} />
+          )}
+        </Route>
+
         <Route path="/platforms">
           <PermissionGuard permission="View Platforms" component={PlatformsPage} />
         </Route>
@@ -118,26 +136,22 @@ function Router() {
           )}
         </Route>
 
-        <Route path="/campaigns">
-          <PermissionGuard permission="View Campaigns" component={CampaignsPage} />
-        </Route>
-        
         <Route path="/transactions">
           <PermissionGuard permission="View Transactions" component={TransactionsPage} />
         </Route>
-        
+
         <Route path="/upload">
           <PermissionGuard permission="Upload Data" component={UploadPage} />
         </Route>
-        
+
         <Route path="/analytics">
           <PermissionGuard permission="View Analytics" component={AnalyticsPage} />
         </Route>
-        
+
         <Route path="/settings">
           <PermissionGuard permission="Manage Settings" component={SettingsPage} />
         </Route>
-        
+
         <Route component={NotFound} />
       </Switch>
     </Layout>
