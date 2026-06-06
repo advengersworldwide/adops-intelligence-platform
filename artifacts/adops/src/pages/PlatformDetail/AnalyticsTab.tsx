@@ -81,7 +81,7 @@ export default function PlatformAnalyticsTab({ platformId, platform }: { platfor
 
   const byClient = new Map<string, number>();
   for (const r of filtered) {
-    const n = r.clientName ?? "Unknown";
+    const n = r.buyingHouseName ?? "Unknown";
     byClient.set(n, (byClient.get(n) ?? 0) + r.netMarginPkr);
   }
   const clientData = Array.from(byClient.entries()).map(([name, margin]) => ({ name, margin }));

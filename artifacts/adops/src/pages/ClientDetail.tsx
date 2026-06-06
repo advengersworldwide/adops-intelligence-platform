@@ -13,8 +13,7 @@ export default function ClientDetailPage({ id }: { id: number }) {
 
   const buyingHouseId = client?.buyingHouseId ?? null;
   const { data: billingRecords, isLoading: recordsLoading } = useListBuyingHouseBillingRecords(
-    buyingHouseId ?? 0,
-    { query: { enabled: buyingHouseId !== null } }
+    buyingHouseId ?? 0
   );
 
   if (clientLoading) {
