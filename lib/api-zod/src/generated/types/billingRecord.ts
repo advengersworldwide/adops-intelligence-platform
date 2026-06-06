@@ -12,6 +12,10 @@ export interface BillingRecord {
   buyingHouseId: number;
   /** @nullable */
   buyingHouseName?: string | null;
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  clientName?: string | null;
   costModelId: number;
   /** @nullable */
   costModelName?: string | null;
@@ -24,7 +28,14 @@ export interface BillingRecord {
   fraudPins: number;
   payoutRate: number;
   marginPct: number;
-  forexRate: number;
+  /** @nullable */
+  forexSellingRate?: number | null;
+  /** @nullable */
+  forexBuyingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
   salesTaxPct: number;
   remittanceTaxPct: number;
   withholdingTaxPct: number;

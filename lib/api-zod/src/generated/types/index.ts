@@ -30,6 +30,7 @@ export * from './getAnalyticsByPlatformParams';
 export * from './getDashboardSummaryParams';
 export * from './getProfitOverTimeParams';
 export * from './healthStatus';
+export * from './listAllBillingRecordsParams';
 export * from './listBillingRecordsParams';
 export * from './listTransactionsParams';
 export * from './platform';

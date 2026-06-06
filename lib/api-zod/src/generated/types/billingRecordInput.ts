@@ -8,13 +8,22 @@
 
 export interface BillingRecordInput {
   buyingHouseId: number;
+  /** @nullable */
+  clientId?: number | null;
   costModelId: number;
   period: string;
   appsflyerPins: number;
   fraudPins: number;
   payoutRate: number;
   marginPct: number;
-  forexRate: number;
+  /** @nullable */
+  forexSellingRate?: number | null;
+  /** @nullable */
+  forexBuyingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
   salesTaxPct: number;
   remittanceTaxPct: number;
   withholdingTaxPct: number;

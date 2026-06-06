@@ -37,9 +37,9 @@ export interface PlatformUpdate {
   /** @nullable */
   paymentTerms?: string | null;
   /** @nullable */
-  salesTaxPct?: number | null;
-  /** @nullable */
   remittanceTaxPct?: number | null;
   /** @nullable */
-  withholdingTaxPct?: number | null;
+  forexBuyingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }

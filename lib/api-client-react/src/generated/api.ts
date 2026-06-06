@@ -37,6 +37,7 @@ import type {
   GetDashboardSummaryParams,
   GetProfitOverTimeParams,
   HealthStatus,
+  ListAllBillingRecordsParams,
   ListBillingRecordsParams,
   ListTransactionsParams,
   Platform,
@@ -2546,6 +2547,90 @@ export function useListBuyingHouseBillingRecords<TData = Awaited<ReturnType<type
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListBuyingHouseBillingRecordsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListAllBillingRecordsUrl = (params?: ListAllBillingRecordsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/billing-records?${stringifiedParams}` : `/api/billing-records`
+}
+
+/**
+ * @summary List all billing records across all platforms
+ */
+export const listAllBillingRecords = async (params?: ListAllBillingRecordsParams, options?: RequestInit): Promise<BillingRecord[]> => {
+
+  return customFetch<BillingRecord[]>(getListAllBillingRecordsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAllBillingRecordsQueryKey = (params?: ListAllBillingRecordsParams,) => {
+    return [
+    `/api/billing-records`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListAllBillingRecordsQueryOptions = <TData = Awaited<ReturnType<typeof listAllBillingRecords>>, TError = ErrorType<unknown>>(params?: ListAllBillingRecordsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAllBillingRecords>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAllBillingRecordsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAllBillingRecords>>> = ({ signal }) => listAllBillingRecords(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAllBillingRecords>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAllBillingRecordsQueryResult = NonNullable<Awaited<ReturnType<typeof listAllBillingRecords>>>
+export type ListAllBillingRecordsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all billing records across all platforms
+ */
+
+export function useListAllBillingRecords<TData = Awaited<ReturnType<typeof listAllBillingRecords>>, TError = ErrorType<unknown>>(
+ params?: ListAllBillingRecordsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAllBillingRecords>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAllBillingRecordsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

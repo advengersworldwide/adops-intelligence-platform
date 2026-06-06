@@ -38,12 +38,28 @@ export interface BuyingHouse {
   name: string;
   clientCount: number;
   netMarginPkr: number;
+  /** @nullable */
+  salesTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
+  /** @nullable */
+  forexSellingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
   createdAt: string;
 }
 
 export interface BuyingHouseInput {
   /** @minLength 1 */
   name: string;
+  /** @nullable */
+  salesTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
+  /** @nullable */
+  forexSellingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }
 
 export interface BuyingHouseTrendPoint {
@@ -121,11 +137,11 @@ export interface Platform {
   /** @nullable */
   paymentTerms?: string | null;
   /** @nullable */
-  salesTaxPct?: number | null;
-  /** @nullable */
   remittanceTaxPct?: number | null;
   /** @nullable */
-  withholdingTaxPct?: number | null;
+  forexBuyingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
   costModels?: PlatformCostModel[];
   createdAt: string;
 }
@@ -180,11 +196,11 @@ export interface PlatformUpdate {
   /** @nullable */
   paymentTerms?: string | null;
   /** @nullable */
-  salesTaxPct?: number | null;
-  /** @nullable */
   remittanceTaxPct?: number | null;
   /** @nullable */
-  withholdingTaxPct?: number | null;
+  forexBuyingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }
 
 export interface PlatformCostModelInput {
@@ -206,6 +222,10 @@ export interface BillingRecord {
   buyingHouseId: number;
   /** @nullable */
   buyingHouseName?: string | null;
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  clientName?: string | null;
   costModelId: number;
   /** @nullable */
   costModelName?: string | null;
@@ -218,7 +238,14 @@ export interface BillingRecord {
   fraudPins: number;
   payoutRate: number;
   marginPct: number;
-  forexRate: number;
+  /** @nullable */
+  forexSellingRate?: number | null;
+  /** @nullable */
+  forexBuyingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
   salesTaxPct: number;
   remittanceTaxPct: number;
   withholdingTaxPct: number;
@@ -229,13 +256,22 @@ export interface BillingRecord {
 
 export interface BillingRecordInput {
   buyingHouseId: number;
+  /** @nullable */
+  clientId?: number | null;
   costModelId: number;
   period: string;
   appsflyerPins: number;
   fraudPins: number;
   payoutRate: number;
   marginPct: number;
-  forexRate: number;
+  /** @nullable */
+  forexSellingRate?: number | null;
+  /** @nullable */
+  forexBuyingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
   salesTaxPct: number;
   remittanceTaxPct: number;
   withholdingTaxPct: number;
@@ -406,6 +442,10 @@ period?: string | null;
  * @nullable
  */
 buyingHouseId?: number | null;
+/**
+ * @nullable
+ */
+clientId?: number | null;
 };
 
 export type ListTransactionsParams = {
@@ -473,5 +513,24 @@ dateFrom?: string | null;
  * @nullable
  */
 dateTo?: string | null;
+};
+
+export type ListAllBillingRecordsParams = {
+/**
+ * @nullable
+ */
+platformId?: number | null;
+/**
+ * @nullable
+ */
+buyingHouseId?: number | null;
+/**
+ * @nullable
+ */
+clientId?: number | null;
+/**
+ * @nullable
+ */
+period?: string | null;
 };
 

@@ -9,4 +9,12 @@
 export interface BuyingHouseInput {
   /** @minLength 1 */
   name: string;
+  /** @nullable */
+  salesTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
+  /** @nullable */
+  forexSellingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }

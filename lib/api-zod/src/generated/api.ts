@@ -110,9 +110,9 @@ export const ListPlatformsResponseItem = zod.object({
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
-  "salesTaxPct": zod.number().nullish(),
   "remittanceTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "costModels": zod.array(zod.object({
   "id": zod.number(),
   "platformId": zod.number(),
@@ -168,9 +168,9 @@ export const GetPlatformResponse = zod.object({
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
-  "salesTaxPct": zod.number().nullish(),
   "remittanceTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "costModels": zod.array(zod.object({
   "id": zod.number(),
   "platformId": zod.number(),
@@ -206,9 +206,9 @@ export const UpdatePlatformBody = zod.object({
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
-  "salesTaxPct": zod.number().nullish(),
   "remittanceTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish()
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish()
 })
 
 export const UpdatePlatformResponse = zod.object({
@@ -228,9 +228,9 @@ export const UpdatePlatformResponse = zod.object({
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
-  "salesTaxPct": zod.number().nullish(),
   "remittanceTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "costModels": zod.array(zod.object({
   "id": zod.number(),
   "platformId": zod.number(),
@@ -310,7 +310,8 @@ export const ListBillingRecordsParams = zod.object({
 
 export const ListBillingRecordsQueryParams = zod.object({
   "period": zod.coerce.string().nullish(),
-  "buyingHouseId": zod.coerce.number().nullish()
+  "buyingHouseId": zod.coerce.number().nullish(),
+  "clientId": zod.coerce.number().nullish()
 })
 
 export const ListBillingRecordsResponseItem = zod.object({
@@ -318,6 +319,8 @@ export const ListBillingRecordsResponseItem = zod.object({
   "platformId": zod.number(),
   "buyingHouseId": zod.number(),
   "buyingHouseName": zod.string().nullish(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
   "costModelId": zod.number(),
   "costModelName": zod.string().nullish(),
   "costModelPayoutRate": zod.number().nullish(),
@@ -327,7 +330,10 @@ export const ListBillingRecordsResponseItem = zod.object({
   "fraudPins": zod.number(),
   "payoutRate": zod.number(),
   "marginPct": zod.number(),
-  "forexRate": zod.number(),
+  "forexSellingRate": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
   "salesTaxPct": zod.number(),
   "remittanceTaxPct": zod.number(),
   "withholdingTaxPct": zod.number(),
@@ -346,13 +352,17 @@ export const CreateBillingRecordParams = zod.object({
 
 export const CreateBillingRecordBody = zod.object({
   "buyingHouseId": zod.number(),
+  "clientId": zod.number().nullish(),
   "costModelId": zod.number(),
   "period": zod.string(),
   "appsflyerPins": zod.number(),
   "fraudPins": zod.number(),
   "payoutRate": zod.number(),
   "marginPct": zod.number(),
-  "forexRate": zod.number(),
+  "forexSellingRate": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
   "salesTaxPct": zod.number(),
   "remittanceTaxPct": zod.number(),
   "withholdingTaxPct": zod.number()
@@ -541,6 +551,10 @@ export const ListBuyingHousesResponseItem = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "forexSellingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 export const ListBuyingHousesResponse = zod.array(ListBuyingHousesResponseItem)
@@ -553,7 +567,11 @@ export const ListBuyingHousesResponse = zod.array(ListBuyingHousesResponseItem)
 
 
 export const CreateBuyingHouseBody = zod.object({
-  "name": zod.string().min(1)
+  "name": zod.string().min(1),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "forexSellingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish()
 })
 
 
@@ -569,6 +587,10 @@ export const GetBuyingHouseResponse = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "forexSellingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 
@@ -584,7 +606,11 @@ export const UpdateBuyingHouseParams = zod.object({
 
 
 export const UpdateBuyingHouseBody = zod.object({
-  "name": zod.string().min(1)
+  "name": zod.string().min(1),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "forexSellingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish()
 })
 
 export const UpdateBuyingHouseResponse = zod.object({
@@ -592,6 +618,10 @@ export const UpdateBuyingHouseResponse = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "forexSellingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 
@@ -648,5 +678,44 @@ export const ListBuyingHouseBillingRecordsResponseItem = zod.object({
   "createdAt": zod.string()
 })
 export const ListBuyingHouseBillingRecordsResponse = zod.array(ListBuyingHouseBillingRecordsResponseItem)
+
+
+/**
+ * @summary List all billing records across all platforms
+ */
+export const ListAllBillingRecordsQueryParams = zod.object({
+  "platformId": zod.coerce.number().nullish(),
+  "buyingHouseId": zod.coerce.number().nullish(),
+  "clientId": zod.coerce.number().nullish(),
+  "period": zod.coerce.string().nullish()
+})
+
+export const ListAllBillingRecordsResponseItem = zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "buyingHouseId": zod.number(),
+  "buyingHouseName": zod.string().nullish(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "costModelId": zod.number(),
+  "costModelName": zod.string().nullish(),
+  "costModelPayoutRate": zod.number().nullish(),
+  "costModelMarginPct": zod.number().nullish(),
+  "period": zod.string(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "payoutRate": zod.number(),
+  "marginPct": zod.number(),
+  "forexSellingRate": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
+  "salesTaxPct": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListAllBillingRecordsResponse = zod.array(ListAllBillingRecordsResponseItem)
 
 

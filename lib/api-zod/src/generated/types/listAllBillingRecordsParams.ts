@@ -6,11 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ListBillingRecordsParams = {
+export type ListAllBillingRecordsParams = {
 /**
  * @nullable
  */
-period?: string | null;
+platformId?: number | null;
 /**
  * @nullable
  */
@@ -19,4 +19,8 @@ buyingHouseId?: number | null;
  * @nullable
  */
 clientId?: number | null;
+/**
+ * @nullable
+ */
+period?: string | null;
 };

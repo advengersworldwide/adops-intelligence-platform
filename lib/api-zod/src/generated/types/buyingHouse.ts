@@ -11,5 +11,13 @@ export interface BuyingHouse {
   name: string;
   clientCount: number;
   netMarginPkr: number;
+  /** @nullable */
+  salesTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
+  /** @nullable */
+  forexSellingRate?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
   createdAt: string;
 }
