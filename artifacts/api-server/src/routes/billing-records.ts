@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
-import { db, billingRecordsTable, buyingHousesTable, platformCostModelsTable } from "@workspace/db";
+import { db, billingRecordsTable, buyingHousesTable, platformCostModelsTable, clientsTable } from "@workspace/db";
 import { optionalAuth } from "../middlewares/auth";
 import {
   ListBillingRecordsParams,
@@ -18,11 +18,17 @@ async function mapRecord(r: typeof billingRecordsTable.$inferSelect) {
   const [bh] = await db.select().from(buyingHousesTable).where(eq(buyingHousesTable.id, r.buyingHouseId));
   const [cm] = await db.select().from(platformCostModelsTable)
     .where(eq(platformCostModelsTable.id, r.costModelId));
+  const client = r.clientId
+    ? (await db.select({ name: clientsTable.name }).from(clientsTable)
+        .where(eq(clientsTable.id, r.clientId)))[0]
+    : null;
   return {
     id: r.id,
     platformId: r.platformId,
     buyingHouseId: r.buyingHouseId,
     buyingHouseName: bh?.name ?? null,
+    clientId: r.clientId ?? null,
+    clientName: client?.name ?? null,
     costModelId: r.costModelId,
     costModelName: cm?.name ?? null,
     costModelPayoutRate: cm ? Number(cm.payoutRate) : null,
@@ -32,10 +38,13 @@ async function mapRecord(r: typeof billingRecordsTable.$inferSelect) {
     fraudPins: r.fraudPins,
     payoutRate: Number(r.payoutRate),
     marginPct: Number(r.marginPct),
-    forexRate: Number(r.forexRate),
+    forexSellingRate: Number(r.forexSellingRate),
+    forexBuyingRate: Number(r.forexBuyingRate),
     salesTaxPct: Number(r.salesTaxPct),
     remittanceTaxPct: Number(r.remittanceTaxPct),
     withholdingTaxPct: Number(r.withholdingTaxPct),
+    bulkDiscountPct: Number(r.bulkDiscountPct),
+    platformBulkDiscountPct: Number(r.platformBulkDiscountPct),
     createdBy: r.createdBy,
     createdAt: r.createdAt.toISOString(),
   };
@@ -50,6 +59,7 @@ router.get("/platforms/:id/billing-records", async (req, res): Promise<void> => 
   const conditions = [eq(billingRecordsTable.platformId, params.data.id)];
   if (query.data.period != null) conditions.push(eq(billingRecordsTable.period, query.data.period));
   if (query.data.buyingHouseId != null) conditions.push(eq(billingRecordsTable.buyingHouseId, query.data.buyingHouseId));
+  if (query.data.clientId != null) conditions.push(eq(billingRecordsTable.clientId, query.data.clientId));
 
   const rows = await db.select().from(billingRecordsTable)
     .where(and(...conditions)).orderBy(billingRecordsTable.createdAt);
@@ -68,16 +78,20 @@ router.post("/platforms/:id/billing-records", optionalAuth, async (req, res): Pr
     const [row] = await db.insert(billingRecordsTable).values({
       platformId: params.data.id,
       buyingHouseId: parsed.data.buyingHouseId,
+      clientId: parsed.data.clientId ?? null,
       costModelId: parsed.data.costModelId,
       period: parsed.data.period,
       appsflyerPins: parsed.data.appsflyerPins,
       fraudPins: parsed.data.fraudPins,
       payoutRate: String(parsed.data.payoutRate),
       marginPct: String(parsed.data.marginPct),
-      forexRate: String(parsed.data.forexRate),
+      forexSellingRate: String(parsed.data.forexSellingRate),
+      forexBuyingRate: String(parsed.data.forexBuyingRate),
       salesTaxPct: String(parsed.data.salesTaxPct),
       remittanceTaxPct: String(parsed.data.remittanceTaxPct),
       withholdingTaxPct: String(parsed.data.withholdingTaxPct),
+      bulkDiscountPct: String(parsed.data.bulkDiscountPct),
+      platformBulkDiscountPct: String(parsed.data.platformBulkDiscountPct),
       createdBy,
     }).returning();
     res.status(201).json(ListBillingRecordsResponseItem.parse(await mapRecord(row)));
