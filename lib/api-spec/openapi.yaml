@@ -24,6 +24,8 @@ tags:
     description: Data upload operations
   - name: buying-houses
     description: Buying house management and analytics
+  - name: billing
+    description: Standalone billing record management
 
 paths:
   /healthz:
@@ -327,6 +329,10 @@ paths:
           schema:
             type: ["string", "null"]
         - name: buyingHouseId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: clientId
           in: query
           schema:
             type: ["integer", "null"]
@@ -732,6 +738,38 @@ paths:
         "404":
           description: Not found
 
+  /billing-records:
+    get:
+      operationId: listAllBillingRecords
+      tags: [billing]
+      summary: List all billing records across all platforms
+      parameters:
+        - name: platformId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: buyingHouseId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: clientId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: period
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of all billing records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BillingRecord"
+
 components:
   schemas:
     HealthStatus:
@@ -790,6 +828,14 @@ components:
           type: integer
         netMarginPkr:
           type: number
+        salesTaxPct:
+          type: ["number", "null"]
+        withholdingTaxPct:
+          type: ["number", "null"]
+        forexSellingRate:
+          type: ["number", "null"]
+        bulkDiscountPct:
+          type: ["number", "null"]
         createdAt:
           type: string
 
@@ -800,6 +846,14 @@ components:
         name:
           type: string
           minLength: 1
+        salesTaxPct:
+          type: ["number", "null"]
+        withholdingTaxPct:
+          type: ["number", "null"]
+        forexSellingRate:
+          type: ["number", "null"]
+        bulkDiscountPct:
+          type: ["number", "null"]
 
     BuyingHouseAnalytics:
       type: object
@@ -904,11 +958,11 @@ components:
           type: ["string", "null"]
         paymentTerms:
           type: ["string", "null"]
-        salesTaxPct:
-          type: ["number", "null"]
         remittanceTaxPct:
           type: ["number", "null"]
-        withholdingTaxPct:
+        forexBuyingRate:
+          type: ["number", "null"]
+        bulkDiscountPct:
           type: ["number", "null"]
         costModels:
           type: array
@@ -972,11 +1026,11 @@ components:
           type: ["string", "null"]
         paymentTerms:
           type: ["string", "null"]
-        salesTaxPct:
-          type: ["number", "null"]
         remittanceTaxPct:
           type: ["number", "null"]
-        withholdingTaxPct:
+        forexBuyingRate:
+          type: ["number", "null"]
+        bulkDiscountPct:
           type: ["number", "null"]
 
     PlatformCostModel:
@@ -1020,7 +1074,7 @@ components:
 
     BillingRecord:
       type: object
-      required: [id, platformId, buyingHouseId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, salesTaxPct, remittanceTaxPct, withholdingTaxPct, createdAt]
+      required: [id, platformId, buyingHouseId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, salesTaxPct, remittanceTaxPct, withholdingTaxPct, createdAt]
       properties:
         id:
           type: integer
@@ -1029,6 +1083,10 @@ components:
         buyingHouseId:
           type: integer
         buyingHouseName:
+          type: ["string", "null"]
+        clientId:
+          type: ["integer", "null"]
+        clientName:
           type: ["string", "null"]
         costModelId:
           type: integer
@@ -1048,8 +1106,14 @@ components:
           type: number
         marginPct:
           type: number
-        forexRate:
-          type: number
+        forexSellingRate:
+          type: ["number", "null"]
+        forexBuyingRate:
+          type: ["number", "null"]
+        bulkDiscountPct:
+          type: ["number", "null"]
+        platformBulkDiscountPct:
+          type: ["number", "null"]
         salesTaxPct:
           type: number
         remittanceTaxPct:
@@ -1063,10 +1127,12 @@ components:
 
     BillingRecordInput:
       type: object
-      required: [buyingHouseId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, salesTaxPct, remittanceTaxPct, withholdingTaxPct]
+      required: [buyingHouseId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, salesTaxPct, remittanceTaxPct, withholdingTaxPct]
       properties:
         buyingHouseId:
           type: integer
+        clientId:
+          type: ["integer", "null"]
         costModelId:
           type: integer
         period:
@@ -1079,8 +1145,14 @@ components:
           type: number
         marginPct:
           type: number
-        forexRate:
-          type: number
+        forexSellingRate:
+          type: ["number", "null"]
+        forexBuyingRate:
+          type: ["number", "null"]
+        bulkDiscountPct:
+          type: ["number", "null"]
+        platformBulkDiscountPct:
+          type: ["number", "null"]
         salesTaxPct:
           type: number
         remittanceTaxPct:
