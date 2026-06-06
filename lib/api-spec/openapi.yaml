@@ -22,6 +22,8 @@ tags:
     description: Analytics and dashboard summaries
   - name: uploads
     description: Data upload operations
+  - name: buying-houses
+    description: Buying house management and analytics
 
 paths:
   /healthz:
@@ -324,7 +326,7 @@ paths:
           in: query
           schema:
             type: ["string", "null"]
-        - name: clientId
+        - name: buyingHouseId
           in: query
           schema:
             type: ["integer", "null"]
@@ -375,111 +377,6 @@ paths:
           schema:
             type: integer
         - name: recordId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "204":
-          description: Deleted
-        "404":
-          description: Not found
-
-  # ── Campaigns ─────────────────────────────────────────────────────────────────
-  /campaigns:
-    get:
-      operationId: listCampaigns
-      tags: [campaigns]
-      summary: List campaigns with optional filters
-      parameters:
-        - name: clientId
-          in: query
-          schema:
-            type: ["integer", "null"]
-        - name: platformId
-          in: query
-          schema:
-            type: ["integer", "null"]
-      responses:
-        "200":
-          description: List of campaigns
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Campaign"
-    post:
-      operationId: createCampaign
-      tags: [campaigns]
-      summary: Create a new campaign
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CampaignInput"
-      responses:
-        "201":
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Campaign"
-        "400":
-          description: Validation error
-
-  /campaigns/{id}:
-    get:
-      operationId: getCampaign
-      tags: [campaigns]
-      summary: Get a campaign by ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Campaign
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Campaign"
-        "404":
-          description: Not found
-    patch:
-      operationId: updateCampaign
-      tags: [campaigns]
-      summary: Update a campaign
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CampaignUpdate"
-      responses:
-        "200":
-          description: Updated campaign
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Campaign"
-        "404":
-          description: Not found
-    delete:
-      operationId: deleteCampaign
-      tags: [campaigns]
-      summary: Delete a campaign
-      parameters:
-        - name: id
           in: path
           required: true
           schema:
@@ -695,6 +592,146 @@ paths:
                 items:
                   $ref: "#/components/schemas/Alert"
 
+  # ── Buying Houses ─────────────────────────────────────────────────────────────
+  /buying-houses:
+    get:
+      operationId: listBuyingHouses
+      tags: [buying-houses]
+      summary: List all buying houses with aggregate stats
+      responses:
+        "200":
+          description: List of buying houses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BuyingHouse"
+    post:
+      operationId: createBuyingHouse
+      tags: [buying-houses]
+      summary: Create a buying house
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuyingHouseInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuyingHouse"
+        "400":
+          description: Validation error
+
+  /buying-houses/{id}:
+    get:
+      operationId: getBuyingHouse
+      tags: [buying-houses]
+      summary: Get a buying house by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Buying house
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuyingHouse"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateBuyingHouse
+      tags: [buying-houses]
+      summary: Update a buying house name
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BuyingHouseInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuyingHouse"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteBuyingHouse
+      tags: [buying-houses]
+      summary: Delete a buying house
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+
+  /buying-houses/{id}/analytics:
+    get:
+      operationId: getBuyingHouseAnalytics
+      tags: [buying-houses]
+      summary: KPIs, monthly trend, and client list for a buying house
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BuyingHouseAnalytics"
+        "404":
+          description: Not found
+
+  /buying-houses/{id}/billing-records:
+    get:
+      operationId: listBuyingHouseBillingRecords
+      tags: [buying-houses]
+      summary: List computed billing records for a buying house
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Billing records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BuyingHouseBillingRecord"
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -708,14 +745,16 @@ components:
     # ── Client ──────────────────────────────────────────────────────────────────
     Client:
       type: object
-      required: [id, name, buyingHouse, pricingModel, createdAt]
+      required: [id, name, pricingModel, createdAt]
       properties:
         id:
           type: integer
         name:
           type: string
-        buyingHouse:
-          type: string
+        buyingHouseId:
+          type: ["integer", "null"]
+        buyingHouseName:
+          type: ["string", "null"]
         pricingModel:
           type: string
           enum: [fixed, percentage]
@@ -727,14 +766,13 @@ components:
 
     ClientInput:
       type: object
-      required: [name, buyingHouse, pricingModel]
+      required: [name, pricingModel]
       properties:
         name:
           type: string
           minLength: 1
-        buyingHouse:
-          type: string
-          minLength: 1
+        buyingHouseId:
+          type: ["integer", "null"]
         pricingModel:
           type: string
           enum: [fixed, percentage]
@@ -747,13 +785,107 @@ components:
         name:
           type: string
           minLength: 1
-        buyingHouse:
-          type: string
+        buyingHouseId:
+          type: ["integer", "null"]
         pricingModel:
           type: string
           enum: [fixed, percentage]
         marginValue:
           type: ["number", "null"]
+
+    # ── BuyingHouse ──────────────────────────────────────────────────────────────
+    BuyingHouse:
+      type: object
+      required: [id, name, clientCount, netMarginPkr, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        clientCount:
+          type: integer
+        netMarginPkr:
+          type: number
+        createdAt:
+          type: string
+
+    BuyingHouseInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+
+    BuyingHouseAnalytics:
+      type: object
+      required: [totalReceivablePkr, totalPayablePkr, netMarginPkr, marginPct, monthlyTrend, clients]
+      properties:
+        totalReceivablePkr:
+          type: number
+        totalPayablePkr:
+          type: number
+        netMarginPkr:
+          type: number
+        marginPct:
+          type: number
+        monthlyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/BuyingHouseTrendPoint"
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/BuyingHouseClientItem"
+
+    BuyingHouseTrendPoint:
+      type: object
+      required: [period, receivablePkr, payablePkr, netMarginPkr]
+      properties:
+        period:
+          type: string
+        receivablePkr:
+          type: number
+        payablePkr:
+          type: number
+        netMarginPkr:
+          type: number
+
+    BuyingHouseClientItem:
+      type: object
+      required: [id, name, pricingModel]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        pricingModel:
+          type: string
+        marginValue:
+          type: ["number", "null"]
+
+    BuyingHouseBillingRecord:
+      type: object
+      required: [id, period, platformId, appsflyerPins, fraudPins, actualPins, netMarginPkr, createdAt]
+      properties:
+        id:
+          type: integer
+        period:
+          type: string
+        platformId:
+          type: integer
+        platformName:
+          type: ["string", "null"]
+        appsflyerPins:
+          type: integer
+        fraudPins:
+          type: integer
+        actualPins:
+          type: integer
+        netMarginPkr:
+          type: number
+        createdAt:
+          type: string
 
     # ── Platform ─────────────────────────────────────────────────────────────────
     Platform:
@@ -908,15 +1040,15 @@ components:
 
     BillingRecord:
       type: object
-      required: [id, platformId, clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, salesTaxPct, remittanceTaxPct, withholdingTaxPct, createdAt]
+      required: [id, platformId, buyingHouseId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, salesTaxPct, remittanceTaxPct, withholdingTaxPct, createdAt]
       properties:
         id:
           type: integer
         platformId:
           type: integer
-        clientId:
+        buyingHouseId:
           type: integer
-        clientName:
+        buyingHouseName:
           type: ["string", "null"]
         costModelId:
           type: integer
@@ -951,9 +1083,9 @@ components:
 
     BillingRecordInput:
       type: object
-      required: [clientId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, salesTaxPct, remittanceTaxPct, withholdingTaxPct]
+      required: [buyingHouseId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, forexRate, salesTaxPct, remittanceTaxPct, withholdingTaxPct]
       properties:
-        clientId:
+        buyingHouseId:
           type: integer
         costModelId:
           type: integer
