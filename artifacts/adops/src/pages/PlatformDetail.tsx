@@ -4,7 +4,7 @@ import { useGetPlatform } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PlatformDetailsTab from "./PlatformDetail/DetailsTab";
-import PlatformTransactionsTab from "./PlatformDetail/TransactionsTab";
+import PlatformDataTab from "./PlatformDetail/DataTab";
 import PlatformAnalyticsTab from "./PlatformDetail/AnalyticsTab";
 
 export default function PlatformDetailPage({ id }: { id: number }) {
@@ -31,14 +31,14 @@ export default function PlatformDetailPage({ id }: { id: number }) {
         <Tabs defaultValue="details">
           <TabsList className="mb-4">
             <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="transactions">Transactions</TabsTrigger>
+            <TabsTrigger value="data">Data</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
           <TabsContent value="details">
             <PlatformDetailsTab platform={platform} />
           </TabsContent>
-          <TabsContent value="transactions">
-            <PlatformTransactionsTab platformId={id} platform={platform} />
+          <TabsContent value="data">
+            <PlatformDataTab platformId={id} platform={platform} />
           </TabsContent>
           <TabsContent value="analytics">
             <PlatformAnalyticsTab platformId={id} platform={platform} />

@@ -47,9 +47,9 @@ type FormState = {
   iban: string;
   salesTaxNumber: string;
   ntnNumber: string;
-  salesTaxPct: string;
   remittanceTaxPct: string;
-  withholdingTaxPct: string;
+  forexBuyingRate: string;
+  bulkDiscountPct: string;
   paymentTerms: string;
 };
 
@@ -77,9 +77,9 @@ function buildFormState(platform: Platform): FormState {
     iban: s(platform.iban),
     salesTaxNumber: s(platform.salesTaxNumber),
     ntnNumber: s(platform.ntnNumber),
-    salesTaxPct: numToStr(platform.salesTaxPct),
     remittanceTaxPct: numToStr(platform.remittanceTaxPct),
-    withholdingTaxPct: numToStr(platform.withholdingTaxPct),
+    forexBuyingRate: numToStr(platform.forexBuyingRate),
+    bulkDiscountPct: numToStr(platform.bulkDiscountPct),
     paymentTerms: s(platform.paymentTerms),
   };
 }
@@ -204,9 +204,9 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
           salesTaxNumber: strOrNull(form.salesTaxNumber),
           ntnNumber: strOrNull(form.ntnNumber),
           paymentTerms: strOrNull(form.paymentTerms),
-          salesTaxPct: numOrNull(form.salesTaxPct),
           remittanceTaxPct: numOrNull(form.remittanceTaxPct),
-          withholdingTaxPct: numOrNull(form.withholdingTaxPct),
+          forexBuyingRate: numOrNull(form.forexBuyingRate),
+          bulkDiscountPct: numOrNull(form.bulkDiscountPct),
         },
       });
 
@@ -339,13 +339,6 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
           />
           <Field label="NTN Number" value={form.ntnNumber} onChange={set("ntnNumber")} disabled={!canEdit} />
           <Field
-            label="Sales Tax %"
-            type="number"
-            value={form.salesTaxPct}
-            onChange={set("salesTaxPct")}
-            disabled={!canEdit}
-          />
-          <Field
             label="Remittance Tax %"
             type="number"
             value={form.remittanceTaxPct}
@@ -353,10 +346,17 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
             disabled={!canEdit}
           />
           <Field
-            label="Withholding Tax %"
+            label="Forex Buying Rate"
             type="number"
-            value={form.withholdingTaxPct}
-            onChange={set("withholdingTaxPct")}
+            value={form.forexBuyingRate}
+            onChange={set("forexBuyingRate")}
+            disabled={!canEdit}
+          />
+          <Field
+            label="Bulk Discount %"
+            type="number"
+            value={form.bulkDiscountPct}
+            onChange={set("bulkDiscountPct")}
             disabled={!canEdit}
           />
         </div>
