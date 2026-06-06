@@ -116,7 +116,6 @@ router.get("/analytics/by-client", async (req, res): Promise<void> => {
     .select({
       clientId: clientsTable.id,
       clientName: clientsTable.name,
-      buyingHouse: clientsTable.buyingHouse,
       revenue: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
       cost: sql<string>`coalesce(sum(${transactionsTable.cost}), 0)`,
       profit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
@@ -128,7 +127,7 @@ router.get("/analytics/by-client", async (req, res): Promise<void> => {
       eq(transactionsTable.campaignId, campaignsTable.id),
       whereClause,
     ))
-    .groupBy(clientsTable.id, clientsTable.name, clientsTable.buyingHouse)
+    .groupBy(clientsTable.id, clientsTable.name)
     .orderBy(sql`sum(${transactionsTable.profit}) desc nulls last`);
 
   res.json(GetAnalyticsByClientResponse.parse(rows.map(r => {
@@ -138,7 +137,7 @@ router.get("/analytics/by-client", async (req, res): Promise<void> => {
     return {
       clientId: r.clientId,
       clientName: r.clientName,
-      buyingHouse: r.buyingHouse,
+      buyingHouse: null,
       revenue,
       cost: parseFloat(r.cost ?? "0"),
       profit,

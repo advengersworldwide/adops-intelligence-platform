@@ -78,6 +78,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@sentry/react": "^10.55.0",
     "react-grid-layout": "^2.2.3",
     "react-resizable": "^4.0.1"
   }

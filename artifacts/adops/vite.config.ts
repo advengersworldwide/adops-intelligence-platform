@@ -3,16 +3,15 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 const rawPort = process.env.PORT;
 
 if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
+  console.warn("PORT environment variable is not provided. Defaulting to 5173.");
 }
 
-const port = Number(rawPort);
+const port = rawPort ? Number(rawPort) : 5173;
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
@@ -22,7 +21,13 @@ const basePath = process.env.BASE_PATH || "/";
 
 export default defineConfig({
   base: "/",
+  envPrefix: ["VITE_", "REACT_VITE_"],
   plugins: [
+    sentryVitePlugin({
+      org: process.env.SENTRY_ORG || "adops-intelligence-platform",
+      project: process.env.SENTRY_PROJECT || "adops-frontend",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
     react(),
     tailwindcss(),
     runtimeErrorOverlay(),
@@ -51,6 +56,7 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    sourcemap: true,
   },
   server: {
     port,
