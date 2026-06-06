@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2, Download } from "lucide-react";
 import {
   useListBillingRecords, useCreateBillingRecord, useDeleteBillingRecord,
-  getListBillingRecordsQueryKey, useListClients,
+  getListBillingRecordsQueryKey, useListBuyingHouses,
 } from "@workspace/api-client-react";
 import type { Platform } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -20,7 +20,7 @@ import { hasPermission } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 const addRecordSchema = z.object({
-  clientId: z.number({ required_error: "Client is required" }),
+  buyingHouseId: z.number({ required_error: "Buying house is required" }),
   costModelId: z.number({ required_error: "Cost model is required" }),
   period: z.string().min(1, "Period is required"),
   appsflyerPins: z.number().int().min(0),
@@ -89,18 +89,18 @@ const TD = ({ children, bold, className }: TD) => (
 
 export default function PlatformTransactionsTab({ platformId, platform }: { platformId: number; platform: Platform }) {
   const [periodFilter, setPeriodFilter] = useState("");
-  const [clientFilter, setClientFilter] = useState("all");
+  const [buyingHouseFilter, setBuyingHouseFilter] = useState("all");
   const [addOpen, setAddOpen] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
 
   const queryParams = {
     ...(periodFilter ? { period: periodFilter } : {}),
-    ...(clientFilter !== "all" ? { clientId: parseInt(clientFilter) } : {}),
+    ...(buyingHouseFilter !== "all" ? { buyingHouseId: parseInt(buyingHouseFilter) } : {}),
   };
 
   const { data: records, isLoading } = useListBillingRecords(platformId, queryParams);
-  const { data: clients } = useListClients();
+  const { data: buyingHouses } = useListBuyingHouses();
 
   const deleteMutation = useDeleteBillingRecord({
     mutation: {
@@ -145,8 +145,8 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
 
   const exportCSV = () => {
     if (!computed.length) return;
-    const headers = ["S#","Billing Entity","Appsflyer Pins","Fraud Pins","Actual Pins","Payout Rate","Net Amount (USD)","Forex Rate","Net Amount (PKR)","Gross Amount (PKR)",`Sales Tax (${salesTaxPct}%)`,"Total Amount (PKR)","Receivable (PKR)","Net Payable (USD)",`Remittance Tax (${remittanceTaxPct}%)`,"Total Payable (USD)","Forex Rate","Total Payable (PKR)","Net Margin (PKR)","Logged By","Logged At"];
-    const rows = computed.map((r, i) => [i+1,r.clientName??"",r.appsflyerPins,r.fraudPins,r.actualPins,r.payoutRate.toFixed(2),r.netAmtUsd.toFixed(2),r.forexRate,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexRate,r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2),r.createdBy??"",`"${new Date(r.createdAt).toLocaleString()}"`]);
+    const headers = ["S#","Buying House","Appsflyer Pins","Fraud Pins","Actual Pins","Payout Rate","Net Amount (USD)","Forex Rate","Net Amount (PKR)","Gross Amount (PKR)",`Sales Tax (${salesTaxPct}%)`,"Total Amount (PKR)","Receivable (PKR)","Net Payable (USD)",`Remittance Tax (${remittanceTaxPct}%)`,"Total Payable (USD)","Forex Rate","Total Payable (PKR)","Net Margin (PKR)","Logged By","Logged At"];
+    const rows = computed.map((r, i) => [i+1,r.buyingHouseName??"",r.appsflyerPins,r.fraudPins,r.actualPins,r.payoutRate.toFixed(2),r.netAmtUsd.toFixed(2),r.forexRate,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexRate,r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2),r.createdBy??"",`"${new Date(r.createdAt).toLocaleString()}"`]);
     const csv = [headers,...rows].map(r=>r.join(",")).join("\n");
     const blob = new Blob([csv],{type:"text/csv"});
     const url = URL.createObjectURL(blob);
@@ -159,11 +159,11 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
         <Input type="month" className="w-40 text-sm" value={periodFilter} onChange={e => setPeriodFilter(e.target.value)} />
-        <Select value={clientFilter} onValueChange={setClientFilter}>
-          <SelectTrigger className="w-40 text-sm"><SelectValue placeholder="All clients" /></SelectTrigger>
+        <Select value={buyingHouseFilter} onValueChange={setBuyingHouseFilter}>
+          <SelectTrigger className="w-44 text-sm"><SelectValue placeholder="All buying houses" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All clients</SelectItem>
-            {clients?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+            <SelectItem value="all">All buying houses</SelectItem>
+            {buyingHouses?.map(bh => <SelectItem key={bh.id} value={String(bh.id)}>{bh.name}</SelectItem>)}
           </SelectContent>
         </Select>
         <div className="ml-auto flex gap-2">
@@ -182,7 +182,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
         <table className="w-full min-w-max">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <TH>S#</TH><TH>Billing Entity</TH><TH>Appsflyer Pins</TH><TH>Fraud Pins</TH>
+              <TH>S#</TH><TH>Buying House</TH><TH>Appsflyer Pins</TH><TH>Fraud Pins</TH>
               <TH>Actual Pins</TH><TH>Payout Rate</TH><TH>Net Amount (USD)</TH><TH>Forex Rate</TH>
               <TH>Net Amount (PKR)</TH><TH>Gross Amount (PKR)</TH>
               <TH>Sales Tax ({fmtNum(salesTaxPct, 0)}%)</TH><TH>Total Amount (PKR)</TH>
@@ -208,7 +208,7 @@ export default function PlatformTransactionsTab({ platformId, platform }: { plat
                 {computed.map((r, i) => (
                   <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                     <TD>{i + 1}</TD>
-                    <TD bold>{r.clientName ?? "—"}</TD>
+                    <TD bold>{r.buyingHouseName ?? "—"}</TD>
                     <TD>{r.appsflyerPins.toLocaleString()}</TD>
                     <TD>{r.fraudPins.toLocaleString()}</TD>
                     <TD bold>{r.actualPins.toLocaleString()}</TD>
@@ -288,7 +288,7 @@ function AddRecordDialog({ open, onClose, platformId, platform, costModels }: {
 }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const { data: clients } = useListClients();
+  const { data: buyingHouses } = useListBuyingHouses();
 
   const form = useForm<AddRecordForm>({ resolver: zodResolver(addRecordSchema) });
 
@@ -331,12 +331,12 @@ function AddRecordDialog({ open, onClose, platformId, platform, costModels }: {
         <DialogHeader><DialogTitle>Add Billing Record</DialogTitle></DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(data => createMutation.mutate({ id: platformId, data }))} className="space-y-3">
-            <FormField control={form.control} name="clientId" render={({ field }) => (
-              <FormItem><FormLabel>Billing Entity</FormLabel>
+            <FormField control={form.control} name="buyingHouseId" render={({ field }) => (
+              <FormItem><FormLabel>Buying House</FormLabel>
                 <Select onValueChange={v => field.onChange(parseInt(v))} value={field.value ? String(field.value) : ""}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select client" /></SelectTrigger></FormControl>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select buying house" /></SelectTrigger></FormControl>
                   <SelectContent>
-                    {clients?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+                    {buyingHouses?.map(bh => <SelectItem key={bh.id} value={String(bh.id)}>{bh.name}</SelectItem>)}
                   </SelectContent>
                 </Select><FormMessage />
               </FormItem>
