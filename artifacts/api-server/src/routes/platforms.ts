@@ -38,9 +38,9 @@ async function mapRow(r: typeof platformsTable.$inferSelect) {
     salesTaxNumber: r.salesTaxNumber,
     ntnNumber: r.ntnNumber,
     paymentTerms: r.paymentTerms,
-    salesTaxPct: r.salesTaxPct !== null ? Number(r.salesTaxPct) : null,
     remittanceTaxPct: r.remittanceTaxPct !== null ? Number(r.remittanceTaxPct) : null,
-    withholdingTaxPct: r.withholdingTaxPct !== null ? Number(r.withholdingTaxPct) : null,
+    forexBuyingRate: r.forexBuyingRate !== null ? parseFloat(r.forexBuyingRate) : null,
+    bulkDiscountPct: r.bulkDiscountPct !== null ? parseFloat(r.bulkDiscountPct) : null,
     costModels: costModels.map(cm => ({
       id: cm.id,
       platformId: cm.platformId,
@@ -65,7 +65,12 @@ router.post("/platforms", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [row] = await db.insert(platformsTable).values(parsed.data).returning();
+  const { forexBuyingRate, bulkDiscountPct, ...restCreate } = parsed.data;
+  const [row] = await db.insert(platformsTable).values({
+    ...restCreate,
+    forexBuyingRate: forexBuyingRate != null ? String(forexBuyingRate) : null,
+    bulkDiscountPct: bulkDiscountPct != null ? String(bulkDiscountPct) : null,
+  }).returning();
   res.status(201).json(GetPlatformResponse.parse(await mapRow(row)));
 });
 
@@ -94,17 +99,14 @@ router.patch("/platforms/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { salesTaxPct, remittanceTaxPct, withholdingTaxPct, ...rest } = parsed.data;
+  const { remittanceTaxPct, forexBuyingRate, bulkDiscountPct, ...rest } = parsed.data;
   const updates: Partial<typeof platformsTable.$inferInsert> = { ...rest };
-  if (salesTaxPct !== undefined) {
-    updates.salesTaxPct = salesTaxPct !== null ? String(salesTaxPct) : null;
-  }
-  if (remittanceTaxPct !== undefined) {
+  if (remittanceTaxPct !== undefined)
     updates.remittanceTaxPct = remittanceTaxPct !== null ? String(remittanceTaxPct) : null;
-  }
-  if (withholdingTaxPct !== undefined) {
-    updates.withholdingTaxPct = withholdingTaxPct !== null ? String(withholdingTaxPct) : null;
-  }
+  if (forexBuyingRate !== undefined)
+    updates.forexBuyingRate = forexBuyingRate != null ? String(forexBuyingRate) : null;
+  if (bulkDiscountPct !== undefined)
+    updates.bulkDiscountPct = bulkDiscountPct != null ? String(bulkDiscountPct) : null;
   const [row] = await db
     .update(platformsTable)
     .set(updates)
