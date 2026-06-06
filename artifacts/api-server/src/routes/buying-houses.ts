@@ -106,12 +106,14 @@ router.delete("/buying-houses/:id", async (req, res): Promise<void> => {
     if (!row) { res.status(404).json({ error: "Buying house not found" }); return; }
     res.sendStatus(204);
   } catch (err: unknown) {
-    const pg = err as { code?: string };
-    if (pg.code === "23503") {
+    const e = err as { code?: string; cause?: { code?: string } };
+    const pgCode = e.code ?? e.cause?.code;
+    if (pgCode === "23503") {
       res.status(400).json({ error: "Cannot delete: this buying house has billing records linked to it. Reassign or delete those records first." });
       return;
     }
-    throw err;
+    console.error("[buying-houses DELETE]", err);
+    res.status(500).json({ error: err instanceof Error ? err.message : "Failed to delete buying house" });
   }
 });
 
