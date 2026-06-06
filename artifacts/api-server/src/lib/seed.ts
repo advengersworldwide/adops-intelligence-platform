@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
 import { db, rolesTable, usersTable } from "@workspace/db";
 
 const DEFAULT_ROLES = [
@@ -6,8 +7,9 @@ const DEFAULT_ROLES = [
     name: "System Admin",
     permissions: [
       "View Dashboard", "View Clients", "Edit Clients",
-      "View Platforms", "Edit Platforms", "View Campaigns",
-      "Edit Campaigns", "View Transactions", "Upload Data",
+      "View Platforms", "Edit Platforms",
+      "View Buying Houses", "Edit Buying Houses",
+      "View Transactions", "Upload Data",
       "View Analytics", "Manage Settings",
     ] as string[],
     isSystem: true,
@@ -16,7 +18,8 @@ const DEFAULT_ROLES = [
     name: "Viewer",
     permissions: [
       "View Dashboard", "View Clients", "View Platforms",
-      "View Campaigns", "View Transactions", "View Analytics",
+      "View Buying Houses",
+      "View Transactions", "View Analytics",
     ] as string[],
     isSystem: true,
   },
@@ -24,8 +27,9 @@ const DEFAULT_ROLES = [
     name: "Operator",
     permissions: [
       "View Dashboard", "View Clients", "Edit Clients",
-      "View Platforms", "Edit Platforms", "View Campaigns",
-      "Edit Campaigns", "View Transactions", "Upload Data",
+      "View Platforms", "Edit Platforms",
+      "View Buying Houses", "Edit Buying Houses",
+      "View Transactions", "Upload Data",
       "View Analytics",
     ] as string[],
     isSystem: true,
@@ -38,6 +42,9 @@ export async function seedDefaults() {
       .then(rows => rows.find(r => r.name === role.name));
     if (!existing) {
       await db.insert(rolesTable).values(role);
+    } else {
+      await db.update(rolesTable).set({ permissions: role.permissions })
+        .where(eq(rolesTable.name, role.name));
     }
   }
 
