@@ -101,29 +101,12 @@ export default function BuyingHouseDetailPage({ id }: { id: number }) {
             <thead>
               <tr className="border-b border-border">
                 <th className="px-5 py-2.5 text-left text-xs font-medium text-muted-foreground">Client</th>
-                <th className="px-5 py-2.5 text-left text-xs font-medium text-muted-foreground">Pricing Model</th>
-                <th className="px-5 py-2.5 text-left text-xs font-medium text-muted-foreground">Margin Value</th>
               </tr>
             </thead>
             <tbody>
               {analytics.clients.map(c => (
                 <tr key={c.id} className="border-b border-border last:border-0 hover:bg-muted/30">
                   <td className="px-5 py-3 text-sm font-medium text-foreground">{c.name}</td>
-                  <td className="px-5 py-3">
-                    <span className={cn(
-                      "rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                      c.pricingModel === "fixed"
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-                        : "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
-                    )}>
-                      {c.pricingModel}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-sm text-muted-foreground">
-                    {c.marginValue != null
-                      ? c.pricingModel === "percentage" ? `${c.marginValue}%` : `$${c.marginValue}`
-                      : "—"}
-                  </td>
                 </tr>
               ))}
             </tbody>

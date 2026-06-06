@@ -151,16 +151,9 @@ router.get("/buying-houses/:id/analytics", async (req, res): Promise<void> => {
   const clientRows = await db.select({
     id: clientsTable.id,
     name: clientsTable.name,
-    pricingModel: clientsTable.pricingModel,
-    marginValue: clientsTable.marginValue,
   }).from(clientsTable).where(eq(clientsTable.buyingHouseId, params.data.id));
 
-  const clients = clientRows.map(c => ({
-    id: c.id,
-    name: c.name,
-    pricingModel: c.pricingModel,
-    marginValue: c.marginValue !== null ? parseFloat(c.marginValue) : null,
-  }));
+  const clients = clientRows.map(c => ({ id: c.id, name: c.name }));
 
   res.json(GetBuyingHouseAnalyticsResponse.parse({ totalReceivablePkr, totalPayablePkr, netMarginPkr, marginPct, monthlyTrend, clients }));
 });

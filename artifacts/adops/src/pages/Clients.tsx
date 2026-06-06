@@ -16,21 +16,18 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { hasPermission } from "@/lib/auth";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
   buyingHouseId: z.number().nullable().optional(),
-  pricingModel: z.enum(["fixed", "percentage"]),
-  marginValue: z.coerce.number().optional().nullable(),
 });
 type ClientForm = z.infer<typeof clientSchema>;
 
 interface ClientRow {
   id: number; name: string;
   buyingHouseId: number | null; buyingHouseName: string | null;
-  pricingModel: string; marginValue?: number | null; createdAt: string;
+  createdAt: string;
 }
 
 export default function ClientsPage() {
@@ -93,7 +90,7 @@ export default function ClientsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Buying House", "Pricing Model", "Margin Value", "Created", hasPermission("Edit Clients") ? "Actions" : null]
+              {["Name", "Buying House", "Created", hasPermission("Edit Clients") ? "Actions" : null]
                 .filter((h): h is string => h !== null)
                 .map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
@@ -104,11 +101,11 @@ export default function ClientsPage() {
             {isLoading ? (
               [...Array(4)].map((_, i) => (
                 <tr key={i} className="border-b border-border">
-                  {[...Array(6)].map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-24" /></td>)}
+                  {[...Array(4)].map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-24" /></td>)}
                 </tr>
               ))
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">No clients found</td></tr>
+              <tr><td colSpan={4} className="px-5 py-10 text-center text-sm text-muted-foreground">No clients found</td></tr>
             ) : (
               filtered.map(c => (
                 <tr key={c.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors" data-testid={`client-row-${c.id}`}>
@@ -118,19 +115,6 @@ export default function ClientsPage() {
                     </Link>
                   </td>
                   <td className="px-5 py-3 text-sm text-muted-foreground">{c.buyingHouseName ?? "—"}</td>
-                  <td className="px-5 py-3">
-                    <span className={cn(
-                      "rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                      c.pricingModel === "fixed"
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-                        : "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
-                    )}>
-                      {c.pricingModel}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-sm text-muted-foreground">
-                    {c.marginValue != null ? (c.pricingModel === "percentage" ? `${c.marginValue}%` : `$${c.marginValue}`) : "—"}
-                  </td>
                   <td className="px-5 py-3 text-xs text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</td>
                   {hasPermission("Edit Clients") && (
                     <td className="px-5 py-3">
@@ -162,8 +146,6 @@ export default function ClientsPage() {
         defaultValues={editClient ? {
           name: editClient.name,
           buyingHouseId: editClient.buyingHouseId ?? null,
-          pricingModel: editClient.pricingModel as "fixed" | "percentage",
-          marginValue: editClient.marginValue ?? null,
         } : undefined}
         onSubmit={(data) => {
           if (editClient) updateMutation.mutate({ id: editClient.id, data });
@@ -183,11 +165,11 @@ function ClientDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, ti
 }) {
   const form = useForm<ClientForm>({
     resolver: zodResolver(clientSchema),
-    defaultValues: defaultValues ?? { name: "", buyingHouseId: null, pricingModel: "fixed", marginValue: null },
+    defaultValues: defaultValues ?? { name: "", buyingHouseId: null },
   });
 
   useEffect(() => {
-    if (open) form.reset(defaultValues ?? { name: "", buyingHouseId: null, pricingModel: "fixed", marginValue: null });
+    if (open) form.reset(defaultValues ?? { name: "", buyingHouseId: null });
   }, [open, defaultValues, form]);
 
   return (
@@ -215,30 +197,6 @@ function ClientDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, ti
                     {buyingHouses.map(bh => <SelectItem key={bh.id} value={String(bh.id)}>{bh.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="pricingModel" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Pricing Model</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    <SelectItem value="fixed">Fixed</SelectItem>
-                    <SelectItem value="percentage">Percentage</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="marginValue" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Margin Value</FormLabel>
-                <FormControl>
-                  <Input type="number" placeholder="e.g. 15" {...field}
-                    value={field.value ?? ""}
-                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))} />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />

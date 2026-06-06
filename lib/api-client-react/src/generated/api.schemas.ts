@@ -9,14 +9,6 @@ export interface HealthStatus {
   status: string;
 }
 
-export type ClientPricingModel = typeof ClientPricingModel[keyof typeof ClientPricingModel];
-
-
-export const ClientPricingModel = {
-  fixed: 'fixed',
-  percentage: 'percentage',
-} as const;
-
 export interface Client {
   id: number;
   name: string;
@@ -24,49 +16,21 @@ export interface Client {
   buyingHouseId?: number | null;
   /** @nullable */
   buyingHouseName?: string | null;
-  pricingModel: ClientPricingModel;
-  /**
-     * Fixed amount or % margin value
-     * @nullable
-     */
-  marginValue?: number | null;
   createdAt: string;
 }
-
-export type ClientInputPricingModel = typeof ClientInputPricingModel[keyof typeof ClientInputPricingModel];
-
-
-export const ClientInputPricingModel = {
-  fixed: 'fixed',
-  percentage: 'percentage',
-} as const;
 
 export interface ClientInput {
   /** @minLength 1 */
   name: string;
   /** @nullable */
   buyingHouseId?: number | null;
-  pricingModel: ClientInputPricingModel;
-  /** @nullable */
-  marginValue?: number | null;
 }
-
-export type ClientUpdatePricingModel = typeof ClientUpdatePricingModel[keyof typeof ClientUpdatePricingModel];
-
-
-export const ClientUpdatePricingModel = {
-  fixed: 'fixed',
-  percentage: 'percentage',
-} as const;
 
 export interface ClientUpdate {
   /** @minLength 1 */
   name?: string;
   /** @nullable */
   buyingHouseId?: number | null;
-  pricingModel?: ClientUpdatePricingModel;
-  /** @nullable */
-  marginValue?: number | null;
 }
 
 export interface BuyingHouse {
@@ -92,9 +56,6 @@ export interface BuyingHouseTrendPoint {
 export interface BuyingHouseClientItem {
   id: number;
   name: string;
-  pricingModel: string;
-  /** @nullable */
-  marginValue?: number | null;
 }
 
 export interface BuyingHouseAnalytics {

@@ -13,7 +13,7 @@ export async function buildContext(): Promise<string> {
   const dateStr = thirtyDaysAgo.toISOString().split("T")[0];
 
   const [clients, platforms, campaigns, txAgg, campaignPerf] = await Promise.all([
-    db.select({ name: clientsTable.name, pricingModel: clientsTable.pricingModel })
+    db.select({ name: clientsTable.name })
       .from(clientsTable),
 
     db.select({ name: platformsTable.name })
@@ -70,7 +70,7 @@ export async function buildContext(): Promise<string> {
   const alerts = perfWithMargin.filter(c => c.profit < 0 || c.margin < 10);
 
   const clientList = clients.length
-    ? clients.map(c => `${c.name} (${c.pricingModel})`).join(", ")
+    ? clients.map(c => c.name).join(", ")
     : "None";
   const platformList = platforms.length
     ? platforms.map(p => p.name).join(", ")

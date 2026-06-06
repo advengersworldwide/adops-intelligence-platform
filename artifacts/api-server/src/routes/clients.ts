@@ -27,8 +27,6 @@ async function mapRow(r: typeof clientsTable.$inferSelect) {
     name: r.name,
     buyingHouseId: r.buyingHouseId ?? null,
     buyingHouseName,
-    pricingModel: r.pricingModel,
-    marginValue: r.marginValue !== null ? parseFloat(r.marginValue) : null,
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -45,9 +43,6 @@ router.post("/clients", async (req, res): Promise<void> => {
   const [row] = await db.insert(clientsTable).values({
     name: parsed.data.name,
     buyingHouseId: parsed.data.buyingHouseId ?? null,
-    pricingModel: parsed.data.pricingModel as "fixed" | "percentage",
-    marginValue: parsed.data.marginValue !== null && parsed.data.marginValue !== undefined
-      ? String(parsed.data.marginValue) : null,
   }).returning();
   res.status(201).json(GetClientResponse.parse(await mapRow(row)));
 });
@@ -68,8 +63,6 @@ router.patch("/clients/:id", async (req, res): Promise<void> => {
   const updates: Record<string, unknown> = {};
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;
   if (parsed.data.buyingHouseId !== undefined) updates.buyingHouseId = parsed.data.buyingHouseId;
-  if (parsed.data.pricingModel !== undefined) updates.pricingModel = parsed.data.pricingModel;
-  if (parsed.data.marginValue !== undefined) updates.marginValue = parsed.data.marginValue !== null ? String(parsed.data.marginValue) : null;
   const [row] = await db.update(clientsTable).set(updates).where(eq(clientsTable.id, params.data.id)).returning();
   if (!row) { res.status(404).json({ error: "Client not found" }); return; }
   res.json(UpdateClientResponse.parse(await mapRow(row)));

@@ -11,9 +11,9 @@ async function seed() {
   }
 
   const [acme, globex, initech] = await db.insert(clientsTable).values([
-    { name: "Acme Corp", pricingModel: "percentage", marginValue: "15.00" },
-    { name: "Globex Media", pricingModel: "fixed", marginValue: "5000.00" },
-    { name: "Initech Group", pricingModel: "percentage", marginValue: "12.50" },
+    { name: "Acme Corp" },
+    { name: "Globex Media" },
+    { name: "Initech Group" },
   ]).returning();
 
   const [ttd, dv360, amazon] = await db.insert(platformsTable).values([

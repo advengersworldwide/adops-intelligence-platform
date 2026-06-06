@@ -25,8 +25,6 @@ export const ListClientsResponseItem = zod.object({
   "name": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
-  "pricingModel": zod.enum(['fixed', 'percentage']),
-  "marginValue": zod.number().nullish().describe('Fixed amount or % margin value'),
   "createdAt": zod.string()
 })
 export const ListClientsResponse = zod.array(ListClientsResponseItem)
@@ -40,9 +38,7 @@ export const ListClientsResponse = zod.array(ListClientsResponseItem)
 
 export const CreateClientBody = zod.object({
   "name": zod.string().min(1),
-  "buyingHouseId": zod.number().nullish(),
-  "pricingModel": zod.enum(['fixed', 'percentage']),
-  "marginValue": zod.number().nullish()
+  "buyingHouseId": zod.number().nullish()
 })
 
 
@@ -58,8 +54,6 @@ export const GetClientResponse = zod.object({
   "name": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
-  "pricingModel": zod.enum(['fixed', 'percentage']),
-  "marginValue": zod.number().nullish().describe('Fixed amount or % margin value'),
   "createdAt": zod.string()
 })
 
@@ -76,9 +70,7 @@ export const UpdateClientParams = zod.object({
 
 export const UpdateClientBody = zod.object({
   "name": zod.string().min(1).optional(),
-  "buyingHouseId": zod.number().nullish(),
-  "pricingModel": zod.enum(['fixed', 'percentage']).optional(),
-  "marginValue": zod.number().nullish()
+  "buyingHouseId": zod.number().nullish()
 })
 
 export const UpdateClientResponse = zod.object({
@@ -86,8 +78,6 @@ export const UpdateClientResponse = zod.object({
   "name": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
-  "pricingModel": zod.enum(['fixed', 'percentage']),
-  "marginValue": zod.number().nullish().describe('Fixed amount or % margin value'),
   "createdAt": zod.string()
 })
 
@@ -634,9 +624,7 @@ export const GetBuyingHouseAnalyticsResponse = zod.object({
 })),
   "clients": zod.array(zod.object({
   "id": zod.number(),
-  "name": zod.string(),
-  "pricingModel": zod.string(),
-  "marginValue": zod.number().nullish()
+  "name": zod.string()
 }))
 })
 

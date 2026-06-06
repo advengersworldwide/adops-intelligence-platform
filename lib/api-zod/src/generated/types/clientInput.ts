@@ -5,14 +5,10 @@
  * AdOps Intelligence Platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { ClientInputPricingModel } from './clientInputPricingModel';
 
 export interface ClientInput {
   /** @minLength 1 */
   name: string;
   /** @nullable */
   buyingHouseId?: number | null;
-  pricingModel: ClientInputPricingModel;
-  /** @nullable */
-  marginValue?: number | null;
 }

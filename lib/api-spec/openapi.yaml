@@ -745,7 +745,7 @@ components:
     # ── Client ──────────────────────────────────────────────────────────────────
     Client:
       type: object
-      required: [id, name, pricingModel, createdAt]
+      required: [id, name, createdAt]
       properties:
         id:
           type: integer
@@ -755,29 +755,18 @@ components:
           type: ["integer", "null"]
         buyingHouseName:
           type: ["string", "null"]
-        pricingModel:
-          type: string
-          enum: [fixed, percentage]
-        marginValue:
-          type: ["number", "null"]
-          description: Fixed amount or % margin value
         createdAt:
           type: string
 
     ClientInput:
       type: object
-      required: [name, pricingModel]
+      required: [name]
       properties:
         name:
           type: string
           minLength: 1
         buyingHouseId:
           type: ["integer", "null"]
-        pricingModel:
-          type: string
-          enum: [fixed, percentage]
-        marginValue:
-          type: ["number", "null"]
 
     ClientUpdate:
       type: object
@@ -787,11 +776,6 @@ components:
           minLength: 1
         buyingHouseId:
           type: ["integer", "null"]
-        pricingModel:
-          type: string
-          enum: [fixed, percentage]
-        marginValue:
-          type: ["number", "null"]
 
     # ── BuyingHouse ──────────────────────────────────────────────────────────────
     BuyingHouse:
@@ -853,16 +837,12 @@ components:
 
     BuyingHouseClientItem:
       type: object
-      required: [id, name, pricingModel]
+      required: [id, name]
       properties:
         id:
           type: integer
         name:
           type: string
-        pricingModel:
-          type: string
-        marginValue:
-          type: ["number", "null"]
 
     BuyingHouseBillingRecord:
       type: object

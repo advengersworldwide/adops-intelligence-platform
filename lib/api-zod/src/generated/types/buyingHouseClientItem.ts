@@ -9,7 +9,4 @@
 export interface BuyingHouseClientItem {
   id: number;
   name: string;
-  pricingModel: string;
-  /** @nullable */
-  marginValue?: number | null;
 }

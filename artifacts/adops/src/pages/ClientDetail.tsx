@@ -20,9 +20,7 @@ export default function ClientDetailPage({ id }: { id: number }) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
-        <div className="grid grid-cols-2 gap-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-10 rounded-xl" />)}
-        </div>
+        <Skeleton className="h-16 rounded-2xl" />
       </div>
     );
   }
@@ -47,7 +45,7 @@ export default function ClientDetailPage({ id }: { id: number }) {
       </div>
 
       {/* Client Info */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm p-5 grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="rounded-2xl border border-border bg-card shadow-sm p-5 grid grid-cols-2 gap-4">
         <div>
           <p className="text-xs text-muted-foreground">Name</p>
           <p className="text-sm font-medium mt-0.5">{client.name}</p>
@@ -55,25 +53,6 @@ export default function ClientDetailPage({ id }: { id: number }) {
         <div>
           <p className="text-xs text-muted-foreground">Buying House</p>
           <p className="text-sm font-medium mt-0.5">{client.buyingHouseName ?? "—"}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Pricing Model</p>
-          <span className={cn(
-            "inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold mt-0.5",
-            client.pricingModel === "fixed"
-              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-              : "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
-          )}>
-            {client.pricingModel}
-          </span>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Margin Value</p>
-          <p className="text-sm font-medium mt-0.5">
-            {client.marginValue != null
-              ? client.pricingModel === "percentage" ? `${client.marginValue}%` : `$${client.marginValue}`
-              : "—"}
-          </p>
         </div>
       </div>
 
