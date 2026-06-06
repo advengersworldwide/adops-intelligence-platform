@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, count } from "drizzle-orm";
 import { db, buyingHousesTable, billingRecordsTable, clientsTable, platformsTable } from "@workspace/db";
+import { computeRow } from "../lib/computeRow";
 import {
   ListBuyingHousesResponse,
   GetBuyingHouseResponse,
@@ -16,30 +17,29 @@ import {
 
 const router: IRouter = Router();
 
-function computeNetMargin(r: {
-  appsflyerPins: number; fraudPins: number;
-  payoutRate: string; marginPct: string; forexRate: string;
-  salesTaxPct: string; remittanceTaxPct: string; withholdingTaxPct: string;
-}): { receivablePkr: number; totalPayablePkr: number; netMarginPkr: number } {
-  const actualPins = r.appsflyerPins - r.fraudPins;
-  const payoutRate = Number(r.payoutRate);
-  const marginPct = Number(r.marginPct);
-  const forexRate = Number(r.forexRate);
-  const salesTaxPct = Number(r.salesTaxPct);
-  const remittanceTaxPct = Number(r.remittanceTaxPct);
-  const withholdingTaxPct = Number(r.withholdingTaxPct);
+async function aggregateBH(bhId: number) {
+  const records = await db.select().from(billingRecordsTable)
+    .where(eq(billingRecordsTable.buyingHouseId, bhId));
+  let totalReceivablePkr = 0;
+  let totalPayablePkr = 0;
+  for (const r of records) {
+    const c = computeRow(r);
+    totalReceivablePkr += c.receivablePkr;
+    totalPayablePkr += c.totalPayablePkr;
+  }
+  return { totalReceivablePkr, totalPayablePkr, netMarginPkr: totalReceivablePkr - totalPayablePkr };
+}
 
-  const netAmtUsd = actualPins * payoutRate;
-  const netAmtPkr = netAmtUsd * forexRate;
-  const grossAmtPkr = marginPct > 0 ? netAmtPkr / (1 - marginPct / 100) : netAmtPkr;
-  const salesTax = grossAmtPkr * (salesTaxPct / 100);
-  const totalAmtPkr = grossAmtPkr + salesTax;
-  const receivablePkr = totalAmtPkr - (totalAmtPkr * withholdingTaxPct / 100) - salesTax;
-  const netPayableUsd = netAmtUsd * (1 - marginPct / 100);
-  const remittanceTax = netPayableUsd * (remittanceTaxPct / 100);
-  const totalPayableUsd = netPayableUsd + remittanceTax;
-  const totalPayablePkr = totalPayableUsd * forexRate;
-  return { receivablePkr, totalPayablePkr, netMarginPkr: receivablePkr - totalPayablePkr };
+function mapBH(bh: typeof buyingHousesTable.$inferSelect) {
+  return {
+    id: bh.id,
+    name: bh.name,
+    salesTaxPct: bh.salesTaxPct !== null ? Number(bh.salesTaxPct) : null,
+    withholdingTaxPct: bh.withholdingTaxPct !== null ? Number(bh.withholdingTaxPct) : null,
+    forexSellingRate: bh.forexSellingRate !== null ? Number(bh.forexSellingRate) : null,
+    bulkDiscountPct: bh.bulkDiscountPct !== null ? Number(bh.bulkDiscountPct) : null,
+    createdAt: bh.createdAt.toISOString(),
+  };
 }
 
 router.get("/buying-houses", async (req, res): Promise<void> => {
@@ -49,10 +49,8 @@ router.get("/buying-houses", async (req, res): Promise<void> => {
       .select({ clientCount: count() })
       .from(clientsTable)
       .where(eq(clientsTable.buyingHouseId, bh.id));
-    const records = await db.select().from(billingRecordsTable)
-      .where(eq(billingRecordsTable.buyingHouseId, bh.id));
-    const netMarginPkr = records.reduce((sum, r) => sum + computeNetMargin(r).netMarginPkr, 0);
-    return { id: bh.id, name: bh.name, clientCount: Number(clientCount), netMarginPkr, createdAt: bh.createdAt.toISOString() };
+    const { netMarginPkr } = await aggregateBH(bh.id);
+    return { ...mapBH(bh), clientCount: Number(clientCount), netMarginPkr };
   }));
   res.json(ListBuyingHousesResponse.parse(result));
 });
@@ -60,8 +58,14 @@ router.get("/buying-houses", async (req, res): Promise<void> => {
 router.post("/buying-houses", async (req, res): Promise<void> => {
   const parsed = CreateBuyingHouseBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const [row] = await db.insert(buyingHousesTable).values({ name: parsed.data.name }).returning();
-  res.status(201).json(GetBuyingHouseResponse.parse({ id: row.id, name: row.name, clientCount: 0, netMarginPkr: 0, createdAt: row.createdAt.toISOString() }));
+  const [row] = await db.insert(buyingHousesTable).values({
+    name: parsed.data.name,
+    salesTaxPct: parsed.data.salesTaxPct != null ? String(parsed.data.salesTaxPct) : null,
+    withholdingTaxPct: parsed.data.withholdingTaxPct != null ? String(parsed.data.withholdingTaxPct) : null,
+    forexSellingRate: parsed.data.forexSellingRate != null ? String(parsed.data.forexSellingRate) : null,
+    bulkDiscountPct: parsed.data.bulkDiscountPct != null ? String(parsed.data.bulkDiscountPct) : null,
+  }).returning();
+  res.status(201).json(GetBuyingHouseResponse.parse({ ...mapBH(row), clientCount: 0, netMarginPkr: 0 }));
 });
 
 router.get("/buying-houses/:id", async (req, res): Promise<void> => {
@@ -69,14 +73,10 @@ router.get("/buying-houses/:id", async (req, res): Promise<void> => {
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const [bh] = await db.select().from(buyingHousesTable).where(eq(buyingHousesTable.id, params.data.id));
   if (!bh) { res.status(404).json({ error: "Buying house not found" }); return; }
-  const [{ clientCount }] = await db
-    .select({ clientCount: count() })
-    .from(clientsTable)
+  const [{ clientCount }] = await db.select({ clientCount: count() }).from(clientsTable)
     .where(eq(clientsTable.buyingHouseId, bh.id));
-  const records = await db.select().from(billingRecordsTable)
-    .where(eq(billingRecordsTable.buyingHouseId, bh.id));
-  const netMarginPkr = records.reduce((sum, r) => sum + computeNetMargin(r).netMarginPkr, 0);
-  res.json(GetBuyingHouseResponse.parse({ id: bh.id, name: bh.name, clientCount: Number(clientCount), netMarginPkr, createdAt: bh.createdAt.toISOString() }));
+  const { netMarginPkr } = await aggregateBH(bh.id);
+  res.json(GetBuyingHouseResponse.parse({ ...mapBH(bh), clientCount: Number(clientCount), netMarginPkr }));
 });
 
 router.patch("/buying-houses/:id", async (req, res): Promise<void> => {
@@ -84,17 +84,18 @@ router.patch("/buying-houses/:id", async (req, res): Promise<void> => {
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = CreateBuyingHouseBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const [row] = await db.update(buyingHousesTable).set({ name: parsed.data.name })
+  const updates: Record<string, unknown> = { name: parsed.data.name };
+  if (parsed.data.salesTaxPct !== undefined) updates.salesTaxPct = parsed.data.salesTaxPct != null ? String(parsed.data.salesTaxPct) : null;
+  if (parsed.data.withholdingTaxPct !== undefined) updates.withholdingTaxPct = parsed.data.withholdingTaxPct != null ? String(parsed.data.withholdingTaxPct) : null;
+  if (parsed.data.forexSellingRate !== undefined) updates.forexSellingRate = parsed.data.forexSellingRate != null ? String(parsed.data.forexSellingRate) : null;
+  if (parsed.data.bulkDiscountPct !== undefined) updates.bulkDiscountPct = parsed.data.bulkDiscountPct != null ? String(parsed.data.bulkDiscountPct) : null;
+  const [row] = await db.update(buyingHousesTable).set(updates)
     .where(eq(buyingHousesTable.id, params.data.id)).returning();
   if (!row) { res.status(404).json({ error: "Buying house not found" }); return; }
-  const [{ clientCount }] = await db
-    .select({ clientCount: count() })
-    .from(clientsTable)
+  const [{ clientCount }] = await db.select({ clientCount: count() }).from(clientsTable)
     .where(eq(clientsTable.buyingHouseId, row.id));
-  const records = await db.select().from(billingRecordsTable)
-    .where(eq(billingRecordsTable.buyingHouseId, row.id));
-  const netMarginPkr = records.reduce((sum, r) => sum + computeNetMargin(r).netMarginPkr, 0);
-  res.json(GetBuyingHouseResponse.parse({ id: row.id, name: row.name, clientCount: Number(clientCount), netMarginPkr, createdAt: row.createdAt.toISOString() }));
+  const { netMarginPkr } = await aggregateBH(row.id);
+  res.json(GetBuyingHouseResponse.parse({ ...mapBH(row), clientCount: Number(clientCount), netMarginPkr }));
 });
 
 router.delete("/buying-houses/:id", async (req, res): Promise<void> => {
@@ -107,13 +108,12 @@ router.delete("/buying-houses/:id", async (req, res): Promise<void> => {
     res.sendStatus(204);
   } catch (err: unknown) {
     const e = err as { code?: string; cause?: { code?: string } };
-    const pgCode = e.code ?? e.cause?.code;
-    if (pgCode === "23503") {
-      res.status(400).json({ error: "Cannot delete: this buying house has billing records linked to it. Reassign or delete those records first." });
+    if ((e.code ?? e.cause?.code) === "23503") {
+      res.status(400).json({ error: "Cannot delete: this buying house has billing records linked to it." });
       return;
     }
     console.error("[buying-houses DELETE]", err);
-    res.status(500).json({ error: err instanceof Error ? err.message : "Failed to delete buying house" });
+    res.status(500).json({ error: err instanceof Error ? err.message : "Failed to delete" });
   }
 });
 
@@ -131,14 +131,14 @@ router.get("/buying-houses/:id/analytics", async (req, res): Promise<void> => {
   const periodMap = new Map<string, { receivablePkr: number; payablePkr: number; netMarginPkr: number }>();
 
   for (const r of records) {
-    const { receivablePkr, totalPayablePkr: payablePkr, netMarginPkr } = computeNetMargin(r);
-    totalReceivablePkr += receivablePkr;
-    totalPayablePkr += payablePkr;
+    const c = computeRow(r);
+    totalReceivablePkr += c.receivablePkr;
+    totalPayablePkr += c.totalPayablePkr;
     const prev = periodMap.get(r.period) ?? { receivablePkr: 0, payablePkr: 0, netMarginPkr: 0 };
     periodMap.set(r.period, {
-      receivablePkr: prev.receivablePkr + receivablePkr,
-      payablePkr: prev.payablePkr + payablePkr,
-      netMarginPkr: prev.netMarginPkr + netMarginPkr,
+      receivablePkr: prev.receivablePkr + c.receivablePkr,
+      payablePkr: prev.payablePkr + c.totalPayablePkr,
+      netMarginPkr: prev.netMarginPkr + c.netMarginPkr,
     });
   }
 
@@ -148,14 +148,13 @@ router.get("/buying-houses/:id/analytics", async (req, res): Promise<void> => {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([period, vals]) => ({ period, ...vals }));
 
-  const clientRows = await db.select({
-    id: clientsTable.id,
-    name: clientsTable.name,
-  }).from(clientsTable).where(eq(clientsTable.buyingHouseId, params.data.id));
+  const clientRows = await db.select({ id: clientsTable.id, name: clientsTable.name })
+    .from(clientsTable).where(eq(clientsTable.buyingHouseId, params.data.id));
 
-  const clients = clientRows.map(c => ({ id: c.id, name: c.name }));
-
-  res.json(GetBuyingHouseAnalyticsResponse.parse({ totalReceivablePkr, totalPayablePkr, netMarginPkr, marginPct, monthlyTrend, clients }));
+  res.json(GetBuyingHouseAnalyticsResponse.parse({
+    totalReceivablePkr, totalPayablePkr, netMarginPkr, marginPct, monthlyTrend,
+    clients: clientRows,
+  }));
 });
 
 router.get("/buying-houses/:id/billing-records", async (req, res): Promise<void> => {
@@ -166,37 +165,32 @@ router.get("/buying-houses/:id/billing-records", async (req, res): Promise<void>
 
   const rows = await db
     .select({
-      id: billingRecordsTable.id,
-      period: billingRecordsTable.period,
+      id: billingRecordsTable.id, period: billingRecordsTable.period,
       platformId: billingRecordsTable.platformId,
-      appsflyerPins: billingRecordsTable.appsflyerPins,
-      fraudPins: billingRecordsTable.fraudPins,
-      payoutRate: billingRecordsTable.payoutRate,
-      marginPct: billingRecordsTable.marginPct,
-      forexRate: billingRecordsTable.forexRate,
-      salesTaxPct: billingRecordsTable.salesTaxPct,
-      remittanceTaxPct: billingRecordsTable.remittanceTaxPct,
+      appsflyerPins: billingRecordsTable.appsflyerPins, fraudPins: billingRecordsTable.fraudPins,
+      payoutRate: billingRecordsTable.payoutRate, marginPct: billingRecordsTable.marginPct,
+      forexSellingRate: billingRecordsTable.forexSellingRate, forexBuyingRate: billingRecordsTable.forexBuyingRate,
+      salesTaxPct: billingRecordsTable.salesTaxPct, remittanceTaxPct: billingRecordsTable.remittanceTaxPct,
       withholdingTaxPct: billingRecordsTable.withholdingTaxPct,
-      createdAt: billingRecordsTable.createdAt,
-      platformName: platformsTable.name,
+      bulkDiscountPct: billingRecordsTable.bulkDiscountPct,
+      platformBulkDiscountPct: billingRecordsTable.platformBulkDiscountPct,
+      createdAt: billingRecordsTable.createdAt, platformName: platformsTable.name,
     })
     .from(billingRecordsTable)
     .leftJoin(platformsTable, eq(billingRecordsTable.platformId, platformsTable.id))
     .where(eq(billingRecordsTable.buyingHouseId, params.data.id))
     .orderBy(billingRecordsTable.period);
 
-  const mapped = rows.map(r => ({
-    id: r.id,
-    period: r.period,
-    platformId: r.platformId,
-    platformName: r.platformName ?? null,
-    appsflyerPins: r.appsflyerPins,
-    fraudPins: r.fraudPins,
-    actualPins: r.appsflyerPins - r.fraudPins,
-    netMarginPkr: computeNetMargin(r).netMarginPkr,
-    createdAt: r.createdAt.toISOString(),
-  }));
-
+  const mapped = rows.map(r => {
+    const c = computeRow(r);
+    return {
+      id: r.id, period: r.period, platformId: r.platformId,
+      platformName: r.platformName ?? null,
+      appsflyerPins: r.appsflyerPins, fraudPins: r.fraudPins,
+      actualPins: c.actualPins, netMarginPkr: c.netMarginPkr,
+      createdAt: r.createdAt.toISOString(),
+    };
+  });
   res.json(ListBuyingHouseBillingRecordsResponse.parse(mapped));
 });
 
