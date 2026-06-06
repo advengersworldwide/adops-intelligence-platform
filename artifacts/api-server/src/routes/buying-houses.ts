@@ -100,10 +100,19 @@ router.patch("/buying-houses/:id", async (req, res): Promise<void> => {
 router.delete("/buying-houses/:id", async (req, res): Promise<void> => {
   const params = DeleteBuyingHouseParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
-  const [row] = await db.delete(buyingHousesTable)
-    .where(eq(buyingHousesTable.id, params.data.id)).returning();
-  if (!row) { res.status(404).json({ error: "Buying house not found" }); return; }
-  res.sendStatus(204);
+  try {
+    const [row] = await db.delete(buyingHousesTable)
+      .where(eq(buyingHousesTable.id, params.data.id)).returning();
+    if (!row) { res.status(404).json({ error: "Buying house not found" }); return; }
+    res.sendStatus(204);
+  } catch (err: unknown) {
+    const pg = err as { code?: string };
+    if (pg.code === "23503") {
+      res.status(400).json({ error: "Cannot delete: this buying house has billing records linked to it. Reassign or delete those records first." });
+      return;
+    }
+    throw err;
+  }
 });
 
 router.get("/buying-houses/:id/analytics", async (req, res): Promise<void> => {
