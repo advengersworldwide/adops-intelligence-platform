@@ -43,7 +43,7 @@ export interface BuyingHouse {
   /** @nullable */
   withholdingTaxPct?: number | null;
   /** @nullable */
-  forexSellingRate?: number | null;
+  remittanceTaxPct?: number | null;
   /** @nullable */
   bulkDiscountPct?: number | null;
   createdAt: string;
@@ -57,7 +57,7 @@ export interface BuyingHouseInput {
   /** @nullable */
   withholdingTaxPct?: number | null;
   /** @nullable */
-  forexSellingRate?: number | null;
+  remittanceTaxPct?: number | null;
   /** @nullable */
   bulkDiscountPct?: number | null;
 }
@@ -137,10 +137,6 @@ export interface Platform {
   /** @nullable */
   paymentTerms?: string | null;
   /** @nullable */
-  remittanceTaxPct?: number | null;
-  /** @nullable */
-  forexBuyingRate?: number | null;
-  /** @nullable */
   bulkDiscountPct?: number | null;
   costModels?: PlatformCostModel[];
   createdAt: string;
@@ -195,10 +191,6 @@ export interface PlatformUpdate {
   ntnNumber?: string | null;
   /** @nullable */
   paymentTerms?: string | null;
-  /** @nullable */
-  remittanceTaxPct?: number | null;
-  /** @nullable */
-  forexBuyingRate?: number | null;
   /** @nullable */
   bulkDiscountPct?: number | null;
 }

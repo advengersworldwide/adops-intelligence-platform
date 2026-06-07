@@ -39,10 +39,6 @@ export interface Platform {
   /** @nullable */
   paymentTerms?: string | null;
   /** @nullable */
-  remittanceTaxPct?: number | null;
-  /** @nullable */
-  forexBuyingRate?: number | null;
-  /** @nullable */
   bulkDiscountPct?: number | null;
   costModels?: PlatformCostModel[];
   createdAt: string;

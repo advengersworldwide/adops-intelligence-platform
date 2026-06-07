@@ -16,7 +16,7 @@ export interface BuyingHouse {
   /** @nullable */
   withholdingTaxPct?: number | null;
   /** @nullable */
-  forexSellingRate?: number | null;
+  remittanceTaxPct?: number | null;
   /** @nullable */
   bulkDiscountPct?: number | null;
   createdAt: string;
