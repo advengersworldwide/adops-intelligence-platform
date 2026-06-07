@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { db, costResourcesTable } from "@workspace/db";
 import {
   ListCostResourcesQueryParams, ListCostResourcesResponse,
-  CreateCostResourceBody, CreateCostResourceResponse,
-  GetCostResourceParams,
+  CreateCostResourceBody,
+  UpdateCostResourceParams,
   UpdateCostResourceBody, UpdateCostResourceResponse,
   DeleteCostResourceParams,
 } from "@workspace/api-zod";
@@ -42,11 +42,11 @@ router.post("/cost-resources", async (req, res): Promise<void> => {
     period: parsed.data.period,
     notes: parsed.data.notes ?? null,
   }).returning();
-  res.status(201).json(CreateCostResourceResponse.parse(mapCost(row)));
+  res.status(201).json(UpdateCostResourceResponse.parse(mapCost(row)));
 });
 
 router.patch("/cost-resources/:id", async (req, res): Promise<void> => {
-  const params = GetCostResourceParams.safeParse({ id: parseInt(req.params.id as string, 10) });
+  const params = UpdateCostResourceParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = UpdateCostResourceBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }

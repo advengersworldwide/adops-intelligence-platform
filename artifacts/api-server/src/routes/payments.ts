@@ -3,8 +3,8 @@ import { eq } from "drizzle-orm";
 import { db, paymentsTable, paymentBillsTable, billsTable } from "@workspace/db";
 import {
   ListPaymentsResponse,
-  CreatePaymentBody, CreatePaymentResponse,
-  GetPaymentParams,
+  CreatePaymentBody,
+  UpdatePaymentParams,
   UpdatePaymentBody, UpdatePaymentResponse,
   DeletePaymentParams,
 } from "@workspace/api-zod";
@@ -60,7 +60,7 @@ router.post("/payments", async (req, res): Promise<void> => {
         }))
       );
     }
-    res.status(201).json(CreatePaymentResponse.parse(await mapPayment(payment)));
+    res.status(201).json(UpdatePaymentResponse.parse(await mapPayment(payment)));
   } catch (err) {
     console.error("[payments POST]", err);
     res.status(500).json({ error: err instanceof Error ? err.message : "Failed to create payment" });
@@ -68,7 +68,7 @@ router.post("/payments", async (req, res): Promise<void> => {
 });
 
 router.patch("/payments/:id", async (req, res): Promise<void> => {
-  const params = GetPaymentParams.safeParse({ id: parseInt(req.params.id as string, 10) });
+  const params = UpdatePaymentParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = UpdatePaymentBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }

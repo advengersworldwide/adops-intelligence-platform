@@ -7,7 +7,7 @@ import {
 import { computeRow } from "../lib/computeRow";
 import {
   ListBillsQueryParams, ListBillsResponse,
-  CreateBillBody, CreateBillResponse,
+  CreateBillBody,
   GetBillParams, GetBillResponse,
   UpdateBillBody, UpdateBillResponse,
   DeleteBillParams,
@@ -139,7 +139,7 @@ router.post("/bills", async (req, res): Promise<void> => {
         parsed.data.billingRecordIds.map(rid => ({ billId: bill.id, billingRecordId: rid }))
       );
     }
-    res.status(201).json(CreateBillResponse.parse(await mapBillDetail(bill)));
+    res.status(201).json(GetBillResponse.parse(await mapBillDetail(bill)));
   } catch (err) {
     console.error("[bills POST]", err);
     res.status(500).json({ error: err instanceof Error ? err.message : "Failed to create bill" });
