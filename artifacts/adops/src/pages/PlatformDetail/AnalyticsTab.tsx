@@ -57,7 +57,7 @@ export default function PlatformAnalyticsTab({ platformId, platform }: { platfor
     ...r,
     ...computeNetMargin(
       r.appsflyerPins, r.fraudPins, r.payoutRate ?? 0, r.marginPct ?? 0,
-      r.salesTaxPct ?? 0, r.remittanceTaxPct ?? 0, r.forexRate ?? 278, r.withholdingTaxPct ?? 0
+      r.salesTaxPct ?? 0, r.remittanceTaxPct ?? 0, r.forexSellingRate ?? 278, r.withholdingTaxPct ?? 0
     ),
   }));
 

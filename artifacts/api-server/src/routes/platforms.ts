@@ -65,9 +65,10 @@ router.post("/platforms", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { forexBuyingRate, bulkDiscountPct, ...restCreate } = parsed.data;
+  const { forexBuyingRate, bulkDiscountPct, remittanceTaxPct, ...restCreate } = parsed.data;
   const [row] = await db.insert(platformsTable).values({
     ...restCreate,
+    remittanceTaxPct: remittanceTaxPct != null ? String(remittanceTaxPct) : null,
     forexBuyingRate: forexBuyingRate != null ? String(forexBuyingRate) : null,
     bulkDiscountPct: bulkDiscountPct != null ? String(bulkDiscountPct) : null,
   }).returning();

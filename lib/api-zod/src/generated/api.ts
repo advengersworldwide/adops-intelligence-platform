@@ -140,7 +140,17 @@ export const CreatePlatformBody = zod.object({
   "pocEmail": zod.string().nullish(),
   "companyEmail": zod.string().nullish(),
   "companyNumber": zod.string().nullish(),
-  "paymentTerms": zod.string().nullish()
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
+  "remittanceTaxPct": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish()
 })
 
 
