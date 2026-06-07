@@ -15,6 +15,7 @@ import usersRouter from "./users";
 import aiRouter from "./ai";
 import billsRouter from "./bills";
 import paymentsRouter from "./payments";
+import costResourcesRouter from "./cost-resources";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(usersRouter);
 router.use(aiRouter);
 router.use(billsRouter);
 router.use(paymentsRouter);
+router.use(costResourcesRouter);
 
 export default router;
