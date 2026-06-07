@@ -47,7 +47,6 @@ type FormState = {
   iban: string;
   salesTaxNumber: string;
   ntnNumber: string;
-  remittanceTaxPct: string;
   bulkDiscountPct: string;
   paymentTerms: string;
 };
@@ -76,7 +75,6 @@ function buildFormState(platform: Platform): FormState {
     iban: s(platform.iban),
     salesTaxNumber: s(platform.salesTaxNumber),
     ntnNumber: s(platform.ntnNumber),
-    remittanceTaxPct: numToStr(platform.remittanceTaxPct),
     bulkDiscountPct: numToStr(platform.bulkDiscountPct),
     paymentTerms: s(platform.paymentTerms),
   };
@@ -202,7 +200,6 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
           salesTaxNumber: strOrNull(form.salesTaxNumber),
           ntnNumber: strOrNull(form.ntnNumber),
           paymentTerms: strOrNull(form.paymentTerms),
-          remittanceTaxPct: numOrNull(form.remittanceTaxPct),
           bulkDiscountPct: numOrNull(form.bulkDiscountPct),
         },
       });
@@ -335,13 +332,6 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
             disabled={!canEdit}
           />
           <Field label="NTN Number" value={form.ntnNumber} onChange={set("ntnNumber")} disabled={!canEdit} />
-          <Field
-            label="Remittance Tax %"
-            type="number"
-            value={form.remittanceTaxPct}
-            onChange={set("remittanceTaxPct")}
-            disabled={!canEdit}
-          />
           <Field
             label="Bulk Discount %"
             type="number"

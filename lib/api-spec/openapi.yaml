@@ -988,6 +988,8 @@ components:
           type: ["string", "null"]
         paymentTerms:
           type: ["string", "null"]
+        bulkDiscountPct:
+          type: ["number", "null"]
 
     PlatformUpdate:
       type: object
