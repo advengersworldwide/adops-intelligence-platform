@@ -26,6 +26,14 @@ tags:
     description: Buying house management and analytics
   - name: billing
     description: Standalone billing record management
+  - name: bills
+    description: Invoice/bill management
+  - name: payments
+    description: Payment recording and settlement
+  - name: cost-resources
+    description: Business cost resource tracking
+  - name: file-upload
+    description: File attachment uploads
 
 paths:
   /healthz:
@@ -372,6 +380,34 @@ paths:
           description: Validation error
 
   /platforms/{id}/billing-records/{recordId}:
+    patch:
+      operationId: updateBillingRecord
+      tags: [billing]
+      summary: Update a billing record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillingRecordInput"
+      responses:
+        "200":
+          description: Updated billing record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillingRecord"
     delete:
       operationId: deleteBillingRecord
       tags: [platforms]
@@ -484,7 +520,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/UploadResult"
+                $ref: "#/components/schemas/UploadDataResult"
         "400":
           description: Validation error
 
@@ -769,6 +805,265 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/BillingRecord"
+
+  /bills:
+    get:
+      operationId: listBills
+      tags: [bills]
+      summary: List all bills
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: buyingHouseId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of bills
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BillSummary"
+    post:
+      operationId: createBill
+      tags: [bills]
+      summary: Create a bill
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillInput"
+      responses:
+        "201":
+          description: Created bill
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillDetail"
+
+  /bills/{id}:
+    get:
+      operationId: getBill
+      tags: [bills]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Bill detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillDetail"
+    patch:
+      operationId: updateBill
+      tags: [bills]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BillInput"
+      responses:
+        "200":
+          description: Updated bill
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BillDetail"
+    delete:
+      operationId: deleteBill
+      tags: [bills]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List all payments
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentDetail"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Created payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentDetail"
+
+  /payments/{id}:
+    patch:
+      operationId: updatePayment
+      tags: [payments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "200":
+          description: Updated payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentDetail"
+    delete:
+      operationId: deletePayment
+      tags: [payments]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /cost-resources:
+    get:
+      operationId: listCostResources
+      tags: [cost-resources]
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: List of cost resources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CostResource"
+    post:
+      operationId: createCostResource
+      tags: [cost-resources]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CostResourceInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CostResource"
+
+  /cost-resources/{id}:
+    patch:
+      operationId: updateCostResource
+      tags: [cost-resources]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CostResourceInput"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CostResource"
+    delete:
+      operationId: deleteCostResource
+      tags: [cost-resources]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /uploads/payment-attachment:
+    post:
+      operationId: uploadPaymentAttachment
+      tags: [file-upload]
+      summary: Upload cheque image or payment receipt
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Upload result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResult"
 
 components:
   schemas:
@@ -1268,7 +1563,7 @@ components:
           items:
             $ref: "#/components/schemas/UploadRow"
 
-    UploadResult:
+    UploadDataResult:
       type: object
       required: [imported, skipped, errors]
       properties:
@@ -1387,3 +1682,194 @@ components:
           type: ["string", "null"]
         value:
           type: ["number", "null"]
+
+    BillSummary:
+      type: object
+      required: [id, billNumber, status, totalReceivable, totalPaid, totalPending, transactionCount, createdAt]
+      properties:
+        id:
+          type: integer
+        billNumber:
+          type: string
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        buyingHouseId:
+          type: ["integer", "null"]
+        buyingHouseName:
+          type: ["string", "null"]
+        status:
+          type: string
+        totalReceivable:
+          type: number
+        totalPaid:
+          type: number
+        totalPending:
+          type: number
+        transactionCount:
+          type: integer
+        notes:
+          type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    BillDetail:
+      type: object
+      required: [id, billNumber, status, totalReceivable, totalPaid, totalPending, transactions, payments, createdAt]
+      properties:
+        id:
+          type: integer
+        billNumber:
+          type: string
+        clientId:
+          type: ["integer", "null"]
+        clientName:
+          type: ["string", "null"]
+        buyingHouseId:
+          type: ["integer", "null"]
+        buyingHouseName:
+          type: ["string", "null"]
+        status:
+          type: string
+        totalReceivable:
+          type: number
+        totalPaid:
+          type: number
+        totalPending:
+          type: number
+        notes:
+          type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/BillingRecord"
+        payments:
+          type: array
+          items:
+            type: object
+            required: [paymentId, amountApplied]
+            properties:
+              paymentId:
+                type: integer
+              amountApplied:
+                type: number
+
+    BillInput:
+      type: object
+      required: [billingRecordIds]
+      properties:
+        clientId:
+          type: ["integer", "null"]
+        buyingHouseId:
+          type: ["integer", "null"]
+        billingRecordIds:
+          type: array
+          items:
+            type: integer
+        notes:
+          type: ["string", "null"]
+
+    PaymentAllocation:
+      type: object
+      required: [billId, amountApplied]
+      properties:
+        billId:
+          type: integer
+        amountApplied:
+          type: number
+
+    PaymentInput:
+      type: object
+      required: [mode, allocations]
+      properties:
+        mode:
+          type: string
+        notes:
+          type: ["string", "null"]
+        chequeImageUrl:
+          type: ["string", "null"]
+        receiptUrl:
+          type: ["string", "null"]
+        allocations:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentAllocation"
+
+    PaymentDetail:
+      type: object
+      required: [id, mode, totalAmount, allocations, createdAt]
+      properties:
+        id:
+          type: integer
+        mode:
+          type: string
+        totalAmount:
+          type: number
+        notes:
+          type: ["string", "null"]
+        chequeImageUrl:
+          type: ["string", "null"]
+        receiptUrl:
+          type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        allocations:
+          type: array
+          items:
+            type: object
+            required: [billId, billNumber, amountApplied]
+            properties:
+              billId:
+                type: integer
+              billNumber:
+                type: string
+              amountApplied:
+                type: number
+
+    CostResource:
+      type: object
+      required: [id, name, amount, period, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        amount:
+          type: number
+        period:
+          type: string
+        notes:
+          type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    CostResourceInput:
+      type: object
+      required: [name, amount, period]
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+        period:
+          type: string
+        notes:
+          type: ["string", "null"]
+
+    UploadResult:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
