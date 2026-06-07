@@ -62,7 +62,7 @@ export default function PlatformDataTab({ platformId, platform }: { platformId: 
 
   const exportCSV = () => {
     if (!computed.length) return;
-    const headers = ["S#","Client","Via (BH)","Period","AF Pins","Fraud Pins","Actual Pins","Payout Rate","Net Payable (USD)","Remittance Tax","Total Payable (USD)","Forex Buying Rate","Platform Discount","Total Payable (PKR)"];
+    const headers = ["S#","Client","Via (BH)","Period","MMP Pins","Fraud Pins","Actual Pins","Payout Rate","Net Payable (USD)","Remittance Tax","Total Payable (USD)","Forex Buying Rate","Platform Discount","Total Payable (PKR)"];
     const rows = computed.map((r,i) => [i+1,r.clientName??"",r.buyingHouseName??"",r.period,r.appsflyerPins,r.fraudPins,r.actualPins,r.payoutRate.toFixed(4),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexBuyingRate,r.platformDiscountAmt.toFixed(2),r.totalPayablePkr.toFixed(2)]);
     const csv = [headers,...rows].map(r=>r.join(",")).join("\n");
     const blob = new Blob([csv],{type:"text/csv"});
@@ -101,7 +101,7 @@ export default function PlatformDataTab({ platformId, platform }: { platformId: 
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <TH>S#</TH><TH>Client</TH><TH>Via (BH)</TH><TH>Period</TH>
-              <TH>AF Pins</TH><TH>Fraud Pins</TH><TH>Actual Pins</TH><TH>Payout Rate</TH>
+              <TH>MMP Pins</TH><TH>Fraud Pins</TH><TH>Actual Pins</TH><TH>Payout Rate</TH>
               <TH>Net Payable (USD)</TH><TH>Remittance Tax</TH><TH>Total Payable (USD)</TH>
               <TH>Forex Buying Rate</TH><TH>Platform Discount</TH><TH>Total Payable (PKR)</TH>
             </tr>

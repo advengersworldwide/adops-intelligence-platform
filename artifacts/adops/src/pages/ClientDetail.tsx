@@ -113,7 +113,7 @@ export default function ClientDetailPage({ id }: { id: number }) {
                   <TH>Period</TH>
                   <TH>Via (BH)</TH>
                   <TH>Platform</TH>
-                  <TH>AF Pins</TH>
+                  <TH>MMP Pins</TH>
                   <TH>Fraud Pins</TH>
                   <TH>Actual Pins</TH>
                   <TH>Receivable (PKR)</TH>

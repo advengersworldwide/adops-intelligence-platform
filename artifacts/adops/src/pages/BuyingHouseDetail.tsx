@@ -174,7 +174,7 @@ export default function BuyingHouseDetailPage({ id }: { id: number }) {
             <thead>
               <tr className="border-b border-border bg-muted/20">
                 <TH>Client</TH><TH>Period</TH><TH>Platform</TH>
-                <TH>AF Pins</TH><TH>Fraud Pins</TH><TH>Actual Pins</TH>
+                <TH>MMP Pins</TH><TH>Fraud Pins</TH><TH>Actual Pins</TH>
                 <TH>Gross Amt (PKR)</TH><TH>BH Discount</TH><TH>Receivable (PKR)</TH>
               </tr>
             </thead>

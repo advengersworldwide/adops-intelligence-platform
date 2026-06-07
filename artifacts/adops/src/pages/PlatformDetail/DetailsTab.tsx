@@ -48,7 +48,6 @@ type FormState = {
   salesTaxNumber: string;
   ntnNumber: string;
   remittanceTaxPct: string;
-  forexBuyingRate: string;
   bulkDiscountPct: string;
   paymentTerms: string;
 };
@@ -78,7 +77,6 @@ function buildFormState(platform: Platform): FormState {
     salesTaxNumber: s(platform.salesTaxNumber),
     ntnNumber: s(platform.ntnNumber),
     remittanceTaxPct: numToStr(platform.remittanceTaxPct),
-    forexBuyingRate: numToStr(platform.forexBuyingRate),
     bulkDiscountPct: numToStr(platform.bulkDiscountPct),
     paymentTerms: s(platform.paymentTerms),
   };
@@ -205,7 +203,6 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
           ntnNumber: strOrNull(form.ntnNumber),
           paymentTerms: strOrNull(form.paymentTerms),
           remittanceTaxPct: numOrNull(form.remittanceTaxPct),
-          forexBuyingRate: numOrNull(form.forexBuyingRate),
           bulkDiscountPct: numOrNull(form.bulkDiscountPct),
         },
       });
@@ -343,13 +340,6 @@ export default function PlatformDetailsTab({ platform }: { platform: Platform })
             type="number"
             value={form.remittanceTaxPct}
             onChange={set("remittanceTaxPct")}
-            disabled={!canEdit}
-          />
-          <Field
-            label="Forex Buying Rate"
-            type="number"
-            value={form.forexBuyingRate}
-            onChange={set("forexBuyingRate")}
             disabled={!canEdit}
           />
           <Field

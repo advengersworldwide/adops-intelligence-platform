@@ -140,7 +140,7 @@ export default function BillingPage() {
 
   const exportCSV = () => {
     if (!computed.length) return;
-    const headers = ["S#","Client","Via (BH)","Platform","Period","AF Pins","Fraud Pins","Actual Pins","Payout Rate","Net Amt (USD)","Forex Sell","Net Amt (PKR)","Gross Amt (PKR)","Sales Tax","Total Amt (PKR)","BH Discount","After Discount","WHT","Receivable (PKR)","Net Payable (USD)","Remittance Tax","Total Payable (USD)","Forex Buy","Platform Discount","Total Payable (PKR)","Net Margin (PKR)","Logged By","Logged At"];
+    const headers = ["S#","Client","Via (BH)","Platform","Period","MMP Pins","Fraud Pins","Actual Pins","Payout Rate","Net Amt (USD)","Forex Sell","Net Amt (PKR)","Gross Amt (PKR)","Sales Tax","Total Amt (PKR)","BH Discount","After Discount","WHT","Receivable (PKR)","Net Payable (USD)","Remittance Tax","Total Payable (USD)","Forex Buy","Platform Discount","Total Payable (PKR)","Net Margin (PKR)","Logged By","Logged At"];
     const rows = computed.map((r, i) => [i+1,r.clientName??"",r.buyingHouseName??"",r.platformName??"",r.period,r.appsflyerPins,r.fraudPins,r.actualPins,r.payoutRate.toFixed(4),r.netAmtUsd.toFixed(2),r.forexSellingRate ?? 0,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.bulkDiscountAmt.toFixed(2),r.amtAfterDiscount.toFixed(2),r.wht.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexBuyingRate ?? 0,r.platformDiscountAmt.toFixed(2),r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2),r.createdBy??"",`"${new Date(r.createdAt).toLocaleString()}"`]);
     const csv = [headers,...rows].map(r=>r.join(",")).join("\n");
     const blob = new Blob([csv],{type:"text/csv"});
@@ -198,7 +198,7 @@ export default function BillingPage() {
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <TH>S#</TH><TH>Client</TH><TH>Via (BH)</TH><TH>Platform</TH><TH>Period</TH>
-              <TH>AF Pins</TH><TH>Fraud Pins</TH><TH>Actual Pins</TH>
+              <TH>MMP Pins</TH><TH>Fraud Pins</TH><TH>Actual Pins</TH>
               <TH>Payout Rate</TH><TH>Net Amt (USD)</TH><TH>Forex Sell</TH><TH>Net Amt (PKR)</TH>
               <TH>Gross Amt (PKR)</TH><TH>Sales Tax</TH><TH>Total Amt (PKR)</TH>
               <TH>BH Discount</TH><TH>After Discount</TH><TH>WHT</TH><TH>Receivable (PKR)</TH>
@@ -313,17 +313,15 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
 
   useEffect(() => {
     if (selectedBH) {
-      if (selectedBH.forexSellingRate != null) form.setValue("forexSellingRate", selectedBH.forexSellingRate);
       if (selectedBH.salesTaxPct != null) form.setValue("salesTaxPct", selectedBH.salesTaxPct);
       if (selectedBH.withholdingTaxPct != null) form.setValue("withholdingTaxPct", selectedBH.withholdingTaxPct);
+      if (selectedBH.remittanceTaxPct != null) form.setValue("remittanceTaxPct", selectedBH.remittanceTaxPct);
       form.setValue("bulkDiscountPct", selectedBH.bulkDiscountPct ?? 0);
     }
   }, [selectedBHId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (selectedPlatform) {
-      if (selectedPlatform.forexBuyingRate != null) form.setValue("forexBuyingRate", selectedPlatform.forexBuyingRate);
-      if (selectedPlatform.remittanceTaxPct != null) form.setValue("remittanceTaxPct", selectedPlatform.remittanceTaxPct);
       form.setValue("platformBulkDiscountPct", selectedPlatform.bulkDiscountPct ?? 0);
     }
   }, [selectedPlatformId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -419,7 +417,7 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
             )} />
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="appsflyerPins" render={({ field }) => (
-                <FormItem><FormLabel>AF Pins</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>MMP Pins</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="fraudPins" render={({ field }) => (
                 <FormItem><FormLabel>Fraud Pins</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
