@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UploadResult {
-  url: string;
-}
+export type ListCostResourcesParams = {
+/**
+ * @nullable
+ */
+period?: string | null;
+};

@@ -363,6 +363,60 @@ export const CreateBillingRecordBody = zod.object({
 
 
 /**
+ * @summary Update a billing record
+ */
+export const UpdateBillingRecordParams = zod.object({
+  "id": zod.coerce.number(),
+  "recordId": zod.coerce.number()
+})
+
+export const UpdateBillingRecordBody = zod.object({
+  "buyingHouseId": zod.number(),
+  "clientId": zod.number().nullish(),
+  "costModelId": zod.number(),
+  "period": zod.string(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "payoutRate": zod.number(),
+  "marginPct": zod.number(),
+  "forexSellingRate": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
+  "salesTaxPct": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number()
+})
+
+export const UpdateBillingRecordResponse = zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "buyingHouseId": zod.number(),
+  "buyingHouseName": zod.string().nullish(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "costModelId": zod.number(),
+  "costModelName": zod.string().nullish(),
+  "costModelPayoutRate": zod.number().nullish(),
+  "costModelMarginPct": zod.number().nullish(),
+  "period": zod.string(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "payoutRate": zod.number(),
+  "marginPct": zod.number(),
+  "forexSellingRate": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
+  "salesTaxPct": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
  * @summary Delete a billing record
  */
 export const DeleteBillingRecordParams = zod.object({
@@ -710,5 +764,291 @@ export const ListAllBillingRecordsResponseItem = zod.object({
   "createdAt": zod.string()
 })
 export const ListAllBillingRecordsResponse = zod.array(ListAllBillingRecordsResponseItem)
+
+
+/**
+ * @summary List all bills
+ */
+export const ListBillsQueryParams = zod.object({
+  "clientId": zod.coerce.number().nullish(),
+  "buyingHouseId": zod.coerce.number().nullish(),
+  "status": zod.coerce.string().nullish()
+})
+
+export const ListBillsResponseItem = zod.object({
+  "id": zod.number(),
+  "billNumber": zod.string(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "buyingHouseId": zod.number().nullish(),
+  "buyingHouseName": zod.string().nullish(),
+  "status": zod.string(),
+  "totalReceivable": zod.number(),
+  "totalPaid": zod.number(),
+  "totalPending": zod.number(),
+  "transactionCount": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListBillsResponse = zod.array(ListBillsResponseItem)
+
+
+/**
+ * @summary Create a bill
+ */
+export const CreateBillBody = zod.object({
+  "clientId": zod.number().nullish(),
+  "buyingHouseId": zod.number().nullish(),
+  "billingRecordIds": zod.array(zod.number()),
+  "notes": zod.string().nullish()
+})
+
+
+export const GetBillParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetBillResponse = zod.object({
+  "id": zod.number(),
+  "billNumber": zod.string(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "buyingHouseId": zod.number().nullish(),
+  "buyingHouseName": zod.string().nullish(),
+  "status": zod.string(),
+  "totalReceivable": zod.number(),
+  "totalPaid": zod.number(),
+  "totalPending": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "transactions": zod.array(zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "buyingHouseId": zod.number(),
+  "buyingHouseName": zod.string().nullish(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "costModelId": zod.number(),
+  "costModelName": zod.string().nullish(),
+  "costModelPayoutRate": zod.number().nullish(),
+  "costModelMarginPct": zod.number().nullish(),
+  "period": zod.string(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "payoutRate": zod.number(),
+  "marginPct": zod.number(),
+  "forexSellingRate": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
+  "salesTaxPct": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "payments": zod.array(zod.object({
+  "paymentId": zod.number(),
+  "amountApplied": zod.number()
+}))
+})
+
+
+export const UpdateBillParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateBillBody = zod.object({
+  "clientId": zod.number().nullish(),
+  "buyingHouseId": zod.number().nullish(),
+  "billingRecordIds": zod.array(zod.number()),
+  "notes": zod.string().nullish()
+})
+
+export const UpdateBillResponse = zod.object({
+  "id": zod.number(),
+  "billNumber": zod.string(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "buyingHouseId": zod.number().nullish(),
+  "buyingHouseName": zod.string().nullish(),
+  "status": zod.string(),
+  "totalReceivable": zod.number(),
+  "totalPaid": zod.number(),
+  "totalPending": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "transactions": zod.array(zod.object({
+  "id": zod.number(),
+  "platformId": zod.number(),
+  "buyingHouseId": zod.number(),
+  "buyingHouseName": zod.string().nullish(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "costModelId": zod.number(),
+  "costModelName": zod.string().nullish(),
+  "costModelPayoutRate": zod.number().nullish(),
+  "costModelMarginPct": zod.number().nullish(),
+  "period": zod.string(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "payoutRate": zod.number(),
+  "marginPct": zod.number(),
+  "forexSellingRate": zod.number().nullish(),
+  "forexBuyingRate": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
+  "salesTaxPct": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string()
+})),
+  "payments": zod.array(zod.object({
+  "paymentId": zod.number(),
+  "amountApplied": zod.number()
+}))
+})
+
+
+export const DeleteBillParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all payments
+ */
+export const ListPaymentsResponseItem = zod.object({
+  "id": zod.number(),
+  "mode": zod.string(),
+  "totalAmount": zod.number(),
+  "notes": zod.string().nullish(),
+  "chequeImageUrl": zod.string().nullish(),
+  "receiptUrl": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "allocations": zod.array(zod.object({
+  "billId": zod.number(),
+  "billNumber": zod.string(),
+  "amountApplied": zod.number()
+}))
+})
+export const ListPaymentsResponse = zod.array(ListPaymentsResponseItem)
+
+
+export const CreatePaymentBody = zod.object({
+  "mode": zod.string(),
+  "notes": zod.string().nullish(),
+  "chequeImageUrl": zod.string().nullish(),
+  "receiptUrl": zod.string().nullish(),
+  "allocations": zod.array(zod.object({
+  "billId": zod.number(),
+  "amountApplied": zod.number()
+}))
+})
+
+
+export const UpdatePaymentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePaymentBody = zod.object({
+  "mode": zod.string(),
+  "notes": zod.string().nullish(),
+  "chequeImageUrl": zod.string().nullish(),
+  "receiptUrl": zod.string().nullish(),
+  "allocations": zod.array(zod.object({
+  "billId": zod.number(),
+  "amountApplied": zod.number()
+}))
+})
+
+export const UpdatePaymentResponse = zod.object({
+  "id": zod.number(),
+  "mode": zod.string(),
+  "totalAmount": zod.number(),
+  "notes": zod.string().nullish(),
+  "chequeImageUrl": zod.string().nullish(),
+  "receiptUrl": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "allocations": zod.array(zod.object({
+  "billId": zod.number(),
+  "billNumber": zod.string(),
+  "amountApplied": zod.number()
+}))
+})
+
+
+export const DeletePaymentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+export const ListCostResourcesQueryParams = zod.object({
+  "period": zod.coerce.string().nullish()
+})
+
+export const ListCostResourcesResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "amount": zod.number(),
+  "period": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListCostResourcesResponse = zod.array(ListCostResourcesResponseItem)
+
+
+export const CreateCostResourceBody = zod.object({
+  "name": zod.string(),
+  "amount": zod.number(),
+  "period": zod.string(),
+  "notes": zod.string().nullish()
+})
+
+
+export const UpdateCostResourceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateCostResourceBody = zod.object({
+  "name": zod.string(),
+  "amount": zod.number(),
+  "period": zod.string(),
+  "notes": zod.string().nullish()
+})
+
+export const UpdateCostResourceResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "amount": zod.number(),
+  "period": zod.string(),
+  "notes": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const DeleteCostResourceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Upload cheque image or payment receipt
+ */
+export const UploadPaymentAttachmentBody = zod.object({
+  "file": zod.instanceof(File)
+})
+
+export const UploadPaymentAttachmentResponse = zod.object({
+  "url": zod.string()
+})
 
 

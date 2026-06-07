@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UploadResult {
-  url: string;
+export interface CostResourceInput {
+  name: string;
+  amount: number;
+  period: string;
+  /** @nullable */
+  notes?: string | null;
 }

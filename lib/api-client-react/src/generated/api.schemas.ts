@@ -159,6 +159,8 @@ export interface PlatformInput {
   companyNumber?: string | null;
   /** @nullable */
   paymentTerms?: string | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }
 
 export interface PlatformUpdate {
@@ -340,7 +342,7 @@ export interface UploadPayload {
   rows: UploadRow[];
 }
 
-export interface UploadResult {
+export interface UploadDataResult {
   imported: number;
   skipped: number;
   errors: string[];
@@ -423,6 +425,130 @@ export interface Alert {
   platformName?: string | null;
   /** @nullable */
   value?: number | null;
+}
+
+export interface BillSummary {
+  id: number;
+  billNumber: string;
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  clientName?: string | null;
+  /** @nullable */
+  buyingHouseId?: number | null;
+  /** @nullable */
+  buyingHouseName?: string | null;
+  status: string;
+  totalReceivable: number;
+  totalPaid: number;
+  totalPending: number;
+  transactionCount: number;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  createdAt: string;
+}
+
+export type BillDetailPaymentsItem = {
+  paymentId: number;
+  amountApplied: number;
+};
+
+export interface BillDetail {
+  id: number;
+  billNumber: string;
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  clientName?: string | null;
+  /** @nullable */
+  buyingHouseId?: number | null;
+  /** @nullable */
+  buyingHouseName?: string | null;
+  status: string;
+  totalReceivable: number;
+  totalPaid: number;
+  totalPending: number;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  createdAt: string;
+  transactions: BillingRecord[];
+  payments: BillDetailPaymentsItem[];
+}
+
+export interface BillInput {
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  buyingHouseId?: number | null;
+  billingRecordIds: number[];
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface PaymentAllocation {
+  billId: number;
+  amountApplied: number;
+}
+
+export interface PaymentInput {
+  mode: string;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  chequeImageUrl?: string | null;
+  /** @nullable */
+  receiptUrl?: string | null;
+  allocations: PaymentAllocation[];
+}
+
+export type PaymentDetailAllocationsItem = {
+  billId: number;
+  billNumber: string;
+  amountApplied: number;
+};
+
+export interface PaymentDetail {
+  id: number;
+  mode: string;
+  totalAmount: number;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  chequeImageUrl?: string | null;
+  /** @nullable */
+  receiptUrl?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  createdAt: string;
+  allocations: PaymentDetailAllocationsItem[];
+}
+
+export interface CostResource {
+  id: number;
+  name: string;
+  amount: number;
+  period: string;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  createdAt: string;
+}
+
+export interface CostResourceInput {
+  name: string;
+  amount: number;
+  period: string;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface UploadResult {
+  url: string;
 }
 
 export type ListBillingRecordsParams = {
@@ -524,5 +650,31 @@ clientId?: number | null;
  * @nullable
  */
 period?: string | null;
+};
+
+export type ListBillsParams = {
+/**
+ * @nullable
+ */
+clientId?: number | null;
+/**
+ * @nullable
+ */
+buyingHouseId?: number | null;
+/**
+ * @nullable
+ */
+status?: string | null;
+};
+
+export type ListCostResourcesParams = {
+/**
+ * @nullable
+ */
+period?: string | null;
+};
+
+export type UploadPaymentAttachmentBody = {
+  file: Blob;
 };
 

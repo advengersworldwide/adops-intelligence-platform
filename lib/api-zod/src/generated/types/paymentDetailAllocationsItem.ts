@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UploadResult {
-  url: string;
-}
+export type PaymentDetailAllocationsItem = {
+  billId: number;
+  billNumber: string;
+  amountApplied: number;
+};

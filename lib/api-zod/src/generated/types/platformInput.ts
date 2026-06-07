@@ -23,4 +23,6 @@ export interface PlatformInput {
   companyNumber?: string | null;
   /** @nullable */
   paymentTerms?: string | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }
