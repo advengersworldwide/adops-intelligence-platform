@@ -21,7 +21,7 @@ export const ALL_PERMISSIONS = [
   "Edit Platforms",
   "View Buying Houses",
   "Edit Buying Houses",
-  "View Billing",
+  "View Transactions",
   "Upload Data",
   "View Analytics",
   "Manage Settings",

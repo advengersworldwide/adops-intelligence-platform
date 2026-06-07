@@ -12,7 +12,7 @@ import PlatformDetailPage from "@/pages/PlatformDetail";
 import BuyingHousesPage from "@/pages/BuyingHouses";
 import BuyingHouseDetailPage from "@/pages/BuyingHouseDetail";
 import ClientDetailPage from "@/pages/ClientDetail";
-import BillingPage from "@/pages/Billing";
+import TransactionsPage from "@/pages/Transactions";
 import UploadPage from "@/pages/Upload";
 import AnalyticsPage from "@/pages/Analytics";
 import SettingsPage from "@/pages/Settings";
@@ -136,8 +136,8 @@ function Router() {
           )}
         </Route>
 
-        <Route path="/billing">
-          <PermissionGuard permission="View Billing" component={BillingPage} />
+        <Route path="/transactions">
+          <PermissionGuard permission="View Transactions" component={TransactionsPage} />
         </Route>
 
         <Route path="/upload">
