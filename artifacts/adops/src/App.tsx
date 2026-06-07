@@ -13,6 +13,9 @@ import BuyingHousesPage from "@/pages/BuyingHouses";
 import BuyingHouseDetailPage from "@/pages/BuyingHouseDetail";
 import ClientDetailPage from "@/pages/ClientDetail";
 import TransactionsPage from "@/pages/Transactions";
+import BillingsPage from "@/pages/Billings";
+import PaymentsPage from "@/pages/Payments";
+import CostPage from "@/pages/Cost";
 import UploadPage from "@/pages/Upload";
 import AnalyticsPage from "@/pages/Analytics";
 import SettingsPage from "@/pages/Settings";
@@ -138,6 +141,18 @@ function Router() {
 
         <Route path="/transactions">
           <PermissionGuard permission="View Transactions" component={TransactionsPage} />
+        </Route>
+
+        <Route path="/billings">
+          <PermissionGuard permission="View Billings" component={BillingsPage} />
+        </Route>
+
+        <Route path="/payments">
+          <PermissionGuard permission="View Payments" component={PaymentsPage} />
+        </Route>
+
+        <Route path="/cost">
+          <PermissionGuard permission="View Cost" component={CostPage} />
         </Route>
 
         <Route path="/upload">
