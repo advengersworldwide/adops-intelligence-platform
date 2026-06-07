@@ -101,6 +101,44 @@ router.post("/platforms/:id/billing-records", optionalAuth, async (req, res): Pr
   }
 });
 
+router.patch("/platforms/:id/billing-records/:recordId", optionalAuth, async (req, res): Promise<void> => {
+  const params = DeleteBillingRecordParams.safeParse({
+    id: parseInt(req.params.id as string, 10),
+    recordId: parseInt(req.params.recordId as string, 10),
+  });
+  if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
+  const parsed = CreateBillingRecordBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+
+  try {
+    const [row] = await db.update(billingRecordsTable).set({
+      buyingHouseId: parsed.data.buyingHouseId,
+      clientId: parsed.data.clientId ?? null,
+      costModelId: parsed.data.costModelId,
+      period: parsed.data.period,
+      appsflyerPins: parsed.data.appsflyerPins,
+      fraudPins: parsed.data.fraudPins,
+      payoutRate: String(parsed.data.payoutRate),
+      marginPct: String(parsed.data.marginPct),
+      forexSellingRate: String(parsed.data.forexSellingRate),
+      forexBuyingRate: String(parsed.data.forexBuyingRate),
+      salesTaxPct: String(parsed.data.salesTaxPct),
+      remittanceTaxPct: String(parsed.data.remittanceTaxPct),
+      withholdingTaxPct: String(parsed.data.withholdingTaxPct),
+      bulkDiscountPct: String(parsed.data.bulkDiscountPct),
+      platformBulkDiscountPct: String(parsed.data.platformBulkDiscountPct),
+    }).where(and(
+      eq(billingRecordsTable.id, params.data.recordId),
+      eq(billingRecordsTable.platformId, params.data.id),
+    )).returning();
+    if (!row) { res.status(404).json({ error: "Billing record not found" }); return; }
+    res.json(ListBillingRecordsResponseItem.parse(await mapRecord(row)));
+  } catch (err) {
+    console.error("[billing-records PATCH]", err);
+    res.status(500).json({ error: err instanceof Error ? err.message : "Failed to update" });
+  }
+});
+
 router.delete("/platforms/:id/billing-records/:recordId", async (req, res): Promise<void> => {
   const params = DeleteBillingRecordParams.safeParse({
     id: parseInt(req.params.id as string, 10),
