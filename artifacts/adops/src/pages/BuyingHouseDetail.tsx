@@ -1,9 +1,13 @@
 import { Link } from "wouter";
 import { ArrowLeft, Building2 } from "lucide-react";
-import { useGetBuyingHouse, useGetBuyingHouseAnalytics } from "@workspace/api-client-react";
+import {
+  useGetBuyingHouse, useGetBuyingHouseAnalytics,
+  useListAllBillingRecords, useListPlatforms, useListClients,
+} from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
+import { computeRow } from "@/lib/computeRow";
 
 function KpiCard({ label, value }: { label: string; value: string }) {
   return (
@@ -18,9 +22,54 @@ function fmtPkr(n: number) {
   return "PKR " + n.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
+function fmtNum(n: number | null | undefined, d = 2) {
+  if (n == null || isNaN(n)) return "—";
+  return n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+const TH = ({ children }: { children?: React.ReactNode }) =>
+  <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{children}</th>;
+
+const TD = ({ children, bold, className }: { children?: React.ReactNode; bold?: boolean; className?: string }) =>
+  <td className={cn("px-3 py-2 text-xs whitespace-nowrap", bold && "font-semibold", className)}>{children}</td>;
+
 export default function BuyingHouseDetailPage({ id }: { id: number }) {
   const { data: bh, isLoading: bhLoading } = useGetBuyingHouse(id);
   const { data: analytics, isLoading: analyticsLoading } = useGetBuyingHouseAnalytics(id);
+  const { data: allRecords, isLoading: recordsLoading } = useListAllBillingRecords({ buyingHouseId: id });
+  const { data: platforms } = useListPlatforms();
+  const { data: clients } = useListClients();
+
+  const platformNameMap = Object.fromEntries((platforms ?? []).map(p => [p.id, p.name]));
+  const clientNameMap = Object.fromEntries((clients ?? []).map(c => [c.id, c.name]));
+
+  const computed = (allRecords ?? []).map(r => ({
+    ...r,
+    platformName: platformNameMap[r.platformId] ?? null,
+    clientName: r.clientId != null ? (clientNameMap[r.clientId] ?? null) : null,
+    ...computeRow({
+      appsflyerPins: r.appsflyerPins,
+      fraudPins: r.fraudPins,
+      payoutRate: r.payoutRate ?? 0,
+      marginPct: r.marginPct ?? 0,
+      forexSellingRate: r.forexSellingRate ?? 0,
+      forexBuyingRate: r.forexBuyingRate ?? 0,
+      salesTaxPct: r.salesTaxPct ?? 0,
+      remittanceTaxPct: r.remittanceTaxPct ?? 0,
+      withholdingTaxPct: r.withholdingTaxPct ?? 0,
+      bulkDiscountPct: r.bulkDiscountPct ?? 0,
+      platformBulkDiscountPct: r.platformBulkDiscountPct ?? 0,
+    }),
+  }));
+
+  const bhTotals = computed.reduce((acc, r) => ({
+    appsflyerPins: acc.appsflyerPins + r.appsflyerPins,
+    fraudPins: acc.fraudPins + r.fraudPins,
+    actualPins: acc.actualPins + r.actualPins,
+    grossAmtPkr: acc.grossAmtPkr + r.grossAmtPkr,
+    bulkDiscountAmt: acc.bulkDiscountAmt + r.bulkDiscountAmt,
+    receivablePkr: acc.receivablePkr + r.receivablePkr,
+  }), { appsflyerPins: 0, fraudPins: 0, actualPins: 0, grossAmtPkr: 0, bulkDiscountAmt: 0, receivablePkr: 0 });
 
   if (bhLoading) {
     return (
@@ -112,6 +161,61 @@ export default function BuyingHouseDetailPage({ id }: { id: number }) {
             </tbody>
           </table>
         )}
+      </div>
+
+      {/* BH Data — receivable view */}
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-border bg-muted/30">
+          <h2 className="text-sm font-semibold text-foreground">Data</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Billing records for this buying house</p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-max">
+            <thead>
+              <tr className="border-b border-border bg-muted/20">
+                <TH>Client</TH><TH>Period</TH><TH>Platform</TH>
+                <TH>AF Pins</TH><TH>Fraud Pins</TH><TH>Actual Pins</TH>
+                <TH>Gross Amt (PKR)</TH><TH>BH Discount</TH><TH>Receivable (PKR)</TH>
+              </tr>
+            </thead>
+            <tbody>
+              {recordsLoading ? (
+                [...Array(3)].map((_, i) => (
+                  <tr key={i} className="border-b border-border">
+                    {[...Array(9)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
+                  </tr>
+                ))
+              ) : computed.length === 0 ? (
+                <tr><td colSpan={9} className="px-5 py-10 text-center text-sm text-muted-foreground">No billing records</td></tr>
+              ) : (
+                <>
+                  {computed.map(r => (
+                    <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/20">
+                      <TD bold>{r.clientName ?? "—"}</TD>
+                      <TD bold>{r.period}</TD>
+                      <TD>{r.platformName ?? "—"}</TD>
+                      <TD>{r.appsflyerPins.toLocaleString()}</TD>
+                      <TD>{r.fraudPins.toLocaleString()}</TD>
+                      <TD bold>{r.actualPins.toLocaleString()}</TD>
+                      <TD>{fmtNum(r.grossAmtPkr)}</TD>
+                      <TD>{fmtNum(r.bulkDiscountAmt)}</TD>
+                      <TD bold className={r.receivablePkr < 0 ? "text-red-600" : ""}>{fmtNum(r.receivablePkr)}</TD>
+                    </tr>
+                  ))}
+                  <tr className="border-t-2 border-border bg-muted/30">
+                    <TD bold>Total</TD><TD></TD><TD></TD>
+                    <TD bold>{bhTotals.appsflyerPins.toLocaleString()}</TD>
+                    <TD bold>{bhTotals.fraudPins.toLocaleString()}</TD>
+                    <TD bold>{bhTotals.actualPins.toLocaleString()}</TD>
+                    <TD bold>{fmtNum(bhTotals.grossAmtPkr)}</TD>
+                    <TD bold>{fmtNum(bhTotals.bulkDiscountAmt)}</TD>
+                    <TD bold className={bhTotals.receivablePkr < 0 ? "text-red-600" : "text-emerald-600"}>{fmtNum(bhTotals.receivablePkr)}</TD>
+                  </tr>
+                </>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

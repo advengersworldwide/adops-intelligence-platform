@@ -17,10 +17,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { hasPermission } from "@/lib/auth";
 
-const bhSchema = z.object({ name: z.string().min(1, "Name is required") });
+const bhSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  salesTaxPct: z.number().nullable().optional(),
+  withholdingTaxPct: z.number().nullable().optional(),
+  forexSellingRate: z.number().nullable().optional(),
+  bulkDiscountPct: z.number().nullable().optional(),
+});
 type BHForm = z.infer<typeof bhSchema>;
 
-interface BHRow { id: number; name: string; clientCount: number; netMarginPkr: number; createdAt: string }
+interface BHRow {
+  id: number;
+  name: string;
+  clientCount: number;
+  netMarginPkr: number;
+  salesTaxPct?: number | null;
+  withholdingTaxPct?: number | null;
+  forexSellingRate?: number | null;
+  bulkDiscountPct?: number | null;
+  createdAt: string;
+}
 
 function fmtPkr(n: number) {
   return n.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -124,7 +140,13 @@ export default function BuyingHousesPage() {
       <BHDialog
         open={createOpen || !!editBH}
         onClose={() => { setCreateOpen(false); setEditBH(null); }}
-        defaultValues={editBH ? { name: editBH.name } : undefined}
+        defaultValues={editBH ? {
+          name: editBH.name,
+          salesTaxPct: editBH.salesTaxPct,
+          withholdingTaxPct: editBH.withholdingTaxPct,
+          forexSellingRate: editBH.forexSellingRate,
+          bulkDiscountPct: editBH.bulkDiscountPct,
+        } : undefined}
         onSubmit={(data) => {
           if (editBH) updateMutation.mutate({ id: editBH.id, data });
           else createMutation.mutate({ data });
@@ -140,8 +162,14 @@ function BHDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, title 
   open: boolean; onClose: () => void; defaultValues?: BHForm;
   onSubmit: (data: BHForm) => void; isSubmitting: boolean; title: string;
 }) {
-  const form = useForm<BHForm>({ resolver: zodResolver(bhSchema), defaultValues: defaultValues ?? { name: "" } });
-  useEffect(() => { if (open) form.reset(defaultValues ?? { name: "" }); }, [open, defaultValues, form]);
+  const form = useForm<BHForm>({
+    resolver: zodResolver(bhSchema),
+    defaultValues: defaultValues ?? { name: "", salesTaxPct: null, withholdingTaxPct: null, forexSellingRate: null, bulkDiscountPct: null },
+  });
+  useEffect(() => {
+    if (open) form.reset(defaultValues ?? { name: "", salesTaxPct: null, withholdingTaxPct: null, forexSellingRate: null, bulkDiscountPct: null });
+  }, [open, defaultValues, form]);
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
@@ -152,6 +180,66 @@ function BHDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, title 
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl><Input placeholder="e.g. Starcom, GroupM" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="salesTaxPct" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Sales Tax %</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 13"
+                    value={field.value ?? ""}
+                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="withholdingTaxPct" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Withholding Tax %</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 10"
+                    value={field.value ?? ""}
+                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="forexSellingRate" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Forex Selling Rate</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 278.50"
+                    value={field.value ?? ""}
+                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="bulkDiscountPct" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bulk Discount %</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 5"
+                    value={field.value ?? ""}
+                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />
