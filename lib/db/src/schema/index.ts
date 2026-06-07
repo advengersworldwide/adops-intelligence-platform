@@ -6,3 +6,8 @@ export * from "./transactions";
 export * from "./auth";
 export * from "./platform-cost-models";
 export * from "./billing-records";
+export * from "./bills";
+export * from "./bill-transactions";
+export * from "./payments";
+export * from "./payment-bills";
+export * from "./cost-resources";
