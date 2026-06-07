@@ -832,7 +832,7 @@ components:
           type: ["number", "null"]
         withholdingTaxPct:
           type: ["number", "null"]
-        forexSellingRate:
+        remittanceTaxPct:
           type: ["number", "null"]
         bulkDiscountPct:
           type: ["number", "null"]
@@ -850,7 +850,7 @@ components:
           type: ["number", "null"]
         withholdingTaxPct:
           type: ["number", "null"]
-        forexSellingRate:
+        remittanceTaxPct:
           type: ["number", "null"]
         bulkDiscountPct:
           type: ["number", "null"]
@@ -958,10 +958,6 @@ components:
           type: ["string", "null"]
         paymentTerms:
           type: ["string", "null"]
-        remittanceTaxPct:
-          type: ["number", "null"]
-        forexBuyingRate:
-          type: ["number", "null"]
         bulkDiscountPct:
           type: ["number", "null"]
         costModels:
@@ -1026,10 +1022,6 @@ components:
           type: ["string", "null"]
         paymentTerms:
           type: ["string", "null"]
-        remittanceTaxPct:
-          type: ["number", "null"]
-        forexBuyingRate:
-          type: ["number", "null"]
         bulkDiscountPct:
           type: ["number", "null"]
 
