@@ -79,6 +79,8 @@
   },
   "dependencies": {
     "@sentry/react": "^10.55.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "react-grid-layout": "^2.2.3",
     "react-resizable": "^4.0.1"
   }
