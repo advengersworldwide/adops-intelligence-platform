@@ -13,6 +13,7 @@ import fileUploadRouter from "./file-upload";
 import rolesRouter from "./roles";
 import usersRouter from "./users";
 import aiRouter from "./ai";
+import billsRouter from "./bills";
 
 const router: IRouter = Router();
 
@@ -30,5 +31,6 @@ router.use(fileUploadRouter);
 router.use(rolesRouter);
 router.use(usersRouter);
 router.use(aiRouter);
+router.use(billsRouter);
 
 export default router;
