@@ -57,10 +57,10 @@ function generateInvoicePdf(bill: BillDetail) {
     const c = computeRow({
       appsflyerPins: t.appsflyerPins, fraudPins: t.fraudPins,
       payoutRate: t.payoutRate, marginPct: t.marginPct,
-      forexSellingRate: t.forexSellingRate, forexBuyingRate: t.forexBuyingRate,
+      forexSellingRate: t.forexSellingRate ?? 0, forexBuyingRate: t.forexBuyingRate ?? 0,
       salesTaxPct: t.salesTaxPct, remittanceTaxPct: t.remittanceTaxPct,
-      withholdingTaxPct: t.withholdingTaxPct, bulkDiscountPct: t.bulkDiscountPct,
-      platformBulkDiscountPct: t.platformBulkDiscountPct,
+      withholdingTaxPct: t.withholdingTaxPct, bulkDiscountPct: t.bulkDiscountPct ?? 0,
+      platformBulkDiscountPct: t.platformBulkDiscountPct ?? 0,
     });
     return [
       t.period,
@@ -325,7 +325,7 @@ function BillDialog({ open, editBill, onClose, onSuccess }: {
                       <div className="flex items-center gap-2">
                         <input type="checkbox" readOnly checked={selected} className="pointer-events-none" />
                         <span className="font-medium">{t.period}</span>
-                        <span className="text-muted-foreground">{t.platformName ?? t.platformId}</span>
+                        <span className="text-muted-foreground">{t.buyingHouseName ?? t.platformId}</span>
                         <span className="text-muted-foreground">{t.clientName ?? "—"}</span>
                       </div>
                       <span className="font-semibold">PKR {fmtNum(c.receivablePkr)}</span>
