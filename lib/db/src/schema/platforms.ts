@@ -20,8 +20,6 @@ export const platformsTable = pgTable("platforms", {
   salesTaxNumber: text("sales_tax_number"),
   ntnNumber: text("ntn_number"),
   paymentTerms: text("payment_terms"),
-  remittanceTaxPct: numeric("remittance_tax_pct", { precision: 6, scale: 2 }),
-  forexBuyingRate: numeric("forex_buying_rate", { precision: 10, scale: 4 }),
   bulkDiscountPct: numeric("bulk_discount_pct", { precision: 6, scale: 2 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
