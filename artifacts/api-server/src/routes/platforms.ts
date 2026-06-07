@@ -38,8 +38,6 @@ async function mapRow(r: typeof platformsTable.$inferSelect) {
     salesTaxNumber: r.salesTaxNumber,
     ntnNumber: r.ntnNumber,
     paymentTerms: r.paymentTerms,
-    remittanceTaxPct: r.remittanceTaxPct !== null ? Number(r.remittanceTaxPct) : null,
-    forexBuyingRate: r.forexBuyingRate !== null ? parseFloat(r.forexBuyingRate) : null,
     bulkDiscountPct: r.bulkDiscountPct !== null ? parseFloat(r.bulkDiscountPct) : null,
     costModels: costModels.map(cm => ({
       id: cm.id,
@@ -65,11 +63,9 @@ router.post("/platforms", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { forexBuyingRate, bulkDiscountPct, remittanceTaxPct, ...restCreate } = parsed.data;
+  const { bulkDiscountPct, ...restCreate } = parsed.data;
   const [row] = await db.insert(platformsTable).values({
     ...restCreate,
-    remittanceTaxPct: remittanceTaxPct != null ? String(remittanceTaxPct) : null,
-    forexBuyingRate: forexBuyingRate != null ? String(forexBuyingRate) : null,
     bulkDiscountPct: bulkDiscountPct != null ? String(bulkDiscountPct) : null,
   }).returning();
   res.status(201).json(GetPlatformResponse.parse(await mapRow(row)));
@@ -100,12 +96,8 @@ router.patch("/platforms/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { remittanceTaxPct, forexBuyingRate, bulkDiscountPct, ...rest } = parsed.data;
+  const { bulkDiscountPct, ...rest } = parsed.data;
   const updates: Partial<typeof platformsTable.$inferInsert> = { ...rest };
-  if (remittanceTaxPct !== undefined)
-    updates.remittanceTaxPct = remittanceTaxPct !== null ? String(remittanceTaxPct) : null;
-  if (forexBuyingRate !== undefined)
-    updates.forexBuyingRate = forexBuyingRate != null ? String(forexBuyingRate) : null;
   if (bulkDiscountPct !== undefined)
     updates.bulkDiscountPct = bulkDiscountPct != null ? String(bulkDiscountPct) : null;
   const [row] = await db
