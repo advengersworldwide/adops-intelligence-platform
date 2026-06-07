@@ -36,7 +36,7 @@ function mapBH(bh: typeof buyingHousesTable.$inferSelect) {
     name: bh.name,
     salesTaxPct: bh.salesTaxPct !== null ? Number(bh.salesTaxPct) : null,
     withholdingTaxPct: bh.withholdingTaxPct !== null ? Number(bh.withholdingTaxPct) : null,
-    forexSellingRate: bh.forexSellingRate !== null ? Number(bh.forexSellingRate) : null,
+    remittanceTaxPct: bh.remittanceTaxPct !== null ? Number(bh.remittanceTaxPct) : null,
     bulkDiscountPct: bh.bulkDiscountPct !== null ? Number(bh.bulkDiscountPct) : null,
     createdAt: bh.createdAt.toISOString(),
   };
@@ -62,7 +62,7 @@ router.post("/buying-houses", async (req, res): Promise<void> => {
     name: parsed.data.name,
     salesTaxPct: parsed.data.salesTaxPct != null ? String(parsed.data.salesTaxPct) : null,
     withholdingTaxPct: parsed.data.withholdingTaxPct != null ? String(parsed.data.withholdingTaxPct) : null,
-    forexSellingRate: parsed.data.forexSellingRate != null ? String(parsed.data.forexSellingRate) : null,
+    remittanceTaxPct: parsed.data.remittanceTaxPct != null ? String(parsed.data.remittanceTaxPct) : null,
     bulkDiscountPct: parsed.data.bulkDiscountPct != null ? String(parsed.data.bulkDiscountPct) : null,
   }).returning();
   res.status(201).json(GetBuyingHouseResponse.parse({ ...mapBH(row), clientCount: 0, netMarginPkr: 0 }));
@@ -87,7 +87,8 @@ router.patch("/buying-houses/:id", async (req, res): Promise<void> => {
   const updates: Record<string, unknown> = { name: parsed.data.name };
   if (parsed.data.salesTaxPct !== undefined) updates.salesTaxPct = parsed.data.salesTaxPct != null ? String(parsed.data.salesTaxPct) : null;
   if (parsed.data.withholdingTaxPct !== undefined) updates.withholdingTaxPct = parsed.data.withholdingTaxPct != null ? String(parsed.data.withholdingTaxPct) : null;
-  if (parsed.data.forexSellingRate !== undefined) updates.forexSellingRate = parsed.data.forexSellingRate != null ? String(parsed.data.forexSellingRate) : null;
+  if (parsed.data.remittanceTaxPct !== undefined)
+    updates.remittanceTaxPct = parsed.data.remittanceTaxPct != null ? String(parsed.data.remittanceTaxPct) : null;
   if (parsed.data.bulkDiscountPct !== undefined) updates.bulkDiscountPct = parsed.data.bulkDiscountPct != null ? String(parsed.data.bulkDiscountPct) : null;
   const [row] = await db.update(buyingHousesTable).set(updates)
     .where(eq(buyingHousesTable.id, params.data.id)).returning();
