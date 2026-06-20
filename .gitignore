@@ -48,6 +48,9 @@ Thumbs.db
 .cache/
 .local/
 
+# Git worktrees
+.worktrees/
+
 # Environment variable files — NEVER commit these
 .env*
 !.env.example
