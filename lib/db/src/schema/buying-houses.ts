@@ -1,11 +1,10 @@
 import { pgTable, text, serial, timestamp, numeric } from "drizzle-orm/pg-core";
+import { kycColumns } from "./kyc-columns";
 
 export const buyingHousesTable = pgTable("buying_houses", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  salesTaxPct: numeric("sales_tax_pct", { precision: 6, scale: 2 }),
-  withholdingTaxPct: numeric("withholding_tax_pct", { precision: 6, scale: 2 }),
-  remittanceTaxPct: numeric("remittance_tax_pct", { precision: 6, scale: 2 }),
+  ...kycColumns,
   bulkDiscountPct: numeric("bulk_discount_pct", { precision: 6, scale: 2 }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

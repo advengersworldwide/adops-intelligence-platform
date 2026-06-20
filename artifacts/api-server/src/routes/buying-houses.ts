@@ -34,15 +34,17 @@ function mapBH(bh: typeof buyingHousesTable.$inferSelect) {
   return {
     id: bh.id,
     name: bh.name,
-    salesTaxPct: bh.salesTaxPct !== null ? Number(bh.salesTaxPct) : null,
-    withholdingTaxPct: bh.withholdingTaxPct !== null ? Number(bh.withholdingTaxPct) : null,
-    remittanceTaxPct: bh.remittanceTaxPct !== null ? Number(bh.remittanceTaxPct) : null,
     bulkDiscountPct: bh.bulkDiscountPct !== null ? Number(bh.bulkDiscountPct) : null,
+    address: bh.address, pocName: bh.pocName, pocNumber: bh.pocNumber, pocEmail: bh.pocEmail,
+    companyEmail: bh.companyEmail, companyNumber: bh.companyNumber,
+    bankName: bh.bankName, bankAccountNumber: bh.bankAccountNumber, bankAddress: bh.bankAddress,
+    swiftCode: bh.swiftCode, iban: bh.iban,
+    salesTaxNumber: bh.salesTaxNumber, ntnNumber: bh.ntnNumber,
     createdAt: bh.createdAt.toISOString(),
   };
 }
 
-router.get("/buying-houses", async (req, res): Promise<void> => {
+router.get("/buying-houses", async (_req, res): Promise<void> => {
   const bhs = await db.select().from(buyingHousesTable).orderBy(buyingHousesTable.createdAt);
   const result = await Promise.all(bhs.map(async (bh) => {
     const [{ clientCount }] = await db
@@ -60,10 +62,14 @@ router.post("/buying-houses", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [row] = await db.insert(buyingHousesTable).values({
     name: parsed.data.name,
-    salesTaxPct: parsed.data.salesTaxPct != null ? String(parsed.data.salesTaxPct) : null,
-    withholdingTaxPct: parsed.data.withholdingTaxPct != null ? String(parsed.data.withholdingTaxPct) : null,
-    remittanceTaxPct: parsed.data.remittanceTaxPct != null ? String(parsed.data.remittanceTaxPct) : null,
     bulkDiscountPct: parsed.data.bulkDiscountPct != null ? String(parsed.data.bulkDiscountPct) : null,
+    address: parsed.data.address ?? null, pocName: parsed.data.pocName ?? null,
+    pocNumber: parsed.data.pocNumber ?? null, pocEmail: parsed.data.pocEmail ?? null,
+    companyEmail: parsed.data.companyEmail ?? null, companyNumber: parsed.data.companyNumber ?? null,
+    bankName: parsed.data.bankName ?? null, bankAccountNumber: parsed.data.bankAccountNumber ?? null,
+    bankAddress: parsed.data.bankAddress ?? null, swiftCode: parsed.data.swiftCode ?? null,
+    iban: parsed.data.iban ?? null, salesTaxNumber: parsed.data.salesTaxNumber ?? null,
+    ntnNumber: parsed.data.ntnNumber ?? null,
   }).returning();
   res.status(201).json(GetBuyingHouseResponse.parse({ ...mapBH(row), clientCount: 0, netMarginPkr: 0 }));
 });
@@ -84,12 +90,11 @@ router.patch("/buying-houses/:id", async (req, res): Promise<void> => {
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = CreateBuyingHouseBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
-  const updates: Record<string, unknown> = { name: parsed.data.name };
-  if (parsed.data.salesTaxPct !== undefined) updates.salesTaxPct = parsed.data.salesTaxPct != null ? String(parsed.data.salesTaxPct) : null;
-  if (parsed.data.withholdingTaxPct !== undefined) updates.withholdingTaxPct = parsed.data.withholdingTaxPct != null ? String(parsed.data.withholdingTaxPct) : null;
-  if (parsed.data.remittanceTaxPct !== undefined)
-    updates.remittanceTaxPct = parsed.data.remittanceTaxPct != null ? String(parsed.data.remittanceTaxPct) : null;
-  if (parsed.data.bulkDiscountPct !== undefined) updates.bulkDiscountPct = parsed.data.bulkDiscountPct != null ? String(parsed.data.bulkDiscountPct) : null;
+  const d = parsed.data;
+  const updates: Record<string, unknown> = { name: d.name };
+  if (d.bulkDiscountPct !== undefined) updates.bulkDiscountPct = d.bulkDiscountPct != null ? String(d.bulkDiscountPct) : null;
+  const kycKeys = ["address","pocName","pocNumber","pocEmail","companyEmail","companyNumber","bankName","bankAccountNumber","bankAddress","swiftCode","iban","salesTaxNumber","ntnNumber"] as const;
+  for (const k of kycKeys) if ((d as Record<string, unknown>)[k] !== undefined) updates[k] = (d as Record<string, unknown>)[k];
   const [row] = await db.update(buyingHousesTable).set(updates)
     .where(eq(buyingHousesTable.id, params.data.id)).returning();
   if (!row) { res.status(404).json({ error: "Buying house not found" }); return; }

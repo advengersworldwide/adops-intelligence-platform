@@ -1346,40 +1346,45 @@ components:
       type: object
       required: [id, name, clientCount, netMarginPkr, createdAt]
       properties:
-        id:
-          type: integer
-        name:
-          type: string
-        clientCount:
-          type: integer
-        netMarginPkr:
-          type: number
-        salesTaxPct:
-          type: ["number", "null"]
-        withholdingTaxPct:
-          type: ["number", "null"]
-        remittanceTaxPct:
-          type: ["number", "null"]
-        bulkDiscountPct:
-          type: ["number", "null"]
-        createdAt:
-          type: string
+        id: { type: integer }
+        name: { type: string }
+        clientCount: { type: integer }
+        netMarginPkr: { type: number }
+        bulkDiscountPct: { type: ["number", "null"] }
+        address: { type: ["string", "null"] }
+        pocName: { type: ["string", "null"] }
+        pocNumber: { type: ["string", "null"] }
+        pocEmail: { type: ["string", "null"] }
+        companyEmail: { type: ["string", "null"] }
+        companyNumber: { type: ["string", "null"] }
+        bankName: { type: ["string", "null"] }
+        bankAccountNumber: { type: ["string", "null"] }
+        bankAddress: { type: ["string", "null"] }
+        swiftCode: { type: ["string", "null"] }
+        iban: { type: ["string", "null"] }
+        salesTaxNumber: { type: ["string", "null"] }
+        ntnNumber: { type: ["string", "null"] }
+        createdAt: { type: string }
 
     BuyingHouseInput:
       type: object
       required: [name]
       properties:
-        name:
-          type: string
-          minLength: 1
-        salesTaxPct:
-          type: ["number", "null"]
-        withholdingTaxPct:
-          type: ["number", "null"]
-        remittanceTaxPct:
-          type: ["number", "null"]
-        bulkDiscountPct:
-          type: ["number", "null"]
+        name: { type: string, minLength: 1 }
+        bulkDiscountPct: { type: ["number", "null"] }
+        address: { type: ["string", "null"] }
+        pocName: { type: ["string", "null"] }
+        pocNumber: { type: ["string", "null"] }
+        pocEmail: { type: ["string", "null"] }
+        companyEmail: { type: ["string", "null"] }
+        companyNumber: { type: ["string", "null"] }
+        bankName: { type: ["string", "null"] }
+        bankAccountNumber: { type: ["string", "null"] }
+        bankAddress: { type: ["string", "null"] }
+        swiftCode: { type: ["string", "null"] }
+        iban: { type: ["string", "null"] }
+        salesTaxNumber: { type: ["string", "null"] }
+        ntnNumber: { type: ["string", "null"] }
 
     BuyingHouseAnalytics:
       type: object

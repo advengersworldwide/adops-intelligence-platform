@@ -155,13 +155,33 @@ export interface BuyingHouse {
   clientCount: number;
   netMarginPkr: number;
   /** @nullable */
-  salesTaxPct?: number | null;
-  /** @nullable */
-  withholdingTaxPct?: number | null;
-  /** @nullable */
-  remittanceTaxPct?: number | null;
-  /** @nullable */
   bulkDiscountPct?: number | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  pocName?: string | null;
+  /** @nullable */
+  pocNumber?: string | null;
+  /** @nullable */
+  pocEmail?: string | null;
+  /** @nullable */
+  companyEmail?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  bankAccountNumber?: string | null;
+  /** @nullable */
+  bankAddress?: string | null;
+  /** @nullable */
+  swiftCode?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /** @nullable */
+  salesTaxNumber?: string | null;
+  /** @nullable */
+  ntnNumber?: string | null;
   createdAt: string;
 }
 
@@ -169,13 +189,33 @@ export interface BuyingHouseInput {
   /** @minLength 1 */
   name: string;
   /** @nullable */
-  salesTaxPct?: number | null;
-  /** @nullable */
-  withholdingTaxPct?: number | null;
-  /** @nullable */
-  remittanceTaxPct?: number | null;
-  /** @nullable */
   bulkDiscountPct?: number | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  pocName?: string | null;
+  /** @nullable */
+  pocNumber?: string | null;
+  /** @nullable */
+  pocEmail?: string | null;
+  /** @nullable */
+  companyEmail?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  bankAccountNumber?: string | null;
+  /** @nullable */
+  bankAddress?: string | null;
+  /** @nullable */
+  swiftCode?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /** @nullable */
+  salesTaxNumber?: string | null;
+  /** @nullable */
+  ntnNumber?: string | null;
 }
 
 export interface BuyingHouseTrendPoint {

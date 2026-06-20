@@ -372,9 +372,10 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
 
   useEffect(() => {
     if (selectedBH) {
-      if (selectedBH.salesTaxPct != null) form.setValue("salesTaxPct", selectedBH.salesTaxPct);
-      if (selectedBH.withholdingTaxPct != null) form.setValue("withholdingTaxPct", selectedBH.withholdingTaxPct);
-      if (selectedBH.remittanceTaxPct != null) form.setValue("remittanceTaxPct", selectedBH.remittanceTaxPct);
+      // Tax rates moved to client level — pass neutral defaults for now (calc deferral)
+      form.setValue("salesTaxPct", 0);
+      form.setValue("withholdingTaxPct", 0);
+      form.setValue("remittanceTaxPct", 0);
       form.setValue("bulkDiscountPct", selectedBH.bulkDiscountPct ?? 0);
     }
   }, [selectedBHId]); // eslint-disable-line react-hooks/exhaustive-deps

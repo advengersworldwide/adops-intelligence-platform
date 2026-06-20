@@ -798,10 +798,20 @@ export const ListBuyingHousesResponseItem = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
-  "remittanceTaxPct": zod.number().nullish(),
   "bulkDiscountPct": zod.number().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListBuyingHousesResponse = zod.array(ListBuyingHousesResponseItem)
@@ -815,10 +825,20 @@ export const ListBuyingHousesResponse = zod.array(ListBuyingHousesResponseItem)
 
 export const CreateBuyingHouseBody = zod.object({
   "name": zod.string().min(1),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
-  "remittanceTaxPct": zod.number().nullish(),
-  "bulkDiscountPct": zod.number().nullish()
+  "bulkDiscountPct": zod.number().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish()
 })
 
 
@@ -834,10 +854,20 @@ export const GetBuyingHouseResponse = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
-  "remittanceTaxPct": zod.number().nullish(),
   "bulkDiscountPct": zod.number().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -854,10 +884,20 @@ export const UpdateBuyingHouseParams = zod.object({
 
 export const UpdateBuyingHouseBody = zod.object({
   "name": zod.string().min(1),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
-  "remittanceTaxPct": zod.number().nullish(),
-  "bulkDiscountPct": zod.number().nullish()
+  "bulkDiscountPct": zod.number().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish()
 })
 
 export const UpdateBuyingHouseResponse = zod.object({
@@ -865,10 +905,20 @@ export const UpdateBuyingHouseResponse = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
-  "remittanceTaxPct": zod.number().nullish(),
   "bulkDiscountPct": zod.number().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
