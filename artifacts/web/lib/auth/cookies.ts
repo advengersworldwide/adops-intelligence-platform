@@ -9,6 +9,7 @@ export interface CookieOptions {
 }
 
 export function buildCookieOptions(
+  overrides: Partial<CookieOptions> = {},
   nodeEnv: string = process.env.NODE_ENV ?? "development",
 ): CookieOptions {
   return {
@@ -17,5 +18,6 @@ export function buildCookieOptions(
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24, // 24h, matches JWT expiry
+    ...overrides,
   };
 }

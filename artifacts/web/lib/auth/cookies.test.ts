@@ -15,7 +15,7 @@ describe("session cookie", () => {
   });
 
   it("is secure in production and not secure in development", () => {
-    expect(buildCookieOptions("production").secure).toBe(true);
-    expect(buildCookieOptions("development").secure).toBe(false);
+    expect(buildCookieOptions({}, "production").secure).toBe(true);
+    expect(buildCookieOptions({}, "development").secure).toBe(false);
   });
 });
