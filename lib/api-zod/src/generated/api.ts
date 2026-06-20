@@ -25,6 +25,23 @@ export const ListClientsResponseItem = zod.object({
   "name": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListClientsResponse = zod.array(ListClientsResponseItem)
@@ -54,6 +71,23 @@ export const GetClientResponse = zod.object({
   "name": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -70,7 +104,23 @@ export const UpdateClientParams = zod.object({
 
 export const UpdateClientBody = zod.object({
   "name": zod.string().min(1).optional(),
-  "buyingHouseId": zod.number().nullish()
+  "buyingHouseId": zod.number().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "paymentTermsId": zod.number().nullish()
 })
 
 export const UpdateClientResponse = zod.object({
@@ -78,6 +128,23 @@ export const UpdateClientResponse = zod.object({
   "name": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "salesTaxPct": zod.number().nullish(),
+  "withholdingTaxPct": zod.number().nullish(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -87,6 +154,79 @@ export const UpdateClientResponse = zod.object({
  */
 export const DeleteClientParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List events for a client
+ */
+export const ListClientEventsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListClientEventsResponseItem = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "name": zod.string(),
+  "costModelId": zod.number().nullish(),
+  "costModelName": zod.string().nullish(),
+  "billableRate": zod.number(),
+  "createdAt": zod.string()
+})
+export const ListClientEventsResponse = zod.array(ListClientEventsResponseItem)
+
+
+/**
+ * @summary Add an event to a client
+ */
+export const CreateClientEventParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const CreateClientEventBody = zod.object({
+  "name": zod.string().min(1),
+  "costModelId": zod.number().nullish(),
+  "billableRate": zod.number()
+})
+
+
+/**
+ * @summary Update a client event
+ */
+export const UpdateClientEventParams = zod.object({
+  "id": zod.coerce.number(),
+  "eventId": zod.coerce.number()
+})
+
+
+
+
+export const UpdateClientEventBody = zod.object({
+  "name": zod.string().min(1).optional(),
+  "costModelId": zod.number().nullish(),
+  "billableRate": zod.number().optional()
+})
+
+export const UpdateClientEventResponse = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "name": zod.string(),
+  "costModelId": zod.number().nullish(),
+  "costModelName": zod.string().nullish(),
+  "billableRate": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a client event
+ */
+export const DeleteClientEventParams = zod.object({
+  "id": zod.coerce.number(),
+  "eventId": zod.coerce.number()
 })
 
 

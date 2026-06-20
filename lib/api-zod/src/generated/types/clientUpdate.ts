@@ -11,4 +11,36 @@ export interface ClientUpdate {
   name?: string;
   /** @nullable */
   buyingHouseId?: number | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  pocName?: string | null;
+  /** @nullable */
+  pocNumber?: string | null;
+  /** @nullable */
+  pocEmail?: string | null;
+  /** @nullable */
+  companyEmail?: string | null;
+  /** @nullable */
+  companyNumber?: string | null;
+  /** @nullable */
+  bankName?: string | null;
+  /** @nullable */
+  bankAccountNumber?: string | null;
+  /** @nullable */
+  bankAddress?: string | null;
+  /** @nullable */
+  swiftCode?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /** @nullable */
+  salesTaxNumber?: string | null;
+  /** @nullable */
+  ntnNumber?: string | null;
+  /** @nullable */
+  salesTaxPct?: number | null;
+  /** @nullable */
+  withholdingTaxPct?: number | null;
+  /** @nullable */
+  paymentTermsId?: number | null;
 }

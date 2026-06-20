@@ -18,6 +18,7 @@ import paymentsRouter from "./payments";
 import costResourcesRouter from "./cost-resources";
 import costModelsRouter from "./cost-models";
 import paymentTermsRouter from "./payment-terms";
+import clientEventsRouter from "./client-events";
 
 const router: IRouter = Router();
 
@@ -25,6 +26,7 @@ router.use(healthRouter);
 router.use(costModelsRouter);
 router.use(paymentTermsRouter);
 router.use(clientsRouter);
+router.use(clientEventsRouter);
 router.use(platformsRouter);
 router.use(platformCostModelsRouter);
 router.use(billingRecordsRouter);

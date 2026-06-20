@@ -3,6 +3,7 @@ export * from "./clients";
 export * from "./platforms";
 export * from "./cost-models";
 export * from "./payment-terms";
+export * from "./client-events";
 export * from "./campaigns";
 export * from "./transactions";
 export * from "./auth";

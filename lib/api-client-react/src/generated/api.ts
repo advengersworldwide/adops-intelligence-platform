@@ -32,6 +32,9 @@ import type {
   BuyingHouseInput,
   Client,
   ClientAnalytics,
+  ClientEvent,
+  ClientEventInput,
+  ClientEventUpdate,
   ClientInput,
   ClientUpdate,
   CostModel,
@@ -524,6 +527,301 @@ export const useDeleteClient = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteClientMutationOptions(options));
+    }
+
+export const getListClientEventsUrl = (id: number,) => {
+
+
+
+
+  return `/api/clients/${id}/events`
+}
+
+/**
+ * @summary List events for a client
+ */
+export const listClientEvents = async (id: number, options?: RequestInit): Promise<ClientEvent[]> => {
+
+  return customFetch<ClientEvent[]>(getListClientEventsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListClientEventsQueryKey = (id: number,) => {
+    return [
+    `/api/clients/${id}/events`
+    ] as const;
+    }
+
+
+export const getListClientEventsQueryOptions = <TData = Awaited<ReturnType<typeof listClientEvents>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClientEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListClientEventsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listClientEvents>>> = ({ signal }) => listClientEvents(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listClientEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListClientEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listClientEvents>>>
+export type ListClientEventsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List events for a client
+ */
+
+export function useListClientEvents<TData = Awaited<ReturnType<typeof listClientEvents>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClientEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListClientEventsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateClientEventUrl = (id: number,) => {
+
+
+
+
+  return `/api/clients/${id}/events`
+}
+
+/**
+ * @summary Add an event to a client
+ */
+export const createClientEvent = async (id: number,
+    clientEventInput: ClientEventInput, options?: RequestInit): Promise<ClientEvent> => {
+
+  return customFetch<ClientEvent>(getCreateClientEventUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      clientEventInput,)
+  }
+);}
+
+
+
+
+export const getCreateClientEventMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createClientEvent>>, TError,{id: number;data: BodyType<ClientEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createClientEvent>>, TError,{id: number;data: BodyType<ClientEventInput>}, TContext> => {
+
+const mutationKey = ['createClientEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createClientEvent>>, {id: number;data: BodyType<ClientEventInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  createClientEvent(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateClientEventMutationResult = NonNullable<Awaited<ReturnType<typeof createClientEvent>>>
+    export type CreateClientEventMutationBody = BodyType<ClientEventInput>
+    export type CreateClientEventMutationError = ErrorType<void>
+
+    /**
+ * @summary Add an event to a client
+ */
+export const useCreateClientEvent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createClientEvent>>, TError,{id: number;data: BodyType<ClientEventInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createClientEvent>>,
+        TError,
+        {id: number;data: BodyType<ClientEventInput>},
+        TContext
+      > => {
+      return useMutation(getCreateClientEventMutationOptions(options));
+    }
+
+export const getUpdateClientEventUrl = (id: number,
+    eventId: number,) => {
+
+
+
+
+  return `/api/clients/${id}/events/${eventId}`
+}
+
+/**
+ * @summary Update a client event
+ */
+export const updateClientEvent = async (id: number,
+    eventId: number,
+    clientEventUpdate: ClientEventUpdate, options?: RequestInit): Promise<ClientEvent> => {
+
+  return customFetch<ClientEvent>(getUpdateClientEventUrl(id,eventId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      clientEventUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateClientEventMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClientEvent>>, TError,{id: number;eventId: number;data: BodyType<ClientEventUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateClientEvent>>, TError,{id: number;eventId: number;data: BodyType<ClientEventUpdate>}, TContext> => {
+
+const mutationKey = ['updateClientEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateClientEvent>>, {id: number;eventId: number;data: BodyType<ClientEventUpdate>}> = (props) => {
+          const {id,eventId,data} = props ?? {};
+
+          return  updateClientEvent(id,eventId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateClientEventMutationResult = NonNullable<Awaited<ReturnType<typeof updateClientEvent>>>
+    export type UpdateClientEventMutationBody = BodyType<ClientEventUpdate>
+    export type UpdateClientEventMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a client event
+ */
+export const useUpdateClientEvent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateClientEvent>>, TError,{id: number;eventId: number;data: BodyType<ClientEventUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateClientEvent>>,
+        TError,
+        {id: number;eventId: number;data: BodyType<ClientEventUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateClientEventMutationOptions(options));
+    }
+
+export const getDeleteClientEventUrl = (id: number,
+    eventId: number,) => {
+
+
+
+
+  return `/api/clients/${id}/events/${eventId}`
+}
+
+/**
+ * @summary Delete a client event
+ */
+export const deleteClientEvent = async (id: number,
+    eventId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteClientEventUrl(id,eventId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteClientEventMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClientEvent>>, TError,{id: number;eventId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteClientEvent>>, TError,{id: number;eventId: number}, TContext> => {
+
+const mutationKey = ['deleteClientEvent'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteClientEvent>>, {id: number;eventId: number}> = (props) => {
+          const {id,eventId} = props ?? {};
+
+          return  deleteClientEvent(id,eventId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteClientEventMutationResult = NonNullable<Awaited<ReturnType<typeof deleteClientEvent>>>
+
+    export type DeleteClientEventMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a client event
+ */
+export const useDeleteClientEvent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteClientEvent>>, TError,{id: number;eventId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteClientEvent>>,
+        TError,
+        {id: number;eventId: number},
+        TContext
+      > => {
+      return useMutation(getDeleteClientEventMutationOptions(options));
     }
 
 export const getListCostModelsUrl = () => {

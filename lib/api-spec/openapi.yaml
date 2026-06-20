@@ -150,6 +150,71 @@ paths:
         "404":
           description: Not found
 
+  /clients/{id}/events:
+    get:
+      operationId: listClientEvents
+      tags: [clients]
+      summary: List events for a client
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ClientEvent" }
+    post:
+      operationId: createClientEvent
+      tags: [clients]
+      summary: Add an event to a client
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientEventInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientEvent" }
+        "400": { description: Validation error }
+
+  /clients/{id}/events/{eventId}:
+    patch:
+      operationId: updateClientEvent
+      tags: [clients]
+      summary: Update a client event
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: eventId, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientEventUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientEvent" }
+        "404": { description: Not found }
+    delete:
+      operationId: deleteClientEvent
+      tags: [clients]
+      summary: Delete a client event
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: eventId, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found }
+
   # ── Cost Models ──────────────────────────────────────────────────────────────
   /cost-models:
     get:
@@ -1197,35 +1262,84 @@ components:
       type: object
       required: [id, name, createdAt]
       properties:
-        id:
-          type: integer
-        name:
-          type: string
-        buyingHouseId:
-          type: ["integer", "null"]
-        buyingHouseName:
-          type: ["string", "null"]
-        createdAt:
-          type: string
+        id: { type: integer }
+        name: { type: string }
+        buyingHouseId: { type: ["integer", "null"] }
+        buyingHouseName: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        pocName: { type: ["string", "null"] }
+        pocNumber: { type: ["string", "null"] }
+        pocEmail: { type: ["string", "null"] }
+        companyEmail: { type: ["string", "null"] }
+        companyNumber: { type: ["string", "null"] }
+        bankName: { type: ["string", "null"] }
+        bankAccountNumber: { type: ["string", "null"] }
+        bankAddress: { type: ["string", "null"] }
+        swiftCode: { type: ["string", "null"] }
+        iban: { type: ["string", "null"] }
+        salesTaxNumber: { type: ["string", "null"] }
+        ntnNumber: { type: ["string", "null"] }
+        salesTaxPct: { type: ["number", "null"] }
+        withholdingTaxPct: { type: ["number", "null"] }
+        paymentTermsId: { type: ["integer", "null"] }
+        paymentTermName: { type: ["string", "null"] }
+        createdAt: { type: string }
 
     ClientInput:
       type: object
       required: [name]
       properties:
-        name:
-          type: string
-          minLength: 1
-        buyingHouseId:
-          type: ["integer", "null"]
+        name: { type: string, minLength: 1 }
+        buyingHouseId: { type: ["integer", "null"] }
 
     ClientUpdate:
       type: object
       properties:
-        name:
-          type: string
-          minLength: 1
-        buyingHouseId:
-          type: ["integer", "null"]
+        name: { type: string, minLength: 1 }
+        buyingHouseId: { type: ["integer", "null"] }
+        address: { type: ["string", "null"] }
+        pocName: { type: ["string", "null"] }
+        pocNumber: { type: ["string", "null"] }
+        pocEmail: { type: ["string", "null"] }
+        companyEmail: { type: ["string", "null"] }
+        companyNumber: { type: ["string", "null"] }
+        bankName: { type: ["string", "null"] }
+        bankAccountNumber: { type: ["string", "null"] }
+        bankAddress: { type: ["string", "null"] }
+        swiftCode: { type: ["string", "null"] }
+        iban: { type: ["string", "null"] }
+        salesTaxNumber: { type: ["string", "null"] }
+        ntnNumber: { type: ["string", "null"] }
+        salesTaxPct: { type: ["number", "null"] }
+        withholdingTaxPct: { type: ["number", "null"] }
+        paymentTermsId: { type: ["integer", "null"] }
+
+    ClientEvent:
+      type: object
+      required: [id, clientId, name, billableRate, createdAt]
+      properties:
+        id: { type: integer }
+        clientId: { type: integer }
+        name: { type: string }
+        costModelId: { type: ["integer", "null"] }
+        costModelName: { type: ["string", "null"] }
+        billableRate: { type: number }
+        createdAt: { type: string }
+
+    ClientEventInput:
+      type: object
+      required: [name, billableRate]
+      properties:
+        name: { type: string, minLength: 1 }
+        costModelId: { type: ["integer", "null"] }
+        billableRate: { type: number }
+
+    ClientEventUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1 }
+        costModelId: { type: ["integer", "null"] }
+        billableRate: { type: number }
 
     # ── BuyingHouse ──────────────────────────────────────────────────────────────
     BuyingHouse:
