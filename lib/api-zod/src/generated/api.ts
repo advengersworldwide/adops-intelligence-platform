@@ -91,6 +91,66 @@ export const DeleteClientParams = zod.object({
 
 
 /**
+ * @summary List all cost models
+ */
+export const ListCostModelsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListCostModelsResponse = zod.array(ListCostModelsResponseItem)
+
+
+/**
+ * @summary Create a cost model
+ */
+
+
+
+export const CreateCostModelBody = zod.object({
+  "name": zod.string().min(1)
+})
+
+
+/**
+ * @summary Delete a cost model
+ */
+export const DeleteCostModelParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all payment terms
+ */
+export const ListPaymentTermsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "createdAt": zod.string()
+})
+export const ListPaymentTermsResponse = zod.array(ListPaymentTermsResponseItem)
+
+
+/**
+ * @summary Create a payment term
+ */
+
+
+
+export const CreatePaymentTermBody = zod.object({
+  "name": zod.string().min(1)
+})
+
+
+/**
+ * @summary Delete a payment term
+ */
+export const DeletePaymentTermParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
  * @summary List all DSP platforms
  */
 export const ListPlatformsResponseItem = zod.object({

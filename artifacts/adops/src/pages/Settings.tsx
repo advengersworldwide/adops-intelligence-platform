@@ -8,13 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { getRoles, saveRole, deleteRole, getUsers, saveUser, deleteUser, ALL_PERMISSIONS, Role, User } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import {
+  useListCostModels, useCreateCostModel, useDeleteCostModel, getListCostModelsQueryKey,
+  useListPaymentTerms, useCreatePaymentTerm, useDeletePaymentTerm, getListPaymentTermsQueryKey,
+} from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
   // Active settings tabs
-  const [activeTab, setActiveTab] = useState<"general" | "roles" | "users">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "roles" | "users" | "costModels" | "paymentTerms">("general");
 
   // General Settings States
   const [alertNegative, setAlertNegative] = useState(
@@ -61,6 +66,15 @@ export default function SettingsPage() {
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState("");
+
+  // Catalog hooks
+  const qc = useQueryClient();
+  const { data: costModels } = useListCostModels();
+  const createCostModel = useCreateCostModel({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListCostModelsQueryKey() }); toast({ title: "Cost model added" }); } } });
+  const deleteCostModelM = useDeleteCostModel({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListCostModelsQueryKey() }); toast({ title: "Cost model deleted" }); } } });
+  const { data: paymentTerms } = useListPaymentTerms();
+  const createPaymentTerm = useCreatePaymentTerm({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListPaymentTermsQueryKey() }); toast({ title: "Payment term added" }); } } });
+  const deletePaymentTermM = useDeletePaymentTerm({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListPaymentTermsQueryKey() }); toast({ title: "Payment term deleted" }); } } });
 
   // Load roles and users from the API on mount
   useEffect(() => {
@@ -236,6 +250,8 @@ export default function SettingsPage() {
           { id: "general", label: "Currency & Appearance" },
           { id: "roles", label: "Roles & Rights" },
           { id: "users", label: "User Accounts" },
+          { id: "costModels", label: "Cost Models" },
+          { id: "paymentTerms", label: "Payment Terms" },
         ].map(tab => (
           <button
             key={tab.id}
@@ -759,6 +775,74 @@ export default function SettingsPage() {
           </Dialog>
         </div>
       )}
+
+      {activeTab === "costModels" && (
+        <CatalogTab
+          title="Cost Models" description="Names referenced when configuring client events."
+          placeholder="e.g. CPI, CPA, CPL"
+          items={costModels ?? []}
+          onAdd={(name) => createCostModel.mutate({ data: { name } })}
+          onDelete={(id) => deleteCostModelM.mutate({ id })}
+        />
+      )}
+
+      {activeTab === "paymentTerms" && (
+        <CatalogTab
+          title="Payment Terms" description="Names referenced by clients and partners."
+          placeholder="e.g. Net 30, Net 60"
+          items={paymentTerms ?? []}
+          onAdd={(name) => createPaymentTerm.mutate({ data: { name } })}
+          onDelete={(id) => deletePaymentTermM.mutate({ id })}
+        />
+      )}
+    </div>
+  );
+}
+
+function CatalogTab({
+  title, description, items, onAdd, onDelete, placeholder,
+}: {
+  title: string;
+  description: string;
+  items: Array<{ id: number; name: string }>;
+  onAdd: (name: string) => void;
+  onDelete: (id: number) => void;
+  placeholder: string;
+}) {
+  const [name, setName] = useState("");
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const t = name.trim();
+    if (t) { onAdd(t); setName(""); }
+  };
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-bold text-foreground">{title}</h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      <form onSubmit={submit} className="flex gap-2 max-w-md">
+        <Input value={name} onChange={e => setName(e.target.value)} placeholder={placeholder} className="text-sm h-9" />
+        <Button type="submit" size="sm" className="gap-1.5 text-xs"><Plus className="h-3.5 w-3.5" /> Add</Button>
+      </form>
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden max-w-md">
+        <table className="w-full">
+          <tbody>
+            {items.length === 0 ? (
+              <tr><td className="px-5 py-8 text-center text-sm text-muted-foreground">None yet</td></tr>
+            ) : items.map(it => (
+              <tr key={it.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                <td className="px-5 py-3 text-sm font-medium text-foreground">{it.name}</td>
+                <td className="px-5 py-3 text-right">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive" onClick={() => onDelete(it.id)}>
+                    <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

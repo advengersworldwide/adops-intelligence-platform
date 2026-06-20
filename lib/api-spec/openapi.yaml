@@ -34,6 +34,10 @@ tags:
     description: Business cost resource tracking
   - name: file-upload
     description: File attachment uploads
+  - name: cost-models
+    description: Global cost model catalog
+  - name: payment-terms
+    description: Global payment terms catalog
 
 paths:
   /healthz:
@@ -145,6 +149,90 @@ paths:
           description: Deleted
         "404":
           description: Not found
+
+  # ── Cost Models ──────────────────────────────────────────────────────────────
+  /cost-models:
+    get:
+      operationId: listCostModels
+      tags: [cost-models]
+      summary: List all cost models
+      responses:
+        "200":
+          description: List of cost models
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CostModel" }
+    post:
+      operationId: createCostModel
+      tags: [cost-models]
+      summary: Create a cost model
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CostModelInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CostModel" }
+        "400": { description: Validation error }
+
+  /cost-models/{id}:
+    delete:
+      operationId: deleteCostModel
+      tags: [cost-models]
+      summary: Delete a cost model
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found }
+
+  # ── Payment Terms ─────────────────────────────────────────────────────────────
+  /payment-terms:
+    get:
+      operationId: listPaymentTerms
+      tags: [payment-terms]
+      summary: List all payment terms
+      responses:
+        "200":
+          description: List of payment terms
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PaymentTerm" }
+    post:
+      operationId: createPaymentTerm
+      tags: [payment-terms]
+      summary: Create a payment term
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentTermInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentTerm" }
+        "400": { description: Validation error }
+
+  /payment-terms/{id}:
+    delete:
+      operationId: deletePaymentTerm
+      tags: [payment-terms]
+      summary: Delete a payment term
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found }
 
   # ── Platforms ─────────────────────────────────────────────────────────────────
   /platforms:
@@ -1074,6 +1162,35 @@ components:
           type: string
       required:
         - status
+
+    # ── Cost Models + Payment Terms ───────────────────────────────────────────
+    CostModel:
+      type: object
+      required: [id, name, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        createdAt: { type: string }
+
+    CostModelInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
+
+    PaymentTerm:
+      type: object
+      required: [id, name, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        createdAt: { type: string }
+
+    PaymentTermInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1 }
 
     # ── Client ──────────────────────────────────────────────────────────────────
     Client:

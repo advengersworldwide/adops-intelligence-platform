@@ -16,10 +16,14 @@ import aiRouter from "./ai";
 import billsRouter from "./bills";
 import paymentsRouter from "./payments";
 import costResourcesRouter from "./cost-resources";
+import costModelsRouter from "./cost-models";
+import paymentTermsRouter from "./payment-terms";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(costModelsRouter);
+router.use(paymentTermsRouter);
 router.use(clientsRouter);
 router.use(platformsRouter);
 router.use(platformCostModelsRouter);

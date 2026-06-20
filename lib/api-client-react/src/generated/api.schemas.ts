@@ -9,6 +9,28 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface CostModel {
+  id: number;
+  name: string;
+  createdAt: string;
+}
+
+export interface CostModelInput {
+  /** @minLength 1 */
+  name: string;
+}
+
+export interface PaymentTerm {
+  id: number;
+  name: string;
+  createdAt: string;
+}
+
+export interface PaymentTermInput {
+  /** @minLength 1 */
+  name: string;
+}
+
 export interface Client {
   id: number;
   name: string;
