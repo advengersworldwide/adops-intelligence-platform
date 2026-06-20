@@ -35,7 +35,7 @@ function fmt(n: number) {
   return `$${n.toFixed(0)}`;
 }
 
-export default function PlatformsPage() {
+export default function PartnersPage() {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const qc = useQueryClient();

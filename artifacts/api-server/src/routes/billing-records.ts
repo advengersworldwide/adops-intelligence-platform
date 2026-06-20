@@ -50,7 +50,7 @@ async function mapRecord(r: typeof billingRecordsTable.$inferSelect) {
   };
 }
 
-router.get("/platforms/:id/billing-records", async (req, res): Promise<void> => {
+router.get("/partners/:id/billing-records", async (req, res): Promise<void> => {
   const params = ListBillingRecordsParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const query = ListBillingRecordsQueryParams.safeParse(req.query);
@@ -67,7 +67,7 @@ router.get("/platforms/:id/billing-records", async (req, res): Promise<void> => 
   res.json(ListBillingRecordsResponse.parse(mapped));
 });
 
-router.post("/platforms/:id/billing-records", optionalAuth, async (req, res): Promise<void> => {
+router.post("/partners/:id/billing-records", optionalAuth, async (req, res): Promise<void> => {
   const params = CreateBillingRecordParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = CreateBillingRecordBody.safeParse(req.body);
@@ -101,7 +101,7 @@ router.post("/platforms/:id/billing-records", optionalAuth, async (req, res): Pr
   }
 });
 
-router.patch("/platforms/:id/billing-records/:recordId", optionalAuth, async (req, res): Promise<void> => {
+router.patch("/partners/:id/billing-records/:recordId", optionalAuth, async (req, res): Promise<void> => {
   const params = DeleteBillingRecordParams.safeParse({
     id: parseInt(req.params.id as string, 10),
     recordId: parseInt(req.params.recordId as string, 10),
@@ -139,7 +139,7 @@ router.patch("/platforms/:id/billing-records/:recordId", optionalAuth, async (re
   }
 });
 
-router.delete("/platforms/:id/billing-records/:recordId", async (req, res): Promise<void> => {
+router.delete("/partners/:id/billing-records/:recordId", async (req, res): Promise<void> => {
   const params = DeleteBillingRecordParams.safeParse({
     id: parseInt(req.params.id as string, 10),
     recordId: parseInt(req.params.recordId as string, 10),
