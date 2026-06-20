@@ -1,15 +1,15 @@
 import { Router, type IRouter } from "express";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, clientsTable, platformsTable, buyingHousesTable } from "@workspace/db";
+import { db, transactionsTable, campaignsTable, clientsTable, partnersTable, buyingHousesTable } from "@workspace/db";
 import {
   GetDashboardSummaryQueryParams,
   GetProfitOverTimeQueryParams,
   GetAnalyticsByClientQueryParams,
-  GetAnalyticsByPlatformQueryParams,
+  GetAnalyticsByPartnerQueryParams,
   GetDashboardSummaryResponse,
   GetProfitOverTimeResponse,
   GetAnalyticsByClientResponse,
-  GetAnalyticsByPlatformResponse,
+  GetAnalyticsByPartnerResponse,
   GetAlertsResponse,
 } from "@workspace/api-zod";
 
@@ -45,12 +45,12 @@ router.get("/analytics/dashboard", async (req, res): Promise<void> => {
   const [counts] = await db
     .select({
       clientCount: sql<number>`count(distinct ${clientsTable.id})::int`,
-      platformCount: sql<number>`count(distinct ${platformsTable.id})::int`,
+      platformCount: sql<number>`count(distinct ${partnersTable.id})::int`,
       campaignCount: sql<number>`count(distinct ${campaignsTable.id})::int`,
     })
     .from(clientsTable)
     .leftJoin(campaignsTable, eq(campaignsTable.clientId, clientsTable.id))
-    .leftJoin(platformsTable, eq(platformsTable.id, campaignsTable.platformId));
+    .leftJoin(partnersTable, eq(partnersTable.id, campaignsTable.platformId));
 
   const totalRevenue = parseFloat(agg?.totalRevenue ?? "0");
   const totalCost = parseFloat(agg?.totalCost ?? "0");
@@ -150,7 +150,7 @@ router.get("/analytics/by-client", async (req, res): Promise<void> => {
 });
 
 router.get("/analytics/by-platform", async (req, res): Promise<void> => {
-  const qp = GetAnalyticsByPlatformQueryParams.safeParse(req.query);
+  const qp = GetAnalyticsByPartnerQueryParams.safeParse(req.query);
   if (!qp.success) {
     res.status(400).json({ error: qp.error.message });
     return;
@@ -161,23 +161,23 @@ router.get("/analytics/by-platform", async (req, res): Promise<void> => {
 
   const rows = await db
     .select({
-      platformId: platformsTable.id,
-      platformName: platformsTable.name,
+      platformId: partnersTable.id,
+      platformName: partnersTable.name,
       revenue: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
       cost: sql<string>`coalesce(sum(${transactionsTable.cost}), 0)`,
       profit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
       transactionCount: sql<number>`count(${transactionsTable.id})::int`,
     })
-    .from(platformsTable)
-    .leftJoin(campaignsTable, eq(campaignsTable.platformId, platformsTable.id))
+    .from(partnersTable)
+    .leftJoin(campaignsTable, eq(campaignsTable.platformId, partnersTable.id))
     .leftJoin(transactionsTable, and(
       eq(transactionsTable.campaignId, campaignsTable.id),
       whereClause,
     ))
-    .groupBy(platformsTable.id, platformsTable.name)
+    .groupBy(partnersTable.id, partnersTable.name)
     .orderBy(sql`sum(${transactionsTable.profit}) desc nulls last`);
 
-  res.json(GetAnalyticsByPlatformResponse.parse(rows.map(r => {
+  res.json(GetAnalyticsByPartnerResponse.parse(rows.map(r => {
     const revenue = parseFloat(r.revenue ?? "0");
     const profit = parseFloat(r.profit ?? "0");
     const marginPct = revenue > 0 ? (profit / revenue) * 100 : 0;
@@ -200,15 +200,15 @@ router.get("/analytics/alerts", async (req, res): Promise<void> => {
       campaignId: campaignsTable.id,
       campaignName: campaignsTable.name,
       clientName: clientsTable.name,
-      platformName: platformsTable.name,
+      platformName: partnersTable.name,
       totalSpend: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
       totalProfit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
     })
     .from(campaignsTable)
     .leftJoin(clientsTable, eq(clientsTable.id, campaignsTable.clientId))
-    .leftJoin(platformsTable, eq(platformsTable.id, campaignsTable.platformId))
+    .leftJoin(partnersTable, eq(partnersTable.id, campaignsTable.platformId))
     .leftJoin(transactionsTable, eq(transactionsTable.campaignId, campaignsTable.id))
-    .groupBy(campaignsTable.id, campaignsTable.name, clientsTable.name, platformsTable.name)
+    .groupBy(campaignsTable.id, campaignsTable.name, clientsTable.name, partnersTable.name)
     .having(sql`count(${transactionsTable.id}) > 0`);
 
   const alerts: Array<{

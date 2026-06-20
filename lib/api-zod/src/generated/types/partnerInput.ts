@@ -6,8 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PlatformUpdate {
-  name?: string;
+export interface PartnerInput {
+  /** @minLength 1 */
+  name: string;
   /** @nullable */
   address?: string | null;
   /** @nullable */

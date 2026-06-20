@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import clientsRouter from "./clients";
-import platformsRouter from "./platforms";
+import partnersRouter from "./partners";
 import partnerConfigRouter from "./partner-config";
 import billingRecordsRouter from "./billing-records";
 import billingRouter from "./billing";
@@ -27,7 +27,7 @@ router.use(costModelsRouter);
 router.use(paymentTermsRouter);
 router.use(clientsRouter);
 router.use(clientEventsRouter);
-router.use(platformsRouter);
+router.use(partnersRouter);
 router.use(partnerConfigRouter);
 router.use(billingRecordsRouter);
 router.use(billingRouter);

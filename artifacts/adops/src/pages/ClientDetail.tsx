@@ -1,9 +1,23 @@
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import {
-  useGetClient, useListAllBillingRecords, useListPlatforms, useListBuyingHouses,
+  useGetClient, useUpdateClient, getGetClientQueryKey,
+  useListAllBillingRecords, useListPartners, useListBuyingHouses,
+  useListClientEvents, useCreateClientEvent, useUpdateClientEvent, useDeleteClientEvent,
+  getListClientEventsQueryKey,
+  useListCostModels, useListPaymentTerms,
+  type ClientEvent,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { hasPermission } from "@/lib/auth";
+import { KycFields, kycFromRecord, kycToPayload, type KycState, EMPTY_KYC } from "@/components/KycFields";
 import { cn } from "@/lib/utils";
 import { computeRow } from "@/lib/computeRow";
 
@@ -22,14 +36,249 @@ const TH = ({ children }: { children?: React.ReactNode }) =>
 const TD = ({ children, bold, className }: { children?: React.ReactNode; bold?: boolean; className?: string }) =>
   <td className={cn("px-3 py-2 text-xs whitespace-nowrap", bold && "font-semibold", className)}>{children}</td>;
 
-export default function ClientDetailPage({ id }: { id: number }) {
-  const { data: client, isLoading: clientLoading } = useGetClient(id);
+// ── Details Tab ──────────────────────────────────────────────────────────────
 
-  const { data: billingRecords, isLoading: recordsLoading } = useListAllBillingRecords(
-    client?.id != null ? { clientId: client.id } : {}
+function DetailsTab({ clientId }: { clientId: number }) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const canEdit = hasPermission("Edit Clients");
+  const { data: client } = useGetClient(clientId);
+  const { data: paymentTerms } = useListPaymentTerms();
+  const updateClient = useUpdateClient();
+
+  const [kyc, setKyc] = useState<KycState>(EMPTY_KYC);
+  const [salesTaxPct, setSalesTaxPct] = useState("");
+  const [withholdingTaxPct, setWithholdingTaxPct] = useState("");
+  const [paymentTermsId, setPaymentTermsId] = useState("none");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!client) return;
+    setKyc(kycFromRecord(client));
+    setSalesTaxPct(client.salesTaxPct != null ? String(client.salesTaxPct) : "");
+    setWithholdingTaxPct(client.withholdingTaxPct != null ? String(client.withholdingTaxPct) : "");
+    setPaymentTermsId(client.paymentTermsId != null ? String(client.paymentTermsId) : "none");
+  }, [client]);
+
+  async function handleSave() {
+    if (!client) return;
+    setSaving(true);
+    try {
+      await updateClient.mutateAsync({ id: clientId, data: {
+        ...kycToPayload(kyc),
+        salesTaxPct: salesTaxPct.trim() !== "" ? parseFloat(salesTaxPct) : null,
+        withholdingTaxPct: withholdingTaxPct.trim() !== "" ? parseFloat(withholdingTaxPct) : null,
+        paymentTermsId: paymentTermsId === "none" ? null : parseInt(paymentTermsId, 10),
+      }});
+      await qc.invalidateQueries({ queryKey: getGetClientQueryKey(clientId) });
+      toast({ title: "Changes saved" });
+    } catch { toast({ title: "Failed to save", variant: "destructive" }); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <div className="space-y-6">
+      <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
+      <div className="rounded-lg border border-border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground">Tax Rates & Payment</h3>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Sales Tax %</span>
+            <Input type="number" step="0.01" value={salesTaxPct} disabled={!canEdit}
+              onChange={e => setSalesTaxPct(e.target.value)} placeholder="e.g. 13" />
+          </label>
+          <label className="block space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Withholding Tax %</span>
+            <Input type="number" step="0.01" value={withholdingTaxPct} disabled={!canEdit}
+              onChange={e => setWithholdingTaxPct(e.target.value)} placeholder="e.g. 10" />
+          </label>
+          <div className="space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Payment Terms</span>
+            <Select value={paymentTermsId} onValueChange={setPaymentTermsId} disabled={!canEdit}>
+              <SelectTrigger><SelectValue placeholder="Select payment terms" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {(paymentTerms ?? []).map(pt => <SelectItem key={pt.id} value={String(pt.id)}>{pt.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+      {canEdit && <div className="flex justify-end"><Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button></div>}
+    </div>
   );
+}
 
-  const { data: platforms } = useListPlatforms();
+// ── Events Tab ───────────────────────────────────────────────────────────────
+
+function EventsTab({ clientId }: { clientId: number }) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const canEdit = hasPermission("Edit Clients");
+  const invalidate = () => qc.invalidateQueries({ queryKey: getListClientEventsQueryKey(clientId) });
+
+  const { data: events, isLoading } = useListClientEvents(clientId);
+  const { data: costModels } = useListCostModels();
+  const createEvent = useCreateClientEvent({ mutation: { onSuccess: () => { invalidate(); toast({ title: "Event added" }); } } });
+  const deleteEvent = useDeleteClientEvent({ mutation: { onSuccess: () => { invalidate(); toast({ title: "Event deleted" }); } } });
+
+  const [newName, setNewName] = useState("");
+  const [newCostModelId, setNewCostModelId] = useState("none");
+  const [newBillableRate, setNewBillableRate] = useState("");
+
+  function handleAdd() {
+    const name = newName.trim();
+    const rate = parseFloat(newBillableRate);
+    if (!name || isNaN(rate)) return;
+    createEvent.mutate({
+      id: clientId,
+      data: {
+        name,
+        costModelId: newCostModelId === "none" ? null : parseInt(newCostModelId, 10),
+        billableRate: rate,
+      },
+    });
+    setNewName(""); setNewCostModelId("none"); setNewBillableRate("");
+  }
+
+  return (
+    <div className="space-y-4">
+      {canEdit && (
+        <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Add Event</h3>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Event Name</span>
+              <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="e.g. Install, Purchase" />
+            </label>
+            <div className="space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Cost Model</span>
+              <Select value={newCostModelId} onValueChange={setNewCostModelId}>
+                <SelectTrigger><SelectValue placeholder="Select cost model" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {(costModels ?? []).map(cm => <SelectItem key={cm.id} value={String(cm.id)}>{cm.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <label className="block space-y-1.5">
+              <span className="text-xs font-medium text-muted-foreground">Billable Rate ($)</span>
+              <Input type="number" step="0.0001" value={newBillableRate} onChange={e => setNewBillableRate(e.target.value)} placeholder="0.00" />
+            </label>
+          </div>
+          <div className="flex justify-end">
+            <Button size="sm" className="gap-1.5" onClick={handleAdd} disabled={!newName.trim() || !newBillableRate}>
+              <Plus className="h-3.5 w-3.5" /> Add Event
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="p-5 space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-4 w-full" />)}</div>
+        ) : !events?.length ? (
+          <p className="px-5 py-8 text-center text-sm text-muted-foreground">No events yet.</p>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Name</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Cost Model</th>
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground">Billable Rate ($)</th>
+                {canEdit && <th className="px-4 py-2.5" />}
+              </tr>
+            </thead>
+            <tbody>
+              {events.map(ev => (
+                <EventRow key={ev.id} clientId={clientId} ev={ev} canEdit={canEdit}
+                  costModels={costModels ?? []} onDelete={() => deleteEvent.mutate({ id: clientId, eventId: ev.id })}
+                  onUpdated={invalidate} />
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EventRow({ clientId, ev, canEdit, costModels, onDelete, onUpdated }: {
+  clientId: number;
+  ev: ClientEvent;
+  canEdit: boolean;
+  costModels: Array<{ id: number; name: string }>;
+  onDelete: () => void;
+  onUpdated: () => void;
+}) {
+  const { toast } = useToast();
+  const updateEvent = useUpdateClientEvent({ mutation: { onSuccess: () => { onUpdated(); toast({ title: "Event updated" }); } } });
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(ev.name);
+  const [costModelId, setCostModelId] = useState(ev.costModelId != null ? String(ev.costModelId) : "none");
+  const [billableRate, setBillableRate] = useState(String(ev.billableRate));
+
+  function handleSave() {
+    const rate = parseFloat(billableRate);
+    if (!name.trim() || isNaN(rate)) return;
+    updateEvent.mutate({ id: clientId, eventId: ev.id, data: {
+      name: name.trim(),
+      costModelId: costModelId === "none" ? null : parseInt(costModelId, 10),
+      billableRate: rate,
+    }});
+    setEditing(false);
+  }
+
+  if (!editing) {
+    return (
+      <tr className="border-b border-border last:border-0 hover:bg-muted/30">
+        <td className="px-4 py-2.5 text-sm font-medium">{ev.name}</td>
+        <td className="px-4 py-2.5 text-sm text-muted-foreground">{ev.costModelName ?? "—"}</td>
+        <td className="px-4 py-2.5 text-sm">{ev.billableRate}</td>
+        {canEdit && (
+          <td className="px-4 py-2.5">
+            <div className="flex gap-1 justify-end">
+              <button onClick={() => setEditing(true)} className="rounded p-1.5 text-muted-foreground hover:bg-accent">
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={onDelete} className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </td>
+        )}
+      </tr>
+    );
+  }
+
+  return (
+    <tr className="border-b border-border last:border-0 bg-muted/20">
+      <td className="px-4 py-2"><Input value={name} onChange={e => setName(e.target.value)} className="h-8 text-sm" /></td>
+      <td className="px-4 py-2">
+        <Select value={costModelId} onValueChange={setCostModelId}>
+          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">None</SelectItem>
+            {costModels.map(cm => <SelectItem key={cm.id} value={String(cm.id)}>{cm.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </td>
+      <td className="px-4 py-2"><Input type="number" step="0.0001" value={billableRate} onChange={e => setBillableRate(e.target.value)} className="h-8 w-28 text-sm" /></td>
+      <td className="px-4 py-2">
+        <div className="flex gap-1 justify-end">
+          <button onClick={handleSave} className="rounded p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"><Check className="h-3.5 w-3.5" /></button>
+          <button onClick={() => setEditing(false)} className="rounded p-1.5 text-muted-foreground hover:bg-accent"><X className="h-3.5 w-3.5" /></button>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+// ── Data Tab ─────────────────────────────────────────────────────────────────
+
+function DataTab({ clientId }: { clientId: number }) {
+  const { data: billingRecords, isLoading: recordsLoading } = useListAllBillingRecords({ clientId });
+  const { data: platforms } = useListPartners();
   const { data: buyingHouses } = useListBuyingHouses();
 
   const platformNameMap = Object.fromEntries((platforms ?? []).map(p => [p.id, p.name]));
@@ -54,7 +303,58 @@ export default function ClientDetailPage({ id }: { id: number }) {
     }),
   }));
 
-  if (clientLoading) {
+  return (
+    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+      {recordsLoading ? (
+        <div className="p-5 space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-4 w-full" />)}</div>
+      ) : !computed.length ? (
+        <p className="px-5 py-8 text-center text-sm text-muted-foreground">No billing records yet.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border">
+                <TH>Period</TH>
+                <TH>Via (BH)</TH>
+                <TH>Partner</TH>
+                <TH>MMP Pins</TH>
+                <TH>Fraud Pins</TH>
+                <TH>Actual Pins</TH>
+                <TH>Receivable (PKR)</TH>
+                <TH>Net Margin (PKR)</TH>
+              </tr>
+            </thead>
+            <tbody>
+              {computed.map(r => (
+                <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                  <TD bold>{r.period}</TD>
+                  <TD>{r.buyingHouseName ?? "—"}</TD>
+                  <TD>{r.platformName ?? "—"}</TD>
+                  <TD>{fmtNum(r.appsflyerPins)}</TD>
+                  <TD>{fmtNum(r.fraudPins)}</TD>
+                  <TD>{fmtNum(r.actualPins)}</TD>
+                  <TD className={r.receivablePkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
+                    {fmtPkr(r.receivablePkr)}
+                  </TD>
+                  <TD bold className={r.netMarginPkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
+                    {fmtPkr(r.netMarginPkr)}
+                  </TD>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+export default function ClientDetailPage({ id }: { id: number }) {
+  const { data: client, isLoading } = useGetClient(id);
+
+  if (isLoading) {
     return (
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
@@ -67,7 +367,6 @@ export default function ClientDetailPage({ id }: { id: number }) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <Link href="/clients">
           <button className="rounded-lg p-1.5 text-muted-foreground hover:bg-accent">
@@ -82,66 +381,22 @@ export default function ClientDetailPage({ id }: { id: number }) {
         )}
       </div>
 
-      {/* Client Info */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm p-5 grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-xs text-muted-foreground">Name</p>
-          <p className="text-sm font-medium mt-0.5">{client.name}</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground">Buying House</p>
-          <p className="text-sm font-medium mt-0.5">{client.buyingHouseName ?? "—"}</p>
-        </div>
-      </div>
-
-      {/* Data */}
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-border bg-muted/30">
-          <h2 className="text-sm font-semibold text-foreground">Data</h2>
-        </div>
-        {recordsLoading ? (
-          <div className="p-5 space-y-2">
-            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-4 w-full" />)}
-          </div>
-        ) : !computed.length ? (
-          <p className="px-5 py-8 text-center text-sm text-muted-foreground">No billing records yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border">
-                  <TH>Period</TH>
-                  <TH>Via (BH)</TH>
-                  <TH>Platform</TH>
-                  <TH>MMP Pins</TH>
-                  <TH>Fraud Pins</TH>
-                  <TH>Actual Pins</TH>
-                  <TH>Receivable (PKR)</TH>
-                  <TH>Net Margin (PKR)</TH>
-                </tr>
-              </thead>
-              <tbody>
-                {computed.map(r => (
-                  <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                    <TD bold>{r.period}</TD>
-                    <TD>{r.buyingHouseName ?? "—"}</TD>
-                    <TD>{r.platformName ?? "—"}</TD>
-                    <TD>{fmtNum(r.appsflyerPins)}</TD>
-                    <TD>{fmtNum(r.fraudPins)}</TD>
-                    <TD>{fmtNum(r.actualPins)}</TD>
-                    <TD className={r.receivablePkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
-                      {fmtPkr(r.receivablePkr)}
-                    </TD>
-                    <TD bold className={r.netMarginPkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
-                      {fmtPkr(r.netMarginPkr)}
-                    </TD>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Tabs defaultValue="details">
+        <TabsList className="mb-4">
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="events">Events</TabsTrigger>
+          <TabsTrigger value="data">Data</TabsTrigger>
+        </TabsList>
+        <TabsContent value="details">
+          <DetailsTab clientId={id} />
+        </TabsContent>
+        <TabsContent value="events">
+          <EventsTab clientId={id} />
+        </TabsContent>
+        <TabsContent value="data">
+          <DataTab clientId={id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
 import {
   db, billingRecordsTable, buyingHousesTable, clientsTable,
-  platformsTable, costModelsTable,
+  partnersTable, costModelsTable,
 } from "@workspace/db";
 import { ListAllBillingRecordsQueryParams, ListAllBillingRecordsResponse } from "@workspace/api-zod";
 
@@ -39,13 +39,13 @@ router.get("/billing-records", async (req, res): Promise<void> => {
       platformBulkDiscountPct: billingRecordsTable.platformBulkDiscountPct,
       createdBy: billingRecordsTable.createdBy,
       createdAt: billingRecordsTable.createdAt,
-      platformName: platformsTable.name,
+      platformName: partnersTable.name,
       buyingHouseName: buyingHousesTable.name,
       clientName: clientsTable.name,
       costModelName: costModelsTable.name,
     })
     .from(billingRecordsTable)
-    .leftJoin(platformsTable, eq(billingRecordsTable.platformId, platformsTable.id))
+    .leftJoin(partnersTable, eq(billingRecordsTable.platformId, partnersTable.id))
     .leftJoin(buyingHousesTable, eq(billingRecordsTable.buyingHouseId, buyingHousesTable.id))
     .leftJoin(clientsTable, eq(billingRecordsTable.clientId, clientsTable.id))
     .leftJoin(costModelsTable, eq(billingRecordsTable.costModelId, costModelsTable.id))

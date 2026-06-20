@@ -2,7 +2,7 @@ import { eq, gte, sum } from "drizzle-orm";
 import {
   db,
   clientsTable,
-  platformsTable,
+  partnersTable,
   campaignsTable,
   transactionsTable,
 } from "@workspace/db";
@@ -16,18 +16,18 @@ export async function buildContext(): Promise<string> {
     db.select({ name: clientsTable.name })
       .from(clientsTable),
 
-    db.select({ name: platformsTable.name })
-      .from(platformsTable),
+    db.select({ name: partnersTable.name })
+      .from(partnersTable),
 
     db.select({
       id: campaignsTable.id,
       name: campaignsTable.name,
       clientName: clientsTable.name,
-      platformName: platformsTable.name,
+      platformName: partnersTable.name,
     })
       .from(campaignsTable)
       .leftJoin(clientsTable, eq(campaignsTable.clientId, clientsTable.id))
-      .leftJoin(platformsTable, eq(campaignsTable.platformId, platformsTable.id))
+      .leftJoin(partnersTable, eq(campaignsTable.platformId, partnersTable.id))
       .limit(50),
 
     db.select({

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { useListBillingRecords, useListBuyingHouses, useListClients } from "@workspace/api-client-react";
-import type { Platform } from "@workspace/api-client-react";
+import type { Partner } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +18,7 @@ const TH = ({ children }: TH) => <th className="px-3 py-2 text-left text-[10px] 
 type TD = { children?: React.ReactNode; bold?: boolean; className?: string };
 const TD = ({ children, bold, className }: TD) => <td className={cn("px-3 py-2 text-xs whitespace-nowrap", bold && "font-semibold", className)}>{children}</td>;
 
-export default function PlatformDataTab({ platformId, platform }: { platformId: number; platform: Platform }) {
+export default function PlatformDataTab({ platformId, platform }: { platformId: number; platform: Partner }) {
   const [periodFilter, setPeriodFilter] = useState("");
   const [bhFilter, setBhFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");

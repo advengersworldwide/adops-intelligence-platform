@@ -1,4 +1,4 @@
-import { db, clientsTable, platformsTable, campaignsTable, transactionsTable } from "@workspace/db";
+import { db, clientsTable, partnersTable, campaignsTable, transactionsTable } from "@workspace/db";
 
 async function seed() {
   const logger = console;
@@ -16,7 +16,7 @@ async function seed() {
     { name: "Initech Group" },
   ]).returning();
 
-  const [ttd, dv360, amazon] = await db.insert(platformsTable).values([
+  const [ttd, dv360, amazon] = await db.insert(partnersTable).values([
     { name: "The Trade Desk" },
     { name: "DV360" },
     { name: "Amazon DSP" },

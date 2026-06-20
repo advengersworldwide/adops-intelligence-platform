@@ -1,13 +1,21 @@
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { ArrowLeft, Building2 } from "lucide-react";
 import {
-  useGetBuyingHouse, useGetBuyingHouseAnalytics,
-  useListAllBillingRecords, useListPlatforms, useListClients,
+  useGetBuyingHouse, useUpdateBuyingHouse, getGetBuyingHouseQueryKey,
+  useGetBuyingHouseAnalytics,
+  useListAllBillingRecords, useListPartners, useListClients,
 } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { computeRow } from "@/lib/computeRow";
+import { useToast } from "@/hooks/use-toast";
+import { hasPermission } from "@/lib/auth";
+import { KycFields, kycFromRecord, kycToPayload, type KycState, EMPTY_KYC } from "@/components/KycFields";
 
 function KpiCard({ label, value }: { label: string; value: string }) {
   return (
@@ -34,11 +42,41 @@ const TD = ({ children, bold, className }: { children?: React.ReactNode; bold?: 
   <td className={cn("px-3 py-2 text-xs whitespace-nowrap", bold && "font-semibold", className)}>{children}</td>;
 
 export default function BuyingHouseDetailPage({ id }: { id: number }) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const canEdit = hasPermission("Edit Buying Houses");
+
   const { data: bh, isLoading: bhLoading } = useGetBuyingHouse(id);
   const { data: analytics, isLoading: analyticsLoading } = useGetBuyingHouseAnalytics(id);
   const { data: allRecords, isLoading: recordsLoading } = useListAllBillingRecords({ buyingHouseId: id });
-  const { data: platforms } = useListPlatforms();
+  const { data: platforms } = useListPartners();
   const { data: clients } = useListClients();
+  const updateBH = useUpdateBuyingHouse();
+
+  const [kyc, setKyc] = useState<KycState>(EMPTY_KYC);
+  const [bulkDiscountPct, setBulkDiscountPct] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!bh) return;
+    setKyc(kycFromRecord(bh));
+    setBulkDiscountPct(bh.bulkDiscountPct != null ? String(bh.bulkDiscountPct) : "");
+  }, [bh]);
+
+  async function handleSave() {
+    if (!bh) return;
+    setSaving(true);
+    try {
+      await updateBH.mutateAsync({ id, data: {
+        name: bh.name,
+        ...kycToPayload(kyc),
+        bulkDiscountPct: bulkDiscountPct.trim() !== "" ? parseFloat(bulkDiscountPct) : null,
+      }});
+      await qc.invalidateQueries({ queryKey: getGetBuyingHouseQueryKey(id) });
+      toast({ title: "Changes saved" });
+    } catch { toast({ title: "Failed to save", variant: "destructive" }); }
+    finally { setSaving(false); }
+  }
 
   const platformNameMap = Object.fromEntries((platforms ?? []).map(p => [p.id, p.name]));
   const clientNameMap = Object.fromEntries((clients ?? []).map(c => [c.id, c.name]));
@@ -97,6 +135,19 @@ export default function BuyingHouseDetailPage({ id }: { id: number }) {
         <h1 className="text-xl font-bold text-foreground">{bh.name}</h1>
       </div>
 
+      {/* Details — KYC + Bulk Discount */}
+      <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
+      <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Bulk Discount %</span>
+        <Input type="number" step="0.01" value={bulkDiscountPct} disabled={!canEdit}
+          onChange={e => setBulkDiscountPct(e.target.value)} placeholder="e.g. 5" />
+      </div>
+      {canEdit && (
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button>
+        </div>
+      )}
+
       {/* KPI Cards */}
       {analyticsLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -121,14 +172,8 @@ export default function BuyingHouseDetailPage({ id }: { id: number }) {
               <XAxis dataKey="period" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} tickFormatter={(v: number) => (v / 1000).toFixed(0) + "K"} />
               <Tooltip formatter={(v: number) => fmtPkr(v)} />
-              <Area
-                type="monotone"
-                dataKey="netMarginPkr"
-                name="Net Margin"
-                stroke="hsl(var(--primary))"
-                fill="hsl(var(--primary) / 0.1)"
-                strokeWidth={2}
-              />
+              <Area type="monotone" dataKey="netMarginPkr" name="Net Margin"
+                stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.1)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -163,7 +208,7 @@ export default function BuyingHouseDetailPage({ id }: { id: number }) {
         )}
       </div>
 
-      {/* BH Data — receivable view */}
+      {/* BH Data */}
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="px-5 py-3 border-b border-border bg-muted/30">
           <h2 className="text-sm font-semibold text-foreground">Data</h2>
@@ -173,7 +218,7 @@ export default function BuyingHouseDetailPage({ id }: { id: number }) {
           <table className="w-full min-w-max">
             <thead>
               <tr className="border-b border-border bg-muted/20">
-                <TH>Client</TH><TH>Period</TH><TH>Platform</TH>
+                <TH>Client</TH><TH>Period</TH><TH>Partner</TH>
                 <TH>MMP Pins</TH><TH>Fraud Pins</TH><TH>Actual Pins</TH>
                 <TH>Gross Amt (PKR)</TH><TH>BH Discount</TH><TH>Receivable (PKR)</TH>
               </tr>

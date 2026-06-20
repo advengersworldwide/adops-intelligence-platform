@@ -19,10 +19,6 @@ import { hasPermission } from "@/lib/auth";
 
 const bhSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  salesTaxPct: z.number().nullable().optional(),
-  withholdingTaxPct: z.number().nullable().optional(),
-  remittanceTaxPct: z.number().nullable().optional(),
-  bulkDiscountPct: z.number().nullable().optional(),
 });
 type BHForm = z.infer<typeof bhSchema>;
 
@@ -31,10 +27,6 @@ interface BHRow {
   name: string;
   clientCount: number;
   netMarginPkr: number;
-  salesTaxPct?: number | null;
-  withholdingTaxPct?: number | null;
-  remittanceTaxPct?: number | null;
-  bulkDiscountPct?: number | null;
   createdAt: string;
 }
 
@@ -140,13 +132,7 @@ export default function BuyingHousesPage() {
       <BHDialog
         open={createOpen || !!editBH}
         onClose={() => { setCreateOpen(false); setEditBH(null); }}
-        defaultValues={editBH ? {
-          name: editBH.name,
-          salesTaxPct: editBH.salesTaxPct,
-          withholdingTaxPct: editBH.withholdingTaxPct,
-          remittanceTaxPct: editBH.remittanceTaxPct,
-          bulkDiscountPct: editBH.bulkDiscountPct,
-        } : undefined}
+        defaultValues={editBH ? { name: editBH.name } : undefined}
         onSubmit={(data) => {
           if (editBH) updateMutation.mutate({ id: editBH.id, data });
           else createMutation.mutate({ data });
@@ -164,10 +150,10 @@ function BHDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, title 
 }) {
   const form = useForm<BHForm>({
     resolver: zodResolver(bhSchema),
-    defaultValues: defaultValues ?? { name: "", salesTaxPct: null, withholdingTaxPct: null, remittanceTaxPct: null, bulkDiscountPct: null },
+    defaultValues: defaultValues ?? { name: "" },
   });
   useEffect(() => {
-    if (open) form.reset(defaultValues ?? { name: "", salesTaxPct: null, withholdingTaxPct: null, remittanceTaxPct: null, bulkDiscountPct: null });
+    if (open) form.reset(defaultValues ?? { name: "" });
   }, [open, defaultValues, form]);
 
   return (
@@ -180,66 +166,6 @@ function BHDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, title 
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl><Input placeholder="e.g. Starcom, GroupM" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="salesTaxPct" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Sales Tax %</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 13"
-                    value={field.value ?? ""}
-                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="withholdingTaxPct" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Withholding Tax %</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 10"
-                    value={field.value ?? ""}
-                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="remittanceTaxPct" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Remittance Tax %</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 1.5"
-                    value={field.value ?? ""}
-                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="bulkDiscountPct" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Bulk Discount %</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder="e.g. 5"
-                    value={field.value ?? ""}
-                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
-                  />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )} />

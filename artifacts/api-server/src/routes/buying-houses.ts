@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, count } from "drizzle-orm";
-import { db, buyingHousesTable, billingRecordsTable, clientsTable, platformsTable } from "@workspace/db";
+import { db, buyingHousesTable, billingRecordsTable, clientsTable, partnersTable } from "@workspace/db";
 import { computeRow } from "../lib/computeRow";
 import {
   ListBuyingHousesResponse,
@@ -180,10 +180,10 @@ router.get("/buying-houses/:id/billing-records", async (req, res): Promise<void>
       withholdingTaxPct: billingRecordsTable.withholdingTaxPct,
       bulkDiscountPct: billingRecordsTable.bulkDiscountPct,
       platformBulkDiscountPct: billingRecordsTable.platformBulkDiscountPct,
-      createdAt: billingRecordsTable.createdAt, platformName: platformsTable.name,
+      createdAt: billingRecordsTable.createdAt, platformName: partnersTable.name,
     })
     .from(billingRecordsTable)
-    .leftJoin(platformsTable, eq(billingRecordsTable.platformId, platformsTable.id))
+    .leftJoin(partnersTable, eq(billingRecordsTable.platformId, partnersTable.id))
     .where(eq(billingRecordsTable.buyingHouseId, params.data.id))
     .orderBy(billingRecordsTable.period);
 

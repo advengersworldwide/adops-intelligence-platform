@@ -43,7 +43,7 @@ import type {
   CostResourceInput,
   DashboardSummary,
   GetAnalyticsByClientParams,
-  GetAnalyticsByPlatformParams,
+  GetAnalyticsByPartnerParams,
   GetDashboardSummaryParams,
   GetProfitOverTimeParams,
   HealthStatus,
@@ -53,17 +53,17 @@ import type {
   ListBillsParams,
   ListCostResourcesParams,
   ListTransactionsParams,
+  Partner,
+  PartnerAnalytics,
   PartnerClient,
   PartnerClientEvent,
+  PartnerInput,
   PartnerPayoutInput,
+  PartnerUpdate,
   PaymentDetail,
   PaymentInput,
   PaymentTerm,
   PaymentTermInput,
-  Platform,
-  PlatformAnalytics,
-  PlatformInput,
-  PlatformUpdate,
   ProfitTimePoint,
   Transaction,
   TransactionInput,
@@ -1261,20 +1261,20 @@ export const useDeletePaymentTerm = <TError = ErrorType<void>,
       return useMutation(getDeletePaymentTermMutationOptions(options));
     }
 
-export const getListPlatformsUrl = () => {
+export const getListPartnersUrl = () => {
 
 
 
 
-  return `/api/platforms`
+  return `/api/partners`
 }
 
 /**
  * @summary List all DSP platforms
  */
-export const listPlatforms = async ( options?: RequestInit): Promise<Platform[]> => {
+export const listPartners = async ( options?: RequestInit): Promise<Partner[]> => {
 
-  return customFetch<Platform[]>(getListPlatformsUrl(),
+  return customFetch<Partner[]>(getListPartnersUrl(),
   {
     ...options,
     method: 'GET'
@@ -1287,45 +1287,45 @@ export const listPlatforms = async ( options?: RequestInit): Promise<Platform[]>
 
 
 
-export const getListPlatformsQueryKey = () => {
+export const getListPartnersQueryKey = () => {
     return [
-    `/api/platforms`
+    `/api/partners`
     ] as const;
     }
 
 
-export const getListPlatformsQueryOptions = <TData = Awaited<ReturnType<typeof listPlatforms>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPlatforms>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getListPartnersQueryOptions = <TData = Awaited<ReturnType<typeof listPartners>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartners>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getListPlatformsQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getListPartnersQueryKey();
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPlatforms>>> = ({ signal }) => listPlatforms({ signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPartners>>> = ({ signal }) => listPartners({ signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPlatforms>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPartners>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type ListPlatformsQueryResult = NonNullable<Awaited<ReturnType<typeof listPlatforms>>>
-export type ListPlatformsQueryError = ErrorType<unknown>
+export type ListPartnersQueryResult = NonNullable<Awaited<ReturnType<typeof listPartners>>>
+export type ListPartnersQueryError = ErrorType<unknown>
 
 
 /**
  * @summary List all DSP platforms
  */
 
-export function useListPlatforms<TData = Awaited<ReturnType<typeof listPlatforms>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPlatforms>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useListPartners<TData = Awaited<ReturnType<typeof listPartners>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartners>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getListPlatformsQueryOptions(options)
+  const queryOptions = getListPartnersQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -1338,37 +1338,37 @@ export function useListPlatforms<TData = Awaited<ReturnType<typeof listPlatforms
 
 
 
-export const getCreatePlatformUrl = () => {
+export const getCreatePartnerUrl = () => {
 
 
 
 
-  return `/api/platforms`
+  return `/api/partners`
 }
 
 /**
  * @summary Create a new platform
  */
-export const createPlatform = async (platformInput: PlatformInput, options?: RequestInit): Promise<Platform> => {
+export const createPartner = async (partnerInput: PartnerInput, options?: RequestInit): Promise<Partner> => {
 
-  return customFetch<Platform>(getCreatePlatformUrl(),
+  return customFetch<Partner>(getCreatePartnerUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      platformInput,)
+      partnerInput,)
   }
 );}
 
 
 
 
-export const getCreatePlatformMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPlatform>>, TError,{data: BodyType<PlatformInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createPlatform>>, TError,{data: BodyType<PlatformInput>}, TContext> => {
+export const getCreatePartnerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPartner>>, TError,{data: BodyType<PartnerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPartner>>, TError,{data: BodyType<PartnerInput>}, TContext> => {
 
-const mutationKey = ['createPlatform'];
+const mutationKey = ['createPartner'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1378,10 +1378,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPlatform>>, {data: BodyType<PlatformInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPartner>>, {data: BodyType<PartnerInput>}> = (props) => {
           const {data} = props ?? {};
 
-          return  createPlatform(data,requestOptions)
+          return  createPartner(data,requestOptions)
         }
 
 
@@ -1391,38 +1391,38 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreatePlatformMutationResult = NonNullable<Awaited<ReturnType<typeof createPlatform>>>
-    export type CreatePlatformMutationBody = BodyType<PlatformInput>
-    export type CreatePlatformMutationError = ErrorType<void>
+    export type CreatePartnerMutationResult = NonNullable<Awaited<ReturnType<typeof createPartner>>>
+    export type CreatePartnerMutationBody = BodyType<PartnerInput>
+    export type CreatePartnerMutationError = ErrorType<void>
 
     /**
  * @summary Create a new platform
  */
-export const useCreatePlatform = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPlatform>>, TError,{data: BodyType<PlatformInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useCreatePartner = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPartner>>, TError,{data: BodyType<PartnerInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof createPlatform>>,
+        Awaited<ReturnType<typeof createPartner>>,
         TError,
-        {data: BodyType<PlatformInput>},
+        {data: BodyType<PartnerInput>},
         TContext
       > => {
-      return useMutation(getCreatePlatformMutationOptions(options));
+      return useMutation(getCreatePartnerMutationOptions(options));
     }
 
-export const getGetPlatformUrl = (id: number,) => {
+export const getGetPartnerUrl = (id: number,) => {
 
 
 
 
-  return `/api/platforms/${id}`
+  return `/api/partners/${id}`
 }
 
 /**
  * @summary Get a platform by ID
  */
-export const getPlatform = async (id: number, options?: RequestInit): Promise<Platform> => {
+export const getPartner = async (id: number, options?: RequestInit): Promise<Partner> => {
 
-  return customFetch<Platform>(getGetPlatformUrl(id),
+  return customFetch<Partner>(getGetPartnerUrl(id),
   {
     ...options,
     method: 'GET'
@@ -1435,45 +1435,45 @@ export const getPlatform = async (id: number, options?: RequestInit): Promise<Pl
 
 
 
-export const getGetPlatformQueryKey = (id: number,) => {
+export const getGetPartnerQueryKey = (id: number,) => {
     return [
-    `/api/platforms/${id}`
+    `/api/partners/${id}`
     ] as const;
     }
 
 
-export const getGetPlatformQueryOptions = <TData = Awaited<ReturnType<typeof getPlatform>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPlatform>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetPartnerQueryOptions = <TData = Awaited<ReturnType<typeof getPartner>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPartner>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetPlatformQueryKey(id);
+  const queryKey =  queryOptions?.queryKey ?? getGetPartnerQueryKey(id);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPlatform>>> = ({ signal }) => getPlatform(id, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPartner>>> = ({ signal }) => getPartner(id, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPlatform>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPartner>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetPlatformQueryResult = NonNullable<Awaited<ReturnType<typeof getPlatform>>>
-export type GetPlatformQueryError = ErrorType<void>
+export type GetPartnerQueryResult = NonNullable<Awaited<ReturnType<typeof getPartner>>>
+export type GetPartnerQueryError = ErrorType<void>
 
 
 /**
  * @summary Get a platform by ID
  */
 
-export function useGetPlatform<TData = Awaited<ReturnType<typeof getPlatform>>, TError = ErrorType<void>>(
- id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPlatform>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useGetPartner<TData = Awaited<ReturnType<typeof getPartner>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPartner>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetPlatformQueryOptions(id,options)
+  const queryOptions = getGetPartnerQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
@@ -1486,38 +1486,38 @@ export function useGetPlatform<TData = Awaited<ReturnType<typeof getPlatform>>, 
 
 
 
-export const getUpdatePlatformUrl = (id: number,) => {
+export const getUpdatePartnerUrl = (id: number,) => {
 
 
 
 
-  return `/api/platforms/${id}`
+  return `/api/partners/${id}`
 }
 
 /**
  * @summary Update a platform
  */
-export const updatePlatform = async (id: number,
-    platformUpdate: PlatformUpdate, options?: RequestInit): Promise<Platform> => {
+export const updatePartner = async (id: number,
+    partnerUpdate: PartnerUpdate, options?: RequestInit): Promise<Partner> => {
 
-  return customFetch<Platform>(getUpdatePlatformUrl(id),
+  return customFetch<Partner>(getUpdatePartnerUrl(id),
   {
     ...options,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      platformUpdate,)
+      partnerUpdate,)
   }
 );}
 
 
 
 
-export const getUpdatePlatformMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePlatform>>, TError,{id: number;data: BodyType<PlatformUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updatePlatform>>, TError,{id: number;data: BodyType<PlatformUpdate>}, TContext> => {
+export const getUpdatePartnerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartner>>, TError,{id: number;data: BodyType<PartnerUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePartner>>, TError,{id: number;data: BodyType<PartnerUpdate>}, TContext> => {
 
-const mutationKey = ['updatePlatform'];
+const mutationKey = ['updatePartner'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1527,10 +1527,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePlatform>>, {id: number;data: BodyType<PlatformUpdate>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePartner>>, {id: number;data: BodyType<PartnerUpdate>}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  updatePlatform(id,data,requestOptions)
+          return  updatePartner(id,data,requestOptions)
         }
 
 
@@ -1540,38 +1540,38 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type UpdatePlatformMutationResult = NonNullable<Awaited<ReturnType<typeof updatePlatform>>>
-    export type UpdatePlatformMutationBody = BodyType<PlatformUpdate>
-    export type UpdatePlatformMutationError = ErrorType<void>
+    export type UpdatePartnerMutationResult = NonNullable<Awaited<ReturnType<typeof updatePartner>>>
+    export type UpdatePartnerMutationBody = BodyType<PartnerUpdate>
+    export type UpdatePartnerMutationError = ErrorType<void>
 
     /**
  * @summary Update a platform
  */
-export const useUpdatePlatform = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePlatform>>, TError,{id: number;data: BodyType<PlatformUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useUpdatePartner = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartner>>, TError,{id: number;data: BodyType<PartnerUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof updatePlatform>>,
+        Awaited<ReturnType<typeof updatePartner>>,
         TError,
-        {id: number;data: BodyType<PlatformUpdate>},
+        {id: number;data: BodyType<PartnerUpdate>},
         TContext
       > => {
-      return useMutation(getUpdatePlatformMutationOptions(options));
+      return useMutation(getUpdatePartnerMutationOptions(options));
     }
 
-export const getDeletePlatformUrl = (id: number,) => {
+export const getDeletePartnerUrl = (id: number,) => {
 
 
 
 
-  return `/api/platforms/${id}`
+  return `/api/partners/${id}`
 }
 
 /**
  * @summary Delete a platform
  */
-export const deletePlatform = async (id: number, options?: RequestInit): Promise<void> => {
+export const deletePartner = async (id: number, options?: RequestInit): Promise<void> => {
 
-  return customFetch<void>(getDeletePlatformUrl(id),
+  return customFetch<void>(getDeletePartnerUrl(id),
   {
     ...options,
     method: 'DELETE'
@@ -1583,11 +1583,11 @@ export const deletePlatform = async (id: number, options?: RequestInit): Promise
 
 
 
-export const getDeletePlatformMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePlatform>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deletePlatform>>, TError,{id: number}, TContext> => {
+export const getDeletePartnerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePartner>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePartner>>, TError,{id: number}, TContext> => {
 
-const mutationKey = ['deletePlatform'];
+const mutationKey = ['deletePartner'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1597,10 +1597,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePlatform>>, {id: number}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePartner>>, {id: number}> = (props) => {
           const {id} = props ?? {};
 
-          return  deletePlatform(id,requestOptions)
+          return  deletePartner(id,requestOptions)
         }
 
 
@@ -1610,22 +1610,22 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeletePlatformMutationResult = NonNullable<Awaited<ReturnType<typeof deletePlatform>>>
+    export type DeletePartnerMutationResult = NonNullable<Awaited<ReturnType<typeof deletePartner>>>
 
-    export type DeletePlatformMutationError = ErrorType<void>
+    export type DeletePartnerMutationError = ErrorType<void>
 
     /**
  * @summary Delete a platform
  */
-export const useDeletePlatform = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePlatform>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useDeletePartner = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePartner>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof deletePlatform>>,
+        Awaited<ReturnType<typeof deletePartner>>,
         TError,
         {id: number},
         TContext
       > => {
-      return useMutation(getDeletePlatformMutationOptions(options));
+      return useMutation(getDeletePartnerMutationOptions(options));
     }
 
 export const getListPartnerClientsUrl = (id: number,) => {
@@ -1633,7 +1633,7 @@ export const getListPartnerClientsUrl = (id: number,) => {
 
 
 
-  return `/api/platforms/${id}/clients`
+  return `/api/partners/${id}/clients`
 }
 
 /**
@@ -1656,7 +1656,7 @@ export const listPartnerClients = async (id: number, options?: RequestInit): Pro
 
 export const getListPartnerClientsQueryKey = (id: number,) => {
     return [
-    `/api/platforms/${id}/clients`
+    `/api/partners/${id}/clients`
     ] as const;
     }
 
@@ -1710,7 +1710,7 @@ export const getLinkPartnerClientUrl = (id: number,) => {
 
 
 
-  return `/api/platforms/${id}/clients`
+  return `/api/partners/${id}/clients`
 }
 
 /**
@@ -1783,7 +1783,7 @@ export const getUnlinkPartnerClientUrl = (id: number,
 
 
 
-  return `/api/platforms/${id}/clients/${clientId}`
+  return `/api/partners/${id}/clients/${clientId}`
 }
 
 /**
@@ -1856,7 +1856,7 @@ export const getSetPartnerEventPayoutUrl = (id: number,
 
 
 
-  return `/api/platforms/${id}/clients/${clientId}/events/${eventId}/payout`
+  return `/api/partners/${id}/clients/${clientId}/events/${eventId}/payout`
 }
 
 /**
@@ -1938,7 +1938,7 @@ export const getListBillingRecordsUrl = (id: number,
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/api/platforms/${id}/billing-records?${stringifiedParams}` : `/api/platforms/${id}/billing-records`
+  return stringifiedParams.length > 0 ? `/api/partners/${id}/billing-records?${stringifiedParams}` : `/api/partners/${id}/billing-records`
 }
 
 /**
@@ -1963,7 +1963,7 @@ export const listBillingRecords = async (id: number,
 export const getListBillingRecordsQueryKey = (id: number,
     params?: ListBillingRecordsParams,) => {
     return [
-    `/api/platforms/${id}/billing-records`, ...(params ? [params] : [])
+    `/api/partners/${id}/billing-records`, ...(params ? [params] : [])
     ] as const;
     }
 
@@ -2019,7 +2019,7 @@ export const getCreateBillingRecordUrl = (id: number,) => {
 
 
 
-  return `/api/platforms/${id}/billing-records`
+  return `/api/partners/${id}/billing-records`
 }
 
 /**
@@ -2092,7 +2092,7 @@ export const getUpdateBillingRecordUrl = (id: number,
 
 
 
-  return `/api/platforms/${id}/billing-records/${recordId}`
+  return `/api/partners/${id}/billing-records/${recordId}`
 }
 
 /**
@@ -2166,7 +2166,7 @@ export const getDeleteBillingRecordUrl = (id: number,
 
 
 
-  return `/api/platforms/${id}/billing-records/${recordId}`
+  return `/api/partners/${id}/billing-records/${recordId}`
 }
 
 /**
@@ -2780,7 +2780,7 @@ export function useGetAnalyticsByClient<TData = Awaited<ReturnType<typeof getAna
 
 
 
-export const getGetAnalyticsByPlatformUrl = (params?: GetAnalyticsByPlatformParams,) => {
+export const getGetAnalyticsByPartnerUrl = (params?: GetAnalyticsByPartnerParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -2798,9 +2798,9 @@ export const getGetAnalyticsByPlatformUrl = (params?: GetAnalyticsByPlatformPara
 /**
  * @summary Spend, cost, profit, and margin grouped by platform
  */
-export const getAnalyticsByPlatform = async (params?: GetAnalyticsByPlatformParams, options?: RequestInit): Promise<PlatformAnalytics[]> => {
+export const getAnalyticsByPartner = async (params?: GetAnalyticsByPartnerParams, options?: RequestInit): Promise<PartnerAnalytics[]> => {
 
-  return customFetch<PlatformAnalytics[]>(getGetAnalyticsByPlatformUrl(params),
+  return customFetch<PartnerAnalytics[]>(getGetAnalyticsByPartnerUrl(params),
   {
     ...options,
     method: 'GET'
@@ -2813,45 +2813,45 @@ export const getAnalyticsByPlatform = async (params?: GetAnalyticsByPlatformPara
 
 
 
-export const getGetAnalyticsByPlatformQueryKey = (params?: GetAnalyticsByPlatformParams,) => {
+export const getGetAnalyticsByPartnerQueryKey = (params?: GetAnalyticsByPartnerParams,) => {
     return [
     `/api/analytics/by-platform`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetAnalyticsByPlatformQueryOptions = <TData = Awaited<ReturnType<typeof getAnalyticsByPlatform>>, TError = ErrorType<unknown>>(params?: GetAnalyticsByPlatformParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsByPlatform>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetAnalyticsByPartnerQueryOptions = <TData = Awaited<ReturnType<typeof getAnalyticsByPartner>>, TError = ErrorType<unknown>>(params?: GetAnalyticsByPartnerParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsByPartner>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetAnalyticsByPlatformQueryKey(params);
+  const queryKey =  queryOptions?.queryKey ?? getGetAnalyticsByPartnerQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnalyticsByPlatform>>> = ({ signal }) => getAnalyticsByPlatform(params, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnalyticsByPartner>>> = ({ signal }) => getAnalyticsByPartner(params, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsByPlatform>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsByPartner>>, TError, TData> & { queryKey: QueryKey }
 }
 
-export type GetAnalyticsByPlatformQueryResult = NonNullable<Awaited<ReturnType<typeof getAnalyticsByPlatform>>>
-export type GetAnalyticsByPlatformQueryError = ErrorType<unknown>
+export type GetAnalyticsByPartnerQueryResult = NonNullable<Awaited<ReturnType<typeof getAnalyticsByPartner>>>
+export type GetAnalyticsByPartnerQueryError = ErrorType<unknown>
 
 
 /**
  * @summary Spend, cost, profit, and margin grouped by platform
  */
 
-export function useGetAnalyticsByPlatform<TData = Awaited<ReturnType<typeof getAnalyticsByPlatform>>, TError = ErrorType<unknown>>(
- params?: GetAnalyticsByPlatformParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsByPlatform>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export function useGetAnalyticsByPartner<TData = Awaited<ReturnType<typeof getAnalyticsByPartner>>, TError = ErrorType<unknown>>(
+ params?: GetAnalyticsByPartnerParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnalyticsByPartner>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetAnalyticsByPlatformQueryOptions(params,options)
+  const queryOptions = getGetAnalyticsByPartnerQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

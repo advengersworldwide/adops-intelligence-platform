@@ -2,7 +2,7 @@ import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
 import { kycColumns } from "./kyc-columns";
 import { paymentTermsTable } from "./payment-terms";
 
-export const platformsTable = pgTable("platforms", {
+export const partnersTable = pgTable("partners", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   ...kycColumns,
@@ -12,4 +12,4 @@ export const platformsTable = pgTable("platforms", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
-export type Platform = typeof platformsTable.$inferSelect;
+export type Partner = typeof partnersTable.$inferSelect;

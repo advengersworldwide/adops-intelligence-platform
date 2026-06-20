@@ -252,7 +252,7 @@ export interface BuyingHouseBillingRecord {
   createdAt: string;
 }
 
-export interface Platform {
+export interface Partner {
   id: number;
   name: string;
   /** @nullable */
@@ -288,7 +288,7 @@ export interface Platform {
   createdAt: string;
 }
 
-export interface PlatformInput {
+export interface PartnerInput {
   /** @minLength 1 */
   name: string;
   /** @nullable */
@@ -321,7 +321,7 @@ export interface PlatformInput {
   paymentTermsId?: number | null;
 }
 
-export interface PlatformUpdate {
+export interface PartnerUpdate {
   name?: string;
   /** @nullable */
   address?: string | null;
@@ -560,7 +560,7 @@ export interface ClientAnalytics {
   transactionCount: number;
 }
 
-export interface PlatformAnalytics {
+export interface PartnerAnalytics {
   platformId: number;
   platformName: string;
   revenue: number;
@@ -796,7 +796,7 @@ dateFrom?: string | null;
 dateTo?: string | null;
 };
 
-export type GetAnalyticsByPlatformParams = {
+export type GetAnalyticsByPartnerParams = {
 /**
  * @nullable
  */

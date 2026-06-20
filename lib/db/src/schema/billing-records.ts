@@ -1,5 +1,5 @@
 import { pgTable, serial, integer, text, numeric, timestamp } from "drizzle-orm/pg-core";
-import { platformsTable } from "./platforms";
+import { partnersTable } from "./partners";
 import { buyingHousesTable } from "./buying-houses";
 import { costModelsTable } from "./cost-models";
 import { clientsTable } from "./clients";
@@ -8,7 +8,7 @@ export const billingRecordsTable = pgTable("billing_records", {
   id: serial("id").primaryKey(),
   platformId: integer("platform_id")
     .notNull()
-    .references(() => platformsTable.id, { onDelete: "cascade" }),
+    .references(() => partnersTable.id, { onDelete: "cascade" }),
   buyingHouseId: integer("buying_house_id")
     .notNull()
     .references(() => buyingHousesTable.id),

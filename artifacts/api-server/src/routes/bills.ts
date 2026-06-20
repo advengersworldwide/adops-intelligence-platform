@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { and, eq, sql } from "drizzle-orm";
 import {
   db, billsTable, billTransactionsTable, billingRecordsTable,
-  paymentBillsTable, clientsTable, buyingHousesTable, costModelsTable, platformsTable,
+  paymentBillsTable, clientsTable, buyingHousesTable, costModelsTable, partnersTable,
 } from "@workspace/db";
 import { computeRow } from "../lib/computeRow";
 import {

@@ -6,8 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PlatformInput {
-  /** @minLength 1 */
+export interface Partner {
+  id: number;
   name: string;
   /** @nullable */
   address?: string | null;
@@ -37,4 +37,7 @@ export interface PlatformInput {
   ntnNumber?: string | null;
   /** @nullable */
   paymentTermsId?: number | null;
+  /** @nullable */
+  paymentTermName?: string | null;
+  createdAt: string;
 }

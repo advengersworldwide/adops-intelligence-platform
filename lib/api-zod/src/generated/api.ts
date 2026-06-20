@@ -293,7 +293,7 @@ export const DeletePaymentTermParams = zod.object({
 /**
  * @summary List all DSP platforms
  */
-export const ListPlatformsResponseItem = zod.object({
+export const ListPartnersResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "address": zod.string().nullish(),
@@ -313,7 +313,7 @@ export const ListPlatformsResponseItem = zod.object({
   "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
 })
-export const ListPlatformsResponse = zod.array(ListPlatformsResponseItem)
+export const ListPartnersResponse = zod.array(ListPartnersResponseItem)
 
 
 /**
@@ -322,7 +322,7 @@ export const ListPlatformsResponse = zod.array(ListPlatformsResponseItem)
 
 
 
-export const CreatePlatformBody = zod.object({
+export const CreatePartnerBody = zod.object({
   "name": zod.string().min(1),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
@@ -344,11 +344,11 @@ export const CreatePlatformBody = zod.object({
 /**
  * @summary Get a platform by ID
  */
-export const GetPlatformParams = zod.object({
+export const GetPartnerParams = zod.object({
   "id": zod.coerce.number()
 })
 
-export const GetPlatformResponse = zod.object({
+export const GetPartnerResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "address": zod.string().nullish(),
@@ -373,11 +373,11 @@ export const GetPlatformResponse = zod.object({
 /**
  * @summary Update a platform
  */
-export const UpdatePlatformParams = zod.object({
+export const UpdatePartnerParams = zod.object({
   "id": zod.coerce.number()
 })
 
-export const UpdatePlatformBody = zod.object({
+export const UpdatePartnerBody = zod.object({
   "name": zod.string().optional(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
@@ -395,7 +395,7 @@ export const UpdatePlatformBody = zod.object({
   "paymentTermsId": zod.number().nullish()
 })
 
-export const UpdatePlatformResponse = zod.object({
+export const UpdatePartnerResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
   "address": zod.string().nullish(),
@@ -420,7 +420,7 @@ export const UpdatePlatformResponse = zod.object({
 /**
  * @summary Delete a platform
  */
-export const DeletePlatformParams = zod.object({
+export const DeletePartnerParams = zod.object({
   "id": zod.coerce.number()
 })
 
@@ -758,12 +758,12 @@ export const GetAnalyticsByClientResponse = zod.array(GetAnalyticsByClientRespon
 /**
  * @summary Spend, cost, profit, and margin grouped by platform
  */
-export const GetAnalyticsByPlatformQueryParams = zod.object({
+export const GetAnalyticsByPartnerQueryParams = zod.object({
   "dateFrom": zod.coerce.string().nullish(),
   "dateTo": zod.coerce.string().nullish()
 })
 
-export const GetAnalyticsByPlatformResponseItem = zod.object({
+export const GetAnalyticsByPartnerResponseItem = zod.object({
   "platformId": zod.number(),
   "platformName": zod.string(),
   "revenue": zod.number(),
@@ -772,7 +772,7 @@ export const GetAnalyticsByPlatformResponseItem = zod.object({
   "marginPct": zod.number(),
   "transactionCount": zod.number()
 })
-export const GetAnalyticsByPlatformResponse = zod.array(GetAnalyticsByPlatformResponseItem)
+export const GetAnalyticsByPartnerResponse = zod.array(GetAnalyticsByPartnerResponseItem)
 
 
 /**

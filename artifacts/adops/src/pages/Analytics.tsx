@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
-import { useGetProfitOverTime, useGetAnalyticsByClient, useGetAnalyticsByPlatform, useGetDashboardSummary } from "@workspace/api-client-react";
+import { useGetProfitOverTime, useGetAnalyticsByClient, useGetAnalyticsByPartner, useGetDashboardSummary } from "@workspace/api-client-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ export default function AnalyticsPage() {
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary(params);
   const { data: timeSeries, isLoading: timeLoading } = useGetProfitOverTime(params);
   const { data: byClient, isLoading: clientLoading } = useGetAnalyticsByClient(params);
-  const { data: byPlatform, isLoading: platformLoading } = useGetAnalyticsByPlatform(params);
+  const { data: byPlatform, isLoading: platformLoading } = useGetAnalyticsByPartner(params);
 
   const baseCurrency = localStorage.getItem("adops-base-currency") || "USD";
   const rawRates = localStorage.getItem("adops-exchange-rates");

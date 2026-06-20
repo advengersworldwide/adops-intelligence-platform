@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, TrendingDown, DollarSign, Target, Users, Monitor, Megaphone, AlertTriangle, Plus, X, BarChart2, GripHorizontal } from "lucide-react";
-import { useGetDashboardSummary, useGetProfitOverTime, useGetAnalyticsByClient, useGetAlerts, useListTransactions, getGetDashboardSummaryQueryKey, getGetProfitOverTimeQueryKey, useGetAnalyticsByPlatform } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetProfitOverTime, useGetAnalyticsByClient, useGetAlerts, useListTransactions, getGetDashboardSummaryQueryKey, getGetProfitOverTimeQueryKey, useGetAnalyticsByPartner } from "@workspace/api-client-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -107,7 +107,7 @@ export default function DashboardPage() {
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary();
   const { data: profitTimeSeries, isLoading: timeLoading } = useGetProfitOverTime();
   const { data: byClient, isLoading: clientLoading } = useGetAnalyticsByClient();
-  const { data: byPlatform } = useGetAnalyticsByPlatform();
+  const { data: byPlatform } = useGetAnalyticsByPartner();
   const { data: alerts } = useGetAlerts();
   const { data: transactions, isLoading: txLoading } = useListTransactions({ limit: 10 } as never);
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useListBillingRecords } from "@workspace/api-client-react";
-import type { Platform } from "@workspace/api-client-react";
+import type { Partner } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -47,7 +47,7 @@ const tooltipStyle = {
   fontSize: "12px",
 };
 
-export default function PlatformAnalyticsTab({ platformId, platform }: { platformId: number; platform: Platform }) {
+export default function PlatformAnalyticsTab({ platformId, platform }: { platformId: number; platform: Partner }) {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 

@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, clientsTable, platformsTable } from "@workspace/db";
+import { db, transactionsTable, campaignsTable, clientsTable, partnersTable } from "@workspace/db";
 import {
   CreateTransactionBody,
   DeleteTransactionParams,
@@ -25,7 +25,7 @@ async function enrichTransaction(row: typeof transactionsTable.$inferSelect) {
 
   if (campaign) {
     const [client] = await db.select({ name: clientsTable.name }).from(clientsTable).where(eq(clientsTable.id, campaign.clientId));
-    const [platform] = await db.select({ name: platformsTable.name }).from(platformsTable).where(eq(platformsTable.id, campaign.platformId));
+    const [platform] = await db.select({ name: partnersTable.name }).from(partnersTable).where(eq(partnersTable.id, campaign.platformId));
     clientName = client?.name ?? null;
     platformName = platform?.name ?? null;
   }
@@ -112,7 +112,7 @@ router.get("/transactions", async (req, res): Promise<void> => {
     clients.forEach(c => clientMap.set(c.id, c.name));
   }
   if (platformIds.length > 0) {
-    const platforms = await db.select({ id: platformsTable.id, name: platformsTable.name }).from(platformsTable);
+    const platforms = await db.select({ id: partnersTable.id, name: partnersTable.name }).from(partnersTable);
     platforms.forEach(p => platformMap.set(p.id, p.name));
   }
 

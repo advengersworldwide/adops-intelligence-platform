@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2, Search } from "lucide-react";
 import { Link } from "wouter";
 import {
-  useListPlatforms, useCreatePlatform, useDeletePlatform,
-  getListPlatformsQueryKey, useGetAnalyticsByPlatform,
+  useListPartners, useCreatePartner, useDeletePartner,
+  getListPartnersQueryKey, useGetAnalyticsByPartner,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -41,14 +41,14 @@ export default function PlatformsPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  const { data: platforms, isLoading } = useListPlatforms();
-  const { data: platformAnalytics } = useGetAnalyticsByPlatform();
+  const { data: platforms, isLoading } = useListPartners();
+  const { data: platformAnalytics } = useGetAnalyticsByPartner();
   const analyticsMap = new Map((platformAnalytics ?? []).map(p => [p.platformId, p]));
 
-  const createMutation = useCreatePlatform({
+  const createMutation = useCreatePartner({
     mutation: {
       onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListPlatformsQueryKey() });
+        qc.invalidateQueries({ queryKey: getListPartnersQueryKey() });
         setCreateOpen(false);
         toast({ title: "Platform created" });
       },
@@ -56,10 +56,10 @@ export default function PlatformsPage() {
     },
   });
 
-  const deleteMutation = useDeletePlatform({
+  const deleteMutation = useDeletePartner({
     mutation: {
       onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListPlatformsQueryKey() });
+        qc.invalidateQueries({ queryKey: getListPartnersQueryKey() });
         toast({ title: "Platform deleted" });
       },
       onError: () => toast({ title: "Failed to delete platform", variant: "destructive" }),
@@ -77,7 +77,7 @@ export default function PlatformsPage() {
           <h1 className="text-xl font-bold text-foreground">Platforms</h1>
           <p className="text-sm text-muted-foreground">{platforms?.length ?? 0} DSP platforms</p>
         </div>
-        {hasPermission("Edit Platforms") && (
+        {hasPermission("Edit Partners") && (
           <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-platform-btn">
             <Plus className="h-3.5 w-3.5" /> Add Platform
           </Button>
@@ -93,7 +93,7 @@ export default function PlatformsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Payment Terms", "Revenue", "Cost", "Profit", "Margin %", hasPermission("Edit Platforms") ? "Actions" : null]
+              {["Name", "Payment Terms", "Revenue", "Cost", "Profit", "Margin %", hasPermission("Edit Partners") ? "Actions" : null]
                 .filter((h): h is string => h !== null)
                 .map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
@@ -115,7 +115,7 @@ export default function PlatformsPage() {
                 return (
                   <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors" data-testid={`platform-row-${p.id}`}>
                     <td className="px-5 py-3 text-sm font-medium">
-                      <Link href={`/platforms/${p.id}`} className="text-foreground hover:text-primary hover:underline">
+                      <Link href={`/partners/${p.id}`} className="text-foreground hover:text-primary hover:underline">
                         {p.name}
                       </Link>
                     </td>
@@ -128,7 +128,7 @@ export default function PlatformsPage() {
                       {an ? fmt(an.profit) : "—"}
                     </td>
                     <td className="px-5 py-3 text-sm text-muted-foreground">{an ? `${an.marginPct.toFixed(1)}%` : "—"}</td>
-                    {hasPermission("Edit Platforms") && (
+                    {hasPermission("Edit Partners") && (
                       <td className="px-5 py-3">
                         <button
                           onClick={() => deleteMutation.mutate({ id: p.id })}

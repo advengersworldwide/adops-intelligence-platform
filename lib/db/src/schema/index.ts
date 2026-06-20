@@ -1,6 +1,6 @@
 export * from "./buying-houses";
 export * from "./clients";
-export * from "./platforms";
+export * from "./partners";
 export * from "./cost-models";
 export * from "./payment-terms";
 export * from "./client-events";

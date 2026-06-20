@@ -299,11 +299,11 @@ paths:
         "204": { description: Deleted }
         "404": { description: Not found }
 
-  # ── Platforms ─────────────────────────────────────────────────────────────────
-  /platforms:
+  # ── Partners ─────────────────────────────────────────────────────────────────
+  /partners:
     get:
-      operationId: listPlatforms
-      tags: [platforms]
+      operationId: listPartners
+      tags: [partners]
       summary: List all DSP platforms
       responses:
         "200":
@@ -313,31 +313,31 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/Platform"
+                  $ref: "#/components/schemas/Partner"
     post:
-      operationId: createPlatform
-      tags: [platforms]
+      operationId: createPartner
+      tags: [partners]
       summary: Create a new platform
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PlatformInput"
+              $ref: "#/components/schemas/PartnerInput"
       responses:
         "201":
           description: Created
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Platform"
+                $ref: "#/components/schemas/Partner"
         "400":
           description: Validation error
 
-  /platforms/{id}:
+  /partners/{id}:
     get:
-      operationId: getPlatform
-      tags: [platforms]
+      operationId: getPartner
+      tags: [partners]
       summary: Get a platform by ID
       parameters:
         - name: id
@@ -347,16 +347,16 @@ paths:
             type: integer
       responses:
         "200":
-          description: Platform
+          description: Partner
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Platform"
+                $ref: "#/components/schemas/Partner"
         "404":
           description: Not found
     patch:
-      operationId: updatePlatform
-      tags: [platforms]
+      operationId: updatePartner
+      tags: [partners]
       summary: Update a platform
       parameters:
         - name: id
@@ -369,19 +369,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PlatformUpdate"
+              $ref: "#/components/schemas/PartnerUpdate"
       responses:
         "200":
           description: Updated platform
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Platform"
+                $ref: "#/components/schemas/Partner"
         "404":
           description: Not found
     delete:
-      operationId: deletePlatform
-      tags: [platforms]
+      operationId: deletePartner
+      tags: [partners]
       summary: Delete a platform
       parameters:
         - name: id
@@ -395,10 +395,10 @@ paths:
         "404":
           description: Not found
 
-  /platforms/{id}/clients:
+  /partners/{id}/clients:
     get:
       operationId: listPartnerClients
-      tags: [platforms]
+      tags: [partners]
       summary: List clients linked to a partner
       parameters:
         - name: id
@@ -417,7 +417,7 @@ paths:
                   $ref: "#/components/schemas/PartnerClient"
     post:
       operationId: linkPartnerClient
-      tags: [platforms]
+      tags: [partners]
       summary: Link a client to a partner
       parameters:
         - name: id
@@ -441,10 +441,10 @@ paths:
         "400":
           description: Validation error
 
-  /platforms/{id}/clients/{clientId}:
+  /partners/{id}/clients/{clientId}:
     delete:
       operationId: unlinkPartnerClient
-      tags: [platforms]
+      tags: [partners]
       summary: Unlink a client from a partner
       parameters:
         - name: id
@@ -463,10 +463,10 @@ paths:
         "404":
           description: Not found
 
-  /platforms/{id}/clients/{clientId}/events/{eventId}/payout:
+  /partners/{id}/clients/{clientId}/events/{eventId}/payout:
     put:
       operationId: setPartnerEventPayout
-      tags: [platforms]
+      tags: [partners]
       summary: Set payout rate for a partner on a specific client event
       parameters:
         - name: id
@@ -500,10 +500,10 @@ paths:
         "404":
           description: Not found
 
-  /platforms/{id}/billing-records:
+  /partners/{id}/billing-records:
     get:
       operationId: listBillingRecords
-      tags: [platforms]
+      tags: [partners]
       summary: List billing records for a platform
       parameters:
         - name: id
@@ -534,7 +534,7 @@ paths:
                   $ref: "#/components/schemas/BillingRecord"
     post:
       operationId: createBillingRecord
-      tags: [platforms]
+      tags: [partners]
       summary: Add a billing record
       parameters:
         - name: id
@@ -558,7 +558,7 @@ paths:
         "400":
           description: Validation error
 
-  /platforms/{id}/billing-records/{recordId}:
+  /partners/{id}/billing-records/{recordId}:
     patch:
       operationId: updateBillingRecord
       tags: [billing]
@@ -589,7 +589,7 @@ paths:
                 $ref: "#/components/schemas/BillingRecord"
     delete:
       operationId: deleteBillingRecord
-      tags: [platforms]
+      tags: [partners]
       summary: Delete a billing record
       parameters:
         - name: id
@@ -776,7 +776,7 @@ paths:
 
   /analytics/by-platform:
     get:
-      operationId: getAnalyticsByPlatform
+      operationId: getAnalyticsByPartner
       tags: [analytics]
       summary: Spend, cost, profit, and margin grouped by platform
       parameters:
@@ -796,7 +796,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/PlatformAnalytics"
+                  $ref: "#/components/schemas/PartnerAnalytics"
 
   /analytics/alerts:
     get:
@@ -1478,8 +1478,8 @@ components:
         createdAt:
           type: string
 
-    # ── Platform ─────────────────────────────────────────────────────────────────
-    Platform:
+    # ── Partner ──────────────────────────────────────────────────────────────────
+    Partner:
       type: object
       required: [id, name, createdAt]
       properties:
@@ -1520,7 +1520,7 @@ components:
         createdAt:
           type: string
 
-    PlatformInput:
+    PartnerInput:
       type: object
       required: [name]
       properties:
@@ -1556,7 +1556,7 @@ components:
         paymentTermsId:
           type: ["integer", "null"]
 
-    PlatformUpdate:
+    PartnerUpdate:
       type: object
       properties:
         name:
@@ -1921,7 +1921,7 @@ components:
         transactionCount:
           type: integer
 
-    PlatformAnalytics:
+    PartnerAnalytics:
       type: object
       required: [platformId, platformName, revenue, cost, profit, marginPct, transactionCount]
       properties:

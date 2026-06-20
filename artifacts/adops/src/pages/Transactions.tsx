@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { Plus, Download } from "lucide-react";
 import {
   useListAllBillingRecords, useCreateBillingRecord, useUpdateBillingRecord, useDeleteBillingRecord,
-  useListBuyingHouses, useListClients, useListPlatforms, useListCostModels,
+  useListBuyingHouses, useListClients, useListPartners, useListCostModels,
   getListAllBillingRecordsQueryKey,
 } from "@workspace/api-client-react";
-import type { Platform, BuyingHouse } from "@workspace/api-client-react";
+import type { Partner, BuyingHouse } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -83,7 +83,7 @@ export default function BillingPage() {
   const { data: records, isLoading } = useListAllBillingRecords(params);
   const { data: buyingHouses } = useListBuyingHouses();
   const { data: clients } = useListClients();
-  const { data: platforms } = useListPlatforms();
+  const { data: platforms } = useListPartners();
 
   const deleteMutation = useDeleteBillingRecord({
     mutation: {
@@ -324,7 +324,7 @@ export default function BillingPage() {
 
 function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSuccess, defaultValues, recordId }: {
   open: boolean; onClose: () => void;
-  platforms: Platform[]; buyingHouses: BuyingHouse[];
+  platforms: Partner[]; buyingHouses: BuyingHouse[];
   clients: Array<{ id: number; name: string; buyingHouseId?: number | null }>;
   onSuccess: () => void;
   defaultValues?: {

@@ -7,7 +7,7 @@ const DEFAULT_ROLES = [
     name: "System Admin",
     permissions: [
       "View Dashboard", "View Clients", "Edit Clients",
-      "View Platforms", "Edit Platforms",
+      "View Partners", "Edit Partners",
       "View Buying Houses", "Edit Buying Houses",
       "View Transactions", "View Billings", "View Payments", "View Cost", "Upload Data",
       "View Analytics", "Manage Settings",
@@ -17,7 +17,7 @@ const DEFAULT_ROLES = [
   {
     name: "Viewer",
     permissions: [
-      "View Dashboard", "View Clients", "View Platforms",
+      "View Dashboard", "View Clients", "View Partners",
       "View Buying Houses",
       "View Transactions", "View Billings", "View Payments", "View Cost", "View Analytics",
     ] as string[],
@@ -27,7 +27,7 @@ const DEFAULT_ROLES = [
     name: "Operator",
     permissions: [
       "View Dashboard", "View Clients", "Edit Clients",
-      "View Platforms", "Edit Platforms",
+      "View Partners", "Edit Partners",
       "View Buying Houses", "Edit Buying Houses",
       "View Transactions", "View Billings", "View Payments", "View Cost", "Upload Data",
       "View Analytics",

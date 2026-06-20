@@ -7,8 +7,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Layout from "@/components/layout/Layout";
 import DashboardPage from "@/pages/Dashboard";
 import ClientsPage from "@/pages/Clients";
-import PlatformsPage from "@/pages/Platforms";
-import PlatformDetailPage from "@/pages/PlatformDetail";
+import PartnersPage from "@/pages/Partners";
+import PartnerDetailPage from "@/pages/PartnerDetail";
 import BuyingHousesPage from "@/pages/BuyingHouses";
 import BuyingHouseDetailPage from "@/pages/BuyingHouseDetail";
 import ClientDetailPage from "@/pages/ClientDetail";
@@ -129,13 +129,13 @@ function Router() {
           )}
         </Route>
 
-        <Route path="/platforms">
-          <PermissionGuard permission="View Platforms" component={PlatformsPage} />
+        <Route path="/partners">
+          <PermissionGuard permission="View Partners" component={PartnersPage} />
         </Route>
 
-        <Route path="/platforms/:id">
+        <Route path="/partners/:id">
           {(params) => (
-            <PermissionGuard permission="View Platforms" component={() => <PlatformDetailPage id={parseInt(params.id!, 10)} />} />
+            <PermissionGuard permission="View Partners" component={() => <PartnerDetailPage id={parseInt(params.id!, 10)} />} />
           )}
         </Route>
 

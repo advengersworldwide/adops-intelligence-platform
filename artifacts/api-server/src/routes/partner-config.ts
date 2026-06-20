@@ -70,7 +70,7 @@ async function buildPartnerClient(
   };
 }
 
-router.get("/platforms/:id/clients", async (req, res): Promise<void> => {
+router.get("/partners/:id/clients", async (req, res): Promise<void> => {
   const params = ListPartnerClientsParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
 
@@ -84,7 +84,7 @@ router.get("/platforms/:id/clients", async (req, res): Promise<void> => {
   res.json(ListPartnerClientsResponse.parse(mapped));
 });
 
-router.post("/platforms/:id/clients", async (req, res): Promise<void> => {
+router.post("/partners/:id/clients", async (req, res): Promise<void> => {
   const params = LinkPartnerClientParams.safeParse({ id: parseInt(req.params.id as string, 10) });
   if (!params.success) { res.status(400).json({ error: params.error.message }); return; }
   const parsed = LinkPartnerClientBody.safeParse(req.body);
@@ -113,7 +113,7 @@ router.post("/platforms/:id/clients", async (req, res): Promise<void> => {
   }
 });
 
-router.delete("/platforms/:id/clients/:clientId", async (req, res): Promise<void> => {
+router.delete("/partners/:id/clients/:clientId", async (req, res): Promise<void> => {
   const params = UnlinkPartnerClientParams.safeParse({
     id: parseInt(req.params.id as string, 10),
     clientId: parseInt(req.params.clientId as string, 10),
@@ -141,7 +141,7 @@ router.delete("/platforms/:id/clients/:clientId", async (req, res): Promise<void
   res.sendStatus(204);
 });
 
-router.put("/platforms/:id/clients/:clientId/events/:eventId/payout", async (req, res): Promise<void> => {
+router.put("/partners/:id/clients/:clientId/events/:eventId/payout", async (req, res): Promise<void> => {
   const params = SetPartnerEventPayoutParams.safeParse({
     id: parseInt(req.params.id as string, 10),
     clientId: parseInt(req.params.clientId as string, 10),

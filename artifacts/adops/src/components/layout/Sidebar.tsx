@@ -18,7 +18,7 @@ const topNavItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard, permission: "View Dashboard" },
   { href: "/clients", label: "Clients", icon: Users, permission: "View Clients" },
   { href: "/buying-houses", label: "Buying Houses", icon: Building2, permission: "View Buying Houses" },
-  { href: "/platforms", label: "Platforms", icon: Monitor, permission: "View Platforms" },
+  { href: "/partners", label: "Partners", icon: Monitor, permission: "View Partners" },
 ];
 
 const financialsItems = [
