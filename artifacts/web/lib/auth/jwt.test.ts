@@ -27,7 +27,7 @@ describe("jwt session", () => {
     await expect(verifySession(token + "x")).rejects.toThrow();
   });
 
-  it("returns null shape on a wrong-secret token", async () => {
+  it("rejects with a wrong-secret token", async () => {
     const token = await signSession(user);
     process.env.JWT_SECRET = "a-different-secret-also-32-chars-minimum";
     await expect(verifySession(token)).rejects.toThrow();
