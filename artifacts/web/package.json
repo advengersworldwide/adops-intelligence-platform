@@ -12,7 +12,11 @@
     "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.0",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
+    "tailwind-merge": "catalog:",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.34.3",
     "@workspace/api-client-react": "workspace:*",
