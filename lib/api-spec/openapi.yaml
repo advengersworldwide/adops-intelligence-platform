@@ -395,11 +395,30 @@ paths:
         "404":
           description: Not found
 
-  /platforms/{id}/cost-models:
-    post:
-      operationId: createPlatformCostModel
+  /platforms/{id}/clients:
+    get:
+      operationId: listPartnerClients
       tags: [platforms]
-      summary: Add a cost model to a platform
+      summary: List clients linked to a partner
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of linked clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PartnerClient"
+    post:
+      operationId: linkPartnerClient
+      tags: [platforms]
+      summary: Link a client to a partner
       parameters:
         - name: id
           in: path
@@ -411,66 +430,73 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/PlatformCostModelInput"
+              $ref: "#/components/schemas/LinkPartnerClientInput"
       responses:
         "201":
-          description: Created
+          description: Linked
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PlatformCostModel"
+                $ref: "#/components/schemas/PartnerClient"
         "400":
           description: Validation error
 
-  /platforms/{id}/cost-models/{cmId}:
-    patch:
-      operationId: updatePlatformCostModel
-      tags: [platforms]
-      summary: Update a cost model
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-        - name: cmId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PlatformCostModelUpdate"
-      responses:
-        "200":
-          description: Updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/PlatformCostModel"
-        "404":
-          description: Not found
+  /platforms/{id}/clients/{clientId}:
     delete:
-      operationId: deletePlatformCostModel
+      operationId: unlinkPartnerClient
       tags: [platforms]
-      summary: Delete a cost model
+      summary: Unlink a client from a partner
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: integer
-        - name: cmId
+        - name: clientId
           in: path
           required: true
           schema:
             type: integer
       responses:
         "204":
-          description: Deleted
+          description: Unlinked
+        "404":
+          description: Not found
+
+  /platforms/{id}/clients/{clientId}/events/{eventId}/payout:
+    put:
+      operationId: setPartnerEventPayout
+      tags: [platforms]
+      summary: Set payout rate for a partner on a specific client event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartnerPayoutInput"
+      responses:
+        "200":
+          description: Payout rate set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PartnerClientEvent"
         "404":
           description: Not found
 
@@ -1487,14 +1513,10 @@ components:
           type: ["string", "null"]
         ntnNumber:
           type: ["string", "null"]
-        paymentTerms:
+        paymentTermsId:
+          type: ["integer", "null"]
+        paymentTermName:
           type: ["string", "null"]
-        bulkDiscountPct:
-          type: ["number", "null"]
-        costModels:
-          type: array
-          items:
-            $ref: "#/components/schemas/PlatformCostModel"
         createdAt:
           type: string
 
@@ -1517,10 +1539,22 @@ components:
           type: ["string", "null"]
         companyNumber:
           type: ["string", "null"]
-        paymentTerms:
+        bankName:
           type: ["string", "null"]
-        bulkDiscountPct:
-          type: ["number", "null"]
+        bankAccountNumber:
+          type: ["string", "null"]
+        bankAddress:
+          type: ["string", "null"]
+        swiftCode:
+          type: ["string", "null"]
+        iban:
+          type: ["string", "null"]
+        salesTaxNumber:
+          type: ["string", "null"]
+        ntnNumber:
+          type: ["string", "null"]
+        paymentTermsId:
+          type: ["integer", "null"]
 
     PlatformUpdate:
       type: object
@@ -1553,48 +1587,60 @@ components:
           type: ["string", "null"]
         ntnNumber:
           type: ["string", "null"]
-        paymentTerms:
-          type: ["string", "null"]
-        bulkDiscountPct:
-          type: ["number", "null"]
+        paymentTermsId:
+          type: ["integer", "null"]
 
-    PlatformCostModel:
+    # ── Partner Config ────────────────────────────────────────────────────────────
+    PartnerClientEvent:
       type: object
-      required: [id, platformId, name, payoutRate, marginPct, createdAt]
+      required: [id, clientEventId, name, billableRate]
       properties:
         id:
           type: integer
-        platformId:
+        clientEventId:
           type: integer
         name:
           type: string
+        costModelId:
+          type: ["integer", "null"]
+        costModelName:
+          type: ["string", "null"]
+        billableRate:
+          type: number
         payoutRate:
-          type: number
-        marginPct:
-          type: number
-        createdAt:
-          type: string
+          type: ["number", "null"]
 
-    PlatformCostModelInput:
+    PartnerClient:
       type: object
-      required: [name, payoutRate, marginPct]
+      required: [id, partnerId, clientId, clientName, events]
       properties:
-        name:
+        id:
+          type: integer
+        partnerId:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
           type: string
-          minLength: 1
-        payoutRate:
-          type: number
-        marginPct:
-          type: number
+        buyingHouseName:
+          type: ["string", "null"]
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartnerClientEvent"
 
-    PlatformCostModelUpdate:
+    LinkPartnerClientInput:
       type: object
+      required: [clientId]
       properties:
-        name:
-          type: string
+        clientId:
+          type: integer
+
+    PartnerPayoutInput:
+      type: object
+      required: [payoutRate]
+      properties:
         payoutRate:
-          type: number
-        marginPct:
           type: number
 
     BillingRecord:

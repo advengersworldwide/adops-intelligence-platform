@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { and, eq, sql } from "drizzle-orm";
 import {
   db, billsTable, billTransactionsTable, billingRecordsTable,
-  paymentBillsTable, clientsTable, buyingHousesTable, platformCostModelsTable, platformsTable,
+  paymentBillsTable, clientsTable, buyingHousesTable, costModelsTable, platformsTable,
 } from "@workspace/db";
 import { computeRow } from "../lib/computeRow";
 import {
@@ -84,15 +84,15 @@ async function mapBillDetail(bill: typeof billsTable.$inferSelect) {
 
   const transactions = await Promise.all(txRows.map(async ({ billing_records: r }) => {
     const bh = await db.select({ name: buyingHousesTable.name }).from(buyingHousesTable).where(eq(buyingHousesTable.id, r.buyingHouseId));
-    const cm = await db.select().from(platformCostModelsTable).where(eq(platformCostModelsTable.id, r.costModelId));
+    const cm = await db.select().from(costModelsTable).where(eq(costModelsTable.id, r.costModelId));
     const cl = r.clientId ? (await db.select({ name: clientsTable.name }).from(clientsTable).where(eq(clientsTable.id, r.clientId)))[0] : null;
     return {
       id: r.id, platformId: r.platformId, buyingHouseId: r.buyingHouseId,
       buyingHouseName: bh[0]?.name ?? null, clientId: r.clientId ?? null,
       clientName: cl?.name ?? null, costModelId: r.costModelId,
       costModelName: cm[0]?.name ?? null,
-      costModelPayoutRate: cm[0] ? Number(cm[0].payoutRate) : null,
-      costModelMarginPct: cm[0] ? Number(cm[0].marginPct) : null,
+      costModelPayoutRate: null,
+      costModelMarginPct: null,
       period: r.period, appsflyerPins: r.appsflyerPins, fraudPins: r.fraudPins,
       payoutRate: Number(r.payoutRate), marginPct: Number(r.marginPct),
       forexSellingRate: Number(r.forexSellingRate), forexBuyingRate: Number(r.forexBuyingRate),

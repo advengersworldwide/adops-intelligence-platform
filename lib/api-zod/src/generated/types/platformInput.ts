@@ -22,7 +22,19 @@ export interface PlatformInput {
   /** @nullable */
   companyNumber?: string | null;
   /** @nullable */
-  paymentTerms?: string | null;
+  bankName?: string | null;
   /** @nullable */
-  bulkDiscountPct?: number | null;
+  bankAccountNumber?: string | null;
+  /** @nullable */
+  bankAddress?: string | null;
+  /** @nullable */
+  swiftCode?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /** @nullable */
+  salesTaxNumber?: string | null;
+  /** @nullable */
+  ntnNumber?: string | null;
+  /** @nullable */
+  paymentTermsId?: number | null;
 }

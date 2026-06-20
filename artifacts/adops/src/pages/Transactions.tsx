@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Plus, Download } from "lucide-react";
 import {
   useListAllBillingRecords, useCreateBillingRecord, useUpdateBillingRecord, useDeleteBillingRecord,
-  useListBuyingHouses, useListClients, useListPlatforms,
+  useListBuyingHouses, useListClients, useListPlatforms, useListCostModels,
   getListAllBillingRecordsQueryKey,
 } from "@workspace/api-client-react";
 import type { Platform, BuyingHouse } from "@workspace/api-client-react";
@@ -382,7 +382,7 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
 
   useEffect(() => {
     if (selectedPlatform) {
-      form.setValue("platformBulkDiscountPct", selectedPlatform.bulkDiscountPct ?? 0);
+      form.setValue("platformBulkDiscountPct", 0);
     }
   }, [selectedPlatformId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -394,12 +394,7 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
     }
   }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const selectedCostModelId = form.watch("costModelId");
-  const costModels = selectedPlatform?.costModels ?? [];
-  useEffect(() => {
-    const cm = costModels.find(c => c.id === selectedCostModelId);
-    if (cm) { form.setValue("payoutRate", cm.payoutRate); form.setValue("marginPct", cm.marginPct); }
-  }, [selectedCostModelId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { data: costModels = [] } = useListCostModels();
 
   const createMutation = useCreateBillingRecord({
     mutation: {
@@ -457,9 +452,9 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
             )} />
             <FormField control={form.control} name="costModelId" render={({ field }) => (
               <FormItem><FormLabel>Cost Model</FormLabel>
-                <Select onValueChange={v => field.onChange(parseInt(v))} value={field.value ? String(field.value) : ""} disabled={!selectedPlatformId}>
+                <Select onValueChange={v => field.onChange(parseInt(v))} value={field.value ? String(field.value) : ""}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select cost model" /></SelectTrigger></FormControl>
-                  <SelectContent>{costModels.map(cm => <SelectItem key={cm.id} value={String(cm.id)}>{cm.name} (${cm.payoutRate}/pin · {cm.marginPct}%)</SelectItem>)}</SelectContent>
+                  <SelectContent>{costModels.map(cm => <SelectItem key={cm.id} value={String(cm.id)}>{cm.name}</SelectItem>)}</SelectContent>
                 </Select><FormMessage />
               </FormItem>
             )} />

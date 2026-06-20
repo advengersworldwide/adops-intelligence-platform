@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, clientsTable, platformsTable } from "@workspace/db";
+import { db, transactionsTable, campaignsTable, clientsTable, platformsTable, buyingHousesTable } from "@workspace/db";
 import {
   GetDashboardSummaryQueryParams,
   GetProfitOverTimeQueryParams,
@@ -116,18 +116,20 @@ router.get("/analytics/by-client", async (req, res): Promise<void> => {
     .select({
       clientId: clientsTable.id,
       clientName: clientsTable.name,
+      buyingHouseName: buyingHousesTable.name,
       revenue: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
       cost: sql<string>`coalesce(sum(${transactionsTable.cost}), 0)`,
       profit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
       transactionCount: sql<number>`count(${transactionsTable.id})::int`,
     })
     .from(clientsTable)
+    .leftJoin(buyingHousesTable, eq(clientsTable.buyingHouseId, buyingHousesTable.id))
     .leftJoin(campaignsTable, eq(campaignsTable.clientId, clientsTable.id))
     .leftJoin(transactionsTable, and(
       eq(transactionsTable.campaignId, campaignsTable.id),
       whereClause,
     ))
-    .groupBy(clientsTable.id, clientsTable.name)
+    .groupBy(clientsTable.id, clientsTable.name, buyingHousesTable.name)
     .orderBy(sql`sum(${transactionsTable.profit}) desc nulls last`);
 
   res.json(GetAnalyticsByClientResponse.parse(rows.map(r => {
@@ -137,7 +139,7 @@ router.get("/analytics/by-client", async (req, res): Promise<void> => {
     return {
       clientId: r.clientId,
       clientName: r.clientName,
-      buyingHouse: null,
+      buyingHouse: r.buyingHouseName ?? undefined,
       revenue,
       cost: parseFloat(r.cost ?? "0"),
       profit,

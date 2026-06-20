@@ -5,7 +5,6 @@
  * AdOps Intelligence Platform API
  * OpenAPI spec version: 0.1.0
  */
-import type { PlatformCostModel } from './platformCostModel';
 
 export interface Platform {
   id: number;
@@ -37,9 +36,8 @@ export interface Platform {
   /** @nullable */
   ntnNumber?: string | null;
   /** @nullable */
-  paymentTerms?: string | null;
+  paymentTermsId?: number | null;
   /** @nullable */
-  bulkDiscountPct?: number | null;
-  costModels?: PlatformCostModel[];
+  paymentTermName?: string | null;
   createdAt: string;
 }

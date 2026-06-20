@@ -309,16 +309,8 @@ export const ListPlatformsResponseItem = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "paymentTerms": zod.string().nullish(),
-  "bulkDiscountPct": zod.number().nullish(),
-  "costModels": zod.array(zod.object({
-  "id": zod.number(),
-  "platformId": zod.number(),
-  "name": zod.string(),
-  "payoutRate": zod.number(),
-  "marginPct": zod.number(),
-  "createdAt": zod.string()
-})).optional(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const ListPlatformsResponse = zod.array(ListPlatformsResponseItem)
@@ -338,8 +330,14 @@ export const CreatePlatformBody = zod.object({
   "pocEmail": zod.string().nullish(),
   "companyEmail": zod.string().nullish(),
   "companyNumber": zod.string().nullish(),
-  "paymentTerms": zod.string().nullish(),
-  "bulkDiscountPct": zod.number().nullish()
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTermsId": zod.number().nullish()
 })
 
 
@@ -366,16 +364,8 @@ export const GetPlatformResponse = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "paymentTerms": zod.string().nullish(),
-  "bulkDiscountPct": zod.number().nullish(),
-  "costModels": zod.array(zod.object({
-  "id": zod.number(),
-  "platformId": zod.number(),
-  "name": zod.string(),
-  "payoutRate": zod.number(),
-  "marginPct": zod.number(),
-  "createdAt": zod.string()
-})).optional(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -402,8 +392,7 @@ export const UpdatePlatformBody = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "paymentTerms": zod.string().nullish(),
-  "bulkDiscountPct": zod.number().nullish()
+  "paymentTermsId": zod.number().nullish()
 })
 
 export const UpdatePlatformResponse = zod.object({
@@ -422,16 +411,8 @@ export const UpdatePlatformResponse = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "paymentTerms": zod.string().nullish(),
-  "bulkDiscountPct": zod.number().nullish(),
-  "costModels": zod.array(zod.object({
-  "id": zod.number(),
-  "platformId": zod.number(),
-  "name": zod.string(),
-  "payoutRate": zod.number(),
-  "marginPct": zod.number(),
-  "createdAt": zod.string()
-})).optional(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
 })
 
@@ -445,52 +426,73 @@ export const DeletePlatformParams = zod.object({
 
 
 /**
- * @summary Add a cost model to a platform
+ * @summary List clients linked to a partner
  */
-export const CreatePlatformCostModelParams = zod.object({
+export const ListPartnerClientsParams = zod.object({
   "id": zod.coerce.number()
 })
 
-
-
-
-export const CreatePlatformCostModelBody = zod.object({
-  "name": zod.string().min(1),
-  "payoutRate": zod.number(),
-  "marginPct": zod.number()
-})
-
-
-/**
- * @summary Update a cost model
- */
-export const UpdatePlatformCostModelParams = zod.object({
-  "id": zod.coerce.number(),
-  "cmId": zod.coerce.number()
-})
-
-export const UpdatePlatformCostModelBody = zod.object({
-  "name": zod.string().optional(),
-  "payoutRate": zod.number().optional(),
-  "marginPct": zod.number().optional()
-})
-
-export const UpdatePlatformCostModelResponse = zod.object({
+export const ListPartnerClientsResponseItem = zod.object({
   "id": zod.number(),
-  "platformId": zod.number(),
+  "partnerId": zod.number(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullish(),
+  "events": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
   "name": zod.string(),
-  "payoutRate": zod.number(),
-  "marginPct": zod.number(),
-  "createdAt": zod.string()
+  "costModelId": zod.number().nullish(),
+  "costModelName": zod.string().nullish(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number().nullish()
+}))
+})
+export const ListPartnerClientsResponse = zod.array(ListPartnerClientsResponseItem)
+
+
+/**
+ * @summary Link a client to a partner
+ */
+export const LinkPartnerClientParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const LinkPartnerClientBody = zod.object({
+  "clientId": zod.number()
 })
 
 
 /**
- * @summary Delete a cost model
+ * @summary Unlink a client from a partner
  */
-export const DeletePlatformCostModelParams = zod.object({
+export const UnlinkPartnerClientParams = zod.object({
   "id": zod.coerce.number(),
-  "cmId": zod.coerce.number()
+  "clientId": zod.coerce.number()
+})
+
+
+/**
+ * @summary Set payout rate for a partner on a specific client event
+ */
+export const SetPartnerEventPayoutParams = zod.object({
+  "id": zod.coerce.number(),
+  "clientId": zod.coerce.number(),
+  "eventId": zod.coerce.number()
+})
+
+export const SetPartnerEventPayoutBody = zod.object({
+  "payoutRate": zod.number()
+})
+
+export const SetPartnerEventPayoutResponse = zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "name": zod.string(),
+  "costModelId": zod.number().nullish(),
+  "costModelName": zod.string().nullish(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number().nullish()
 })
 
 

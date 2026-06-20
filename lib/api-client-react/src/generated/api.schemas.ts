@@ -252,15 +252,6 @@ export interface BuyingHouseBillingRecord {
   createdAt: string;
 }
 
-export interface PlatformCostModel {
-  id: number;
-  platformId: number;
-  name: string;
-  payoutRate: number;
-  marginPct: number;
-  createdAt: string;
-}
-
 export interface Platform {
   id: number;
   name: string;
@@ -291,10 +282,9 @@ export interface Platform {
   /** @nullable */
   ntnNumber?: string | null;
   /** @nullable */
-  paymentTerms?: string | null;
+  paymentTermsId?: number | null;
   /** @nullable */
-  bulkDiscountPct?: number | null;
-  costModels?: PlatformCostModel[];
+  paymentTermName?: string | null;
   createdAt: string;
 }
 
@@ -314,9 +304,21 @@ export interface PlatformInput {
   /** @nullable */
   companyNumber?: string | null;
   /** @nullable */
-  paymentTerms?: string | null;
+  bankName?: string | null;
   /** @nullable */
-  bulkDiscountPct?: number | null;
+  bankAccountNumber?: string | null;
+  /** @nullable */
+  bankAddress?: string | null;
+  /** @nullable */
+  swiftCode?: string | null;
+  /** @nullable */
+  iban?: string | null;
+  /** @nullable */
+  salesTaxNumber?: string | null;
+  /** @nullable */
+  ntnNumber?: string | null;
+  /** @nullable */
+  paymentTermsId?: number | null;
 }
 
 export interface PlatformUpdate {
@@ -348,22 +350,38 @@ export interface PlatformUpdate {
   /** @nullable */
   ntnNumber?: string | null;
   /** @nullable */
-  paymentTerms?: string | null;
-  /** @nullable */
-  bulkDiscountPct?: number | null;
+  paymentTermsId?: number | null;
 }
 
-export interface PlatformCostModelInput {
-  /** @minLength 1 */
+export interface PartnerClientEvent {
+  id: number;
+  clientEventId: number;
   name: string;
-  payoutRate: number;
-  marginPct: number;
+  /** @nullable */
+  costModelId?: number | null;
+  /** @nullable */
+  costModelName?: string | null;
+  billableRate: number;
+  /** @nullable */
+  payoutRate?: number | null;
 }
 
-export interface PlatformCostModelUpdate {
-  name?: string;
-  payoutRate?: number;
-  marginPct?: number;
+export interface PartnerClient {
+  id: number;
+  partnerId: number;
+  clientId: number;
+  clientName: string;
+  /** @nullable */
+  buyingHouseName?: string | null;
+  events: PartnerClientEvent[];
+}
+
+export interface LinkPartnerClientInput {
+  clientId: number;
+}
+
+export interface PartnerPayoutInput {
+  payoutRate: number;
 }
 
 export interface BillingRecord {

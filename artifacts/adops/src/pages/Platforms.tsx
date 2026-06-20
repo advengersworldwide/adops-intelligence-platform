@@ -11,18 +11,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { hasPermission } from "@/lib/auth";
-
-const PAYMENT_TERMS = ["net_30", "net_60", "net_90", "net_120", "net_150"] as const;
-const PAYMENT_LABEL: Record<string, string> = {
-  net_30: "Net 30", net_60: "Net 60", net_90: "Net 90", net_120: "Net 120", net_150: "Net 150",
-};
 
 const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -32,7 +26,6 @@ const createSchema = z.object({
   pocEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   companyEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   companyNumber: z.string().regex(/^[+\d\s()\-]*$/, "Invalid phone number").optional().or(z.literal("")),
-  paymentTerms: z.enum(PAYMENT_TERMS).optional(),
 });
 type CreateForm = z.infer<typeof createSchema>;
 
@@ -100,7 +93,7 @@ export default function PlatformsPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Payment Terms", "Cost Models", "Revenue", "Cost", "Profit", "Margin %", hasPermission("Edit Platforms") ? "Actions" : null]
+              {["Name", "Payment Terms", "Revenue", "Cost", "Profit", "Margin %", hasPermission("Edit Platforms") ? "Actions" : null]
                 .filter((h): h is string => h !== null)
                 .map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
@@ -115,7 +108,7 @@ export default function PlatformsPage() {
                 </tr>
               ))
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground">No platforms found</td></tr>
+              <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">No platforms found</td></tr>
             ) : (
               filtered.map(p => {
                 const an = analyticsMap.get(p.id);
@@ -127,10 +120,7 @@ export default function PlatformsPage() {
                       </Link>
                     </td>
                     <td className="px-5 py-3 text-sm text-muted-foreground">
-                      {p.paymentTerms ? PAYMENT_LABEL[p.paymentTerms] ?? p.paymentTerms : "—"}
-                    </td>
-                    <td className="px-5 py-3 text-sm text-muted-foreground">
-                      {p.costModels?.length ? p.costModels.map(cm => cm.name).join(", ") : "—"}
+                      {p.paymentTermName ?? "—"}
                     </td>
                     <td className="px-5 py-3 text-sm font-medium">{an ? fmt(an.revenue) : "—"}</td>
                     <td className="px-5 py-3 text-sm text-muted-foreground">{an ? fmt(an.cost) : "—"}</td>
@@ -211,17 +201,6 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
                 <FormItem><FormLabel>Company Number</FormLabel><FormControl><Input type="tel" placeholder="Reg. number" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
-            <FormField control={form.control} name="paymentTerms" render={({ field }) => (
-              <FormItem><FormLabel>Payment Terms</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select terms" /></SelectTrigger></FormControl>
-                  <SelectContent>
-                    {PAYMENT_TERMS.map(t => <SelectItem key={t} value={t}>{PAYMENT_LABEL[t]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
               <Button type="submit" disabled={isSubmitting} data-testid="submit-platform-btn">

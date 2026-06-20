@@ -47,20 +47,21 @@ import type {
   GetDashboardSummaryParams,
   GetProfitOverTimeParams,
   HealthStatus,
+  LinkPartnerClientInput,
   ListAllBillingRecordsParams,
   ListBillingRecordsParams,
   ListBillsParams,
   ListCostResourcesParams,
   ListTransactionsParams,
+  PartnerClient,
+  PartnerClientEvent,
+  PartnerPayoutInput,
   PaymentDetail,
   PaymentInput,
   PaymentTerm,
   PaymentTermInput,
   Platform,
   PlatformAnalytics,
-  PlatformCostModel,
-  PlatformCostModelInput,
-  PlatformCostModelUpdate,
   PlatformInput,
   PlatformUpdate,
   ProfitTimePoint,
@@ -1627,38 +1628,115 @@ export const useDeletePlatform = <TError = ErrorType<void>,
       return useMutation(getDeletePlatformMutationOptions(options));
     }
 
-export const getCreatePlatformCostModelUrl = (id: number,) => {
+export const getListPartnerClientsUrl = (id: number,) => {
 
 
 
 
-  return `/api/platforms/${id}/cost-models`
+  return `/api/platforms/${id}/clients`
 }
 
 /**
- * @summary Add a cost model to a platform
+ * @summary List clients linked to a partner
  */
-export const createPlatformCostModel = async (id: number,
-    platformCostModelInput: PlatformCostModelInput, options?: RequestInit): Promise<PlatformCostModel> => {
+export const listPartnerClients = async (id: number, options?: RequestInit): Promise<PartnerClient[]> => {
 
-  return customFetch<PlatformCostModel>(getCreatePlatformCostModelUrl(id),
+  return customFetch<PartnerClient[]>(getListPartnerClientsUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPartnerClientsQueryKey = (id: number,) => {
+    return [
+    `/api/platforms/${id}/clients`
+    ] as const;
+    }
+
+
+export const getListPartnerClientsQueryOptions = <TData = Awaited<ReturnType<typeof listPartnerClients>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartnerClients>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPartnerClientsQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPartnerClients>>> = ({ signal }) => listPartnerClients(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPartnerClients>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPartnerClientsQueryResult = NonNullable<Awaited<ReturnType<typeof listPartnerClients>>>
+export type ListPartnerClientsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List clients linked to a partner
+ */
+
+export function useListPartnerClients<TData = Awaited<ReturnType<typeof listPartnerClients>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartnerClients>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPartnerClientsQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getLinkPartnerClientUrl = (id: number,) => {
+
+
+
+
+  return `/api/platforms/${id}/clients`
+}
+
+/**
+ * @summary Link a client to a partner
+ */
+export const linkPartnerClient = async (id: number,
+    linkPartnerClientInput: LinkPartnerClientInput, options?: RequestInit): Promise<PartnerClient> => {
+
+  return customFetch<PartnerClient>(getLinkPartnerClientUrl(id),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      platformCostModelInput,)
+      linkPartnerClientInput,)
   }
 );}
 
 
 
 
-export const getCreatePlatformCostModelMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPlatformCostModel>>, TError,{id: number;data: BodyType<PlatformCostModelInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createPlatformCostModel>>, TError,{id: number;data: BodyType<PlatformCostModelInput>}, TContext> => {
+export const getLinkPartnerClientMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkPartnerClient>>, TError,{id: number;data: BodyType<LinkPartnerClientInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof linkPartnerClient>>, TError,{id: number;data: BodyType<LinkPartnerClientInput>}, TContext> => {
 
-const mutationKey = ['createPlatformCostModel'];
+const mutationKey = ['linkPartnerClient'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1668,10 +1746,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPlatformCostModel>>, {id: number;data: BodyType<PlatformCostModelInput>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof linkPartnerClient>>, {id: number;data: BodyType<LinkPartnerClientInput>}> = (props) => {
           const {id,data} = props ?? {};
 
-          return  createPlatformCostModel(id,data,requestOptions)
+          return  linkPartnerClient(id,data,requestOptions)
         }
 
 
@@ -1681,114 +1759,40 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreatePlatformCostModelMutationResult = NonNullable<Awaited<ReturnType<typeof createPlatformCostModel>>>
-    export type CreatePlatformCostModelMutationBody = BodyType<PlatformCostModelInput>
-    export type CreatePlatformCostModelMutationError = ErrorType<void>
+    export type LinkPartnerClientMutationResult = NonNullable<Awaited<ReturnType<typeof linkPartnerClient>>>
+    export type LinkPartnerClientMutationBody = BodyType<LinkPartnerClientInput>
+    export type LinkPartnerClientMutationError = ErrorType<void>
 
     /**
- * @summary Add a cost model to a platform
+ * @summary Link a client to a partner
  */
-export const useCreatePlatformCostModel = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPlatformCostModel>>, TError,{id: number;data: BodyType<PlatformCostModelInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useLinkPartnerClient = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof linkPartnerClient>>, TError,{id: number;data: BodyType<LinkPartnerClientInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof createPlatformCostModel>>,
+        Awaited<ReturnType<typeof linkPartnerClient>>,
         TError,
-        {id: number;data: BodyType<PlatformCostModelInput>},
+        {id: number;data: BodyType<LinkPartnerClientInput>},
         TContext
       > => {
-      return useMutation(getCreatePlatformCostModelMutationOptions(options));
+      return useMutation(getLinkPartnerClientMutationOptions(options));
     }
 
-export const getUpdatePlatformCostModelUrl = (id: number,
-    cmId: number,) => {
+export const getUnlinkPartnerClientUrl = (id: number,
+    clientId: number,) => {
 
 
 
 
-  return `/api/platforms/${id}/cost-models/${cmId}`
+  return `/api/platforms/${id}/clients/${clientId}`
 }
 
 /**
- * @summary Update a cost model
+ * @summary Unlink a client from a partner
  */
-export const updatePlatformCostModel = async (id: number,
-    cmId: number,
-    platformCostModelUpdate: PlatformCostModelUpdate, options?: RequestInit): Promise<PlatformCostModel> => {
+export const unlinkPartnerClient = async (id: number,
+    clientId: number, options?: RequestInit): Promise<void> => {
 
-  return customFetch<PlatformCostModel>(getUpdatePlatformCostModelUrl(id,cmId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      platformCostModelUpdate,)
-  }
-);}
-
-
-
-
-export const getUpdatePlatformCostModelMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePlatformCostModel>>, TError,{id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updatePlatformCostModel>>, TError,{id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>}, TContext> => {
-
-const mutationKey = ['updatePlatformCostModel'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePlatformCostModel>>, {id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>}> = (props) => {
-          const {id,cmId,data} = props ?? {};
-
-          return  updatePlatformCostModel(id,cmId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdatePlatformCostModelMutationResult = NonNullable<Awaited<ReturnType<typeof updatePlatformCostModel>>>
-    export type UpdatePlatformCostModelMutationBody = BodyType<PlatformCostModelUpdate>
-    export type UpdatePlatformCostModelMutationError = ErrorType<void>
-
-    /**
- * @summary Update a cost model
- */
-export const useUpdatePlatformCostModel = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePlatformCostModel>>, TError,{id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof updatePlatformCostModel>>,
-        TError,
-        {id: number;cmId: number;data: BodyType<PlatformCostModelUpdate>},
-        TContext
-      > => {
-      return useMutation(getUpdatePlatformCostModelMutationOptions(options));
-    }
-
-export const getDeletePlatformCostModelUrl = (id: number,
-    cmId: number,) => {
-
-
-
-
-  return `/api/platforms/${id}/cost-models/${cmId}`
-}
-
-/**
- * @summary Delete a cost model
- */
-export const deletePlatformCostModel = async (id: number,
-    cmId: number, options?: RequestInit): Promise<void> => {
-
-  return customFetch<void>(getDeletePlatformCostModelUrl(id,cmId),
+  return customFetch<void>(getUnlinkPartnerClientUrl(id,clientId),
   {
     ...options,
     method: 'DELETE'
@@ -1800,11 +1804,11 @@ export const deletePlatformCostModel = async (id: number,
 
 
 
-export const getDeletePlatformCostModelMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePlatformCostModel>>, TError,{id: number;cmId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof deletePlatformCostModel>>, TError,{id: number;cmId: number}, TContext> => {
+export const getUnlinkPartnerClientMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlinkPartnerClient>>, TError,{id: number;clientId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unlinkPartnerClient>>, TError,{id: number;clientId: number}, TContext> => {
 
-const mutationKey = ['deletePlatformCostModel'];
+const mutationKey = ['unlinkPartnerClient'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1814,10 +1818,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePlatformCostModel>>, {id: number;cmId: number}> = (props) => {
-          const {id,cmId} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlinkPartnerClient>>, {id: number;clientId: number}> = (props) => {
+          const {id,clientId} = props ?? {};
 
-          return  deletePlatformCostModel(id,cmId,requestOptions)
+          return  unlinkPartnerClient(id,clientId,requestOptions)
         }
 
 
@@ -1827,22 +1831,98 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type DeletePlatformCostModelMutationResult = NonNullable<Awaited<ReturnType<typeof deletePlatformCostModel>>>
+    export type UnlinkPartnerClientMutationResult = NonNullable<Awaited<ReturnType<typeof unlinkPartnerClient>>>
 
-    export type DeletePlatformCostModelMutationError = ErrorType<void>
+    export type UnlinkPartnerClientMutationError = ErrorType<void>
 
     /**
- * @summary Delete a cost model
+ * @summary Unlink a client from a partner
  */
-export const useDeletePlatformCostModel = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePlatformCostModel>>, TError,{id: number;cmId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+export const useUnlinkPartnerClient = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlinkPartnerClient>>, TError,{id: number;clientId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof deletePlatformCostModel>>,
+        Awaited<ReturnType<typeof unlinkPartnerClient>>,
         TError,
-        {id: number;cmId: number},
+        {id: number;clientId: number},
         TContext
       > => {
-      return useMutation(getDeletePlatformCostModelMutationOptions(options));
+      return useMutation(getUnlinkPartnerClientMutationOptions(options));
+    }
+
+export const getSetPartnerEventPayoutUrl = (id: number,
+    clientId: number,
+    eventId: number,) => {
+
+
+
+
+  return `/api/platforms/${id}/clients/${clientId}/events/${eventId}/payout`
+}
+
+/**
+ * @summary Set payout rate for a partner on a specific client event
+ */
+export const setPartnerEventPayout = async (id: number,
+    clientId: number,
+    eventId: number,
+    partnerPayoutInput: PartnerPayoutInput, options?: RequestInit): Promise<PartnerClientEvent> => {
+
+  return customFetch<PartnerClientEvent>(getSetPartnerEventPayoutUrl(id,clientId,eventId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      partnerPayoutInput,)
+  }
+);}
+
+
+
+
+export const getSetPartnerEventPayoutMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setPartnerEventPayout>>, TError,{id: number;clientId: number;eventId: number;data: BodyType<PartnerPayoutInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setPartnerEventPayout>>, TError,{id: number;clientId: number;eventId: number;data: BodyType<PartnerPayoutInput>}, TContext> => {
+
+const mutationKey = ['setPartnerEventPayout'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setPartnerEventPayout>>, {id: number;clientId: number;eventId: number;data: BodyType<PartnerPayoutInput>}> = (props) => {
+          const {id,clientId,eventId,data} = props ?? {};
+
+          return  setPartnerEventPayout(id,clientId,eventId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetPartnerEventPayoutMutationResult = NonNullable<Awaited<ReturnType<typeof setPartnerEventPayout>>>
+    export type SetPartnerEventPayoutMutationBody = BodyType<PartnerPayoutInput>
+    export type SetPartnerEventPayoutMutationError = ErrorType<void>
+
+    /**
+ * @summary Set payout rate for a partner on a specific client event
+ */
+export const useSetPartnerEventPayout = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setPartnerEventPayout>>, TError,{id: number;clientId: number;eventId: number;data: BodyType<PartnerPayoutInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setPartnerEventPayout>>,
+        TError,
+        {id: number;clientId: number;eventId: number;data: BodyType<PartnerPayoutInput>},
+        TContext
+      > => {
+      return useMutation(getSetPartnerEventPayoutMutationOptions(options));
     }
 
 export const getListBillingRecordsUrl = (id: number,

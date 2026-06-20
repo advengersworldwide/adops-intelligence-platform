@@ -35,7 +35,5 @@ export interface PlatformUpdate {
   /** @nullable */
   ntnNumber?: string | null;
   /** @nullable */
-  paymentTerms?: string | null;
-  /** @nullable */
-  bulkDiscountPct?: number | null;
+  paymentTermsId?: number | null;
 }

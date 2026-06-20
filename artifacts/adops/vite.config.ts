@@ -1,11 +1,12 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
 
-const rawPort = process.env.PORT;
+const fileEnv = loadEnv(process.env.NODE_ENV ?? "development", import.meta.dirname, "");
+const rawPort = process.env.PORT ?? fileEnv.PORT;
 
 if (!rawPort) {
   console.warn("PORT environment variable is not provided. Defaulting to 5173.");

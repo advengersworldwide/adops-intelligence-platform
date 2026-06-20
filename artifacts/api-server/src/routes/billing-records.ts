@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
-import { db, billingRecordsTable, buyingHousesTable, platformCostModelsTable, clientsTable } from "@workspace/db";
+import { db, billingRecordsTable, buyingHousesTable, costModelsTable, clientsTable } from "@workspace/db";
 import { optionalAuth } from "../middlewares/auth";
 import {
   ListBillingRecordsParams,
@@ -16,8 +16,8 @@ const router: IRouter = Router();
 
 async function mapRecord(r: typeof billingRecordsTable.$inferSelect) {
   const [bh] = await db.select().from(buyingHousesTable).where(eq(buyingHousesTable.id, r.buyingHouseId));
-  const [cm] = await db.select().from(platformCostModelsTable)
-    .where(eq(platformCostModelsTable.id, r.costModelId));
+  const [cm] = await db.select().from(costModelsTable)
+    .where(eq(costModelsTable.id, r.costModelId));
   const client = r.clientId
     ? (await db.select({ name: clientsTable.name }).from(clientsTable)
         .where(eq(clientsTable.id, r.clientId)))[0]
@@ -31,8 +31,8 @@ async function mapRecord(r: typeof billingRecordsTable.$inferSelect) {
     clientName: client?.name ?? null,
     costModelId: r.costModelId,
     costModelName: cm?.name ?? null,
-    costModelPayoutRate: cm ? Number(cm.payoutRate) : null,
-    costModelMarginPct: cm ? Number(cm.marginPct) : null,
+    costModelPayoutRate: null,
+    costModelMarginPct: null,
     period: r.period,
     appsflyerPins: r.appsflyerPins,
     fraudPins: r.fraudPins,

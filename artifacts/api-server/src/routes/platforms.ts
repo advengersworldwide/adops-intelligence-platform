@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
-import { db, platformsTable, platformCostModelsTable } from "@workspace/db";
+import { db, platformsTable, paymentTermsTable } from "@workspace/db";
 import {
   CreatePlatformBody,
   UpdatePlatformBody,
@@ -15,11 +15,10 @@ import {
 const router: IRouter = Router();
 
 async function mapRow(r: typeof platformsTable.$inferSelect) {
-  const costModels = await db
-    .select()
-    .from(platformCostModelsTable)
-    .where(eq(platformCostModelsTable.platformId, r.id))
-    .orderBy(platformCostModelsTable.createdAt);
+  const [pt] = r.paymentTermsId
+    ? await db.select({ name: paymentTermsTable.name }).from(paymentTermsTable)
+        .where(eq(paymentTermsTable.id, r.paymentTermsId))
+    : [];
 
   return {
     id: r.id,
@@ -37,16 +36,8 @@ async function mapRow(r: typeof platformsTable.$inferSelect) {
     iban: r.iban,
     salesTaxNumber: r.salesTaxNumber,
     ntnNumber: r.ntnNumber,
-    paymentTerms: r.paymentTerms,
-    bulkDiscountPct: r.bulkDiscountPct !== null ? parseFloat(r.bulkDiscountPct) : null,
-    costModels: costModels.map(cm => ({
-      id: cm.id,
-      platformId: cm.platformId,
-      name: cm.name,
-      payoutRate: Number(cm.payoutRate),
-      marginPct: Number(cm.marginPct),
-      createdAt: cm.createdAt.toISOString(),
-    })),
+    paymentTermsId: r.paymentTermsId ?? null,
+    paymentTermName: pt?.name ?? null,
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -63,11 +54,7 @@ router.post("/platforms", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { bulkDiscountPct, ...restCreate } = parsed.data;
-  const [row] = await db.insert(platformsTable).values({
-    ...restCreate,
-    bulkDiscountPct: bulkDiscountPct != null ? String(bulkDiscountPct) : null,
-  }).returning();
+  const [row] = await db.insert(platformsTable).values(parsed.data).returning();
   res.status(201).json(GetPlatformResponse.parse(await mapRow(row)));
 });
 
@@ -96,13 +83,9 @@ router.patch("/platforms/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const { bulkDiscountPct, ...rest } = parsed.data;
-  const updates: Partial<typeof platformsTable.$inferInsert> = { ...rest };
-  if (bulkDiscountPct !== undefined)
-    updates.bulkDiscountPct = bulkDiscountPct != null ? String(bulkDiscountPct) : null;
   const [row] = await db
     .update(platformsTable)
-    .set(updates)
+    .set(parsed.data)
     .where(eq(platformsTable.id, params.data.id))
     .returning();
   if (!row) {

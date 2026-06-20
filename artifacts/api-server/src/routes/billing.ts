@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import { and, eq } from "drizzle-orm";
 import {
   db, billingRecordsTable, buyingHousesTable, clientsTable,
-  platformsTable, platformCostModelsTable,
+  platformsTable, costModelsTable,
 } from "@workspace/db";
 import { ListAllBillingRecordsQueryParams, ListAllBillingRecordsResponse } from "@workspace/api-zod";
 
@@ -42,15 +42,13 @@ router.get("/billing-records", async (req, res): Promise<void> => {
       platformName: platformsTable.name,
       buyingHouseName: buyingHousesTable.name,
       clientName: clientsTable.name,
-      costModelName: platformCostModelsTable.name,
-      costModelPayoutRate: platformCostModelsTable.payoutRate,
-      costModelMarginPct: platformCostModelsTable.marginPct,
+      costModelName: costModelsTable.name,
     })
     .from(billingRecordsTable)
     .leftJoin(platformsTable, eq(billingRecordsTable.platformId, platformsTable.id))
     .leftJoin(buyingHousesTable, eq(billingRecordsTable.buyingHouseId, buyingHousesTable.id))
     .leftJoin(clientsTable, eq(billingRecordsTable.clientId, clientsTable.id))
-    .leftJoin(platformCostModelsTable, eq(billingRecordsTable.costModelId, platformCostModelsTable.id))
+    .leftJoin(costModelsTable, eq(billingRecordsTable.costModelId, costModelsTable.id))
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(billingRecordsTable.createdAt);
 
@@ -64,8 +62,8 @@ router.get("/billing-records", async (req, res): Promise<void> => {
     clientName: r.clientName ?? null,
     costModelId: r.costModelId,
     costModelName: r.costModelName ?? null,
-    costModelPayoutRate: r.costModelPayoutRate != null ? Number(r.costModelPayoutRate) : null,
-    costModelMarginPct: r.costModelMarginPct != null ? Number(r.costModelMarginPct) : null,
+    costModelPayoutRate: null,
+    costModelMarginPct: null,
     period: r.period,
     appsflyerPins: r.appsflyerPins,
     fraudPins: r.fraudPins,

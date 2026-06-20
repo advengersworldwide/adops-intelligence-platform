@@ -1,7 +1,7 @@
 import { pgTable, serial, integer, text, numeric, timestamp } from "drizzle-orm/pg-core";
 import { platformsTable } from "./platforms";
 import { buyingHousesTable } from "./buying-houses";
-import { platformCostModelsTable } from "./platform-cost-models";
+import { costModelsTable } from "./cost-models";
 import { clientsTable } from "./clients";
 
 export const billingRecordsTable = pgTable("billing_records", {
@@ -16,7 +16,7 @@ export const billingRecordsTable = pgTable("billing_records", {
     .references(() => clientsTable.id, { onDelete: "set null" }),
   costModelId: integer("cost_model_id")
     .notNull()
-    .references(() => platformCostModelsTable.id),
+    .references(() => costModelsTable.id),
   period: text("period").notNull(),
   appsflyerPins: integer("appsflyer_pins").notNull(),
   fraudPins: integer("fraud_pins").notNull(),

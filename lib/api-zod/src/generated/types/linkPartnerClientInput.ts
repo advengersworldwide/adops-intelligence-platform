@@ -6,9 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PlatformCostModelInput {
-  /** @minLength 1 */
-  name: string;
-  payoutRate: number;
-  marginPct: number;
+export interface LinkPartnerClientInput {
+  clientId: number;
 }
