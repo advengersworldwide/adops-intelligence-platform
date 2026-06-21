@@ -1,0 +1,52 @@
+import { eq, gte, sum } from "drizzle-orm";
+import { db, clientsTable, partnersTable, campaignsTable, transactionsTable } from "@workspace/db";
+
+export async function buildContext(): Promise<string> {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const dateStr = thirtyDaysAgo.toISOString().split("T")[0];
+
+  const [clients, platforms, campaigns, txAgg, campaignPerf] = await Promise.all([
+    db.select({ name: clientsTable.name }).from(clientsTable),
+    db.select({ name: partnersTable.name }).from(partnersTable),
+    db.select({ id: campaignsTable.id, name: campaignsTable.name, clientName: clientsTable.name, platformName: partnersTable.name })
+      .from(campaignsTable)
+      .leftJoin(clientsTable, eq(campaignsTable.clientId, clientsTable.id))
+      .leftJoin(partnersTable, eq(campaignsTable.platformId, partnersTable.id))
+      .limit(50),
+    db.select({ totalSpend: sum(transactionsTable.spend), totalCost: sum(transactionsTable.cost), totalProfit: sum(transactionsTable.profit) })
+      .from(transactionsTable).where(gte(transactionsTable.date, dateStr!)),
+    db.select({ campaignId: transactionsTable.campaignId, totalSpend: sum(transactionsTable.spend), totalProfit: sum(transactionsTable.profit) })
+      .from(transactionsTable).where(gte(transactionsTable.date, dateStr!)).groupBy(transactionsTable.campaignId),
+  ]);
+
+  const fmt = (n: number) => `$${n.toFixed(2)}`;
+  const pct = (n: number) => `${n.toFixed(1)}%`;
+  const totalSpend = parseFloat(txAgg[0]?.totalSpend ?? "0");
+  const totalCost = parseFloat(txAgg[0]?.totalCost ?? "0");
+  const totalProfit = parseFloat(txAgg[0]?.totalProfit ?? "0");
+  const overallMargin = totalSpend > 0 ? (totalProfit / totalSpend) * 100 : 0;
+  const campaignNameMap = new Map(campaigns.map(c => [c.id, c.name]));
+  const perfWithMargin = campaignPerf.map(c => { const spend = parseFloat(c.totalSpend ?? "0"); const profit = parseFloat(c.totalProfit ?? "0"); const margin = spend > 0 ? (profit / spend) * 100 : 0; return { name: campaignNameMap.get(c.campaignId) ?? `Campaign ${c.campaignId}`, profit, margin }; });
+  const top5 = [...perfWithMargin].sort((a, b) => b.profit - a.profit).slice(0, 5);
+  const bottom5 = [...perfWithMargin].sort((a, b) => a.margin - b.margin).slice(0, 5);
+  const alerts = perfWithMargin.filter(c => c.profit < 0 || c.margin < 10);
+
+  return `You are an AI assistant for AdOps Intelligence (Advengers Worldwide).
+You have access to real-time advertising operations data. Today: ${new Date().toISOString().split("T")[0]}.
+
+CLIENTS (${clients.length}): ${clients.length ? clients.map(c => c.name).join(", ") : "None"}
+PLATFORMS (${platforms.length}): ${platforms.length ? platforms.map(p => p.name).join(", ") : "None"}
+CAMPAIGNS (${campaigns.length} total): ${campaigns.length ? campaigns.map(c => `${c.name} [${c.clientName ?? "?"}/${c.platformName ?? "?"}]`).join(", ") + (campaigns.length === 50 ? " (showing first 50)" : "") : "None"}
+LAST 30 DAYS:
+  Spend: ${fmt(totalSpend)} | Cost: ${fmt(totalCost)} | Profit: ${fmt(totalProfit)} | Margin: ${pct(overallMargin)}
+TOP 5 CAMPAIGNS BY PROFIT: ${top5.length ? top5.map(c => `${c.name}: ${fmt(c.profit)}`).join(", ") : "No transaction data"}
+BOTTOM 5 CAMPAIGNS BY MARGIN: ${bottom5.length ? bottom5.map(c => `${c.name}: ${pct(c.margin)}`).join(", ") : "No transaction data"}
+ACTIVE ALERTS: ${alerts.length ? alerts.map(c => `${c.name} (profit: ${fmt(c.profit)}, margin: ${pct(c.margin)})`).join("; ") : "None"}
+
+Answer questions about this data concisely and accurately.
+Only discuss topics relevant to advertising operations and this data.
+Write in plain professional prose. Do not use markdown formatting, bullet symbols,
+asterisks, pound signs, or emojis. Keep responses short and to the point — 2 to 4
+sentences maximum unless a longer answer is clearly required. Never pad responses.`;
+}
