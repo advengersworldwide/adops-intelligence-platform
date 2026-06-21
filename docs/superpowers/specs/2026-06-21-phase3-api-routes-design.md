@@ -2,7 +2,7 @@
 
 **Date:** 2026-06-21
 **Branch:** feat/nextjs-migration
-**Scope:** Port all 21 Express route files to 45 Next.js 15 App Router Route Handlers under `artifacts/web/app/api/`
+**Scope:** Port all 21 Express route files to 41 Next.js 15 App Router Route Handlers under `artifacts/web/app/api/`
 
 ---
 
@@ -146,7 +146,7 @@ No global error handler. Each handler catches at the DB/business logic level onl
 
 ---
 
-## Route Inventory (45 handlers)
+## Route Inventory (41 handlers)
 
 ### Infrastructure
 | File | Methods | Auth |

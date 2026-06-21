@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 import { requireAuth, isAuthError } from "@/lib/auth/require";
 import { buildContext } from "@/lib/ai-context";
 
@@ -11,16 +13,15 @@ function getGroq(): Groq {
   return _groq;
 }
 
-const rateLimitMap = new Map<number, { count: number; resetAt: number }>();
-
-function checkLocalRateLimit(userId: number): boolean {
-  const now = Date.now();
-  const window = 60 * 1000;
-  const entry = rateLimitMap.get(userId);
-  if (!entry || now > entry.resetAt) { rateLimitMap.set(userId, { count: 1, resetAt: now + window }); return true; }
-  if (entry.count >= 20) return false;
-  entry.count++;
-  return true;
+let _ratelimit: Ratelimit | null = null;
+function getRatelimit(): Ratelimit {
+  if (!_ratelimit) {
+    _ratelimit = new Ratelimit({
+      redis: Redis.fromEnv(),
+      limiter: Ratelimit.slidingWindow(20, "1 m"),
+    });
+  }
+  return _ratelimit;
 }
 
 export async function POST(req: Request): Promise<Response> {
@@ -30,7 +31,8 @@ export async function POST(req: Request): Promise<Response> {
   const groqKey = process.env["GROQ"];
   if (!groqKey) return NextResponse.json({ error: "AI service not configured" }, { status: 500 });
 
-  if (!checkLocalRateLimit(auth.user.sub)) {
+  const { success } = await getRatelimit().limit(`ai:${auth.user.sub}`);
+  if (!success) {
     return NextResponse.json({ error: "Too many requests. Please wait before sending another message." }, { status: 429 });
   }
 
