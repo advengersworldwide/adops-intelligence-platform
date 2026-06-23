@@ -1,3 +1,7 @@
 **/node_modules
 graphify-out
 artifacts/mockup-sandbox
+lib/
+scripts/
+AUDIT.md
+.agents/
