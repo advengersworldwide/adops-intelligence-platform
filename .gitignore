@@ -51,6 +51,9 @@ Thumbs.db
 # Git worktrees
 .worktrees/
 
+# Git worktrees
+.worktrees/
+
 # Environment variable files — NEVER commit these
 .env*
 !.env.example
