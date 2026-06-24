@@ -1304,3 +1304,319 @@ export const UploadPaymentAttachmentResponse = zod.object({
 })
 
 
+/**
+ * @summary List client purchase orders
+ */
+export const ListClientPurchaseOrdersResponseItem = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullish(),
+  "attachmentUrl": zod.string(),
+  "attachmentName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListClientPurchaseOrdersResponse = zod.array(ListClientPurchaseOrdersResponseItem)
+
+
+/**
+ * @summary Create a client purchase order
+ */
+
+
+
+export const CreateClientPurchaseOrderBody = zod.object({
+  "clientId": zod.number(),
+  "attachmentUrl": zod.string().min(1),
+  "attachmentName": zod.string().nullish()
+})
+
+
+/**
+ * @summary Get a client purchase order
+ */
+export const GetClientPurchaseOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetClientPurchaseOrderResponse = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullish(),
+  "attachmentUrl": zod.string(),
+  "attachmentName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update a client purchase order
+ */
+export const UpdateClientPurchaseOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+export const UpdateClientPurchaseOrderBody = zod.object({
+  "clientId": zod.number().optional(),
+  "attachmentUrl": zod.string().min(1).optional(),
+  "attachmentName": zod.string().nullish()
+})
+
+export const UpdateClientPurchaseOrderResponse = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullish(),
+  "attachmentUrl": zod.string(),
+  "attachmentName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a client purchase order
+ */
+export const DeleteClientPurchaseOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List a client's purchase orders (for the PPO dropdown)
+ */
+export const ListClientPurchaseOrdersByClientParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListClientPurchaseOrdersByClientResponseItem = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullish(),
+  "attachmentUrl": zod.string(),
+  "attachmentName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListClientPurchaseOrdersByClientResponse = zod.array(ListClientPurchaseOrdersByClientResponseItem)
+
+
+/**
+ * @summary List partner purchase orders
+ */
+export const ListPartnerPurchaseOrdersResponseItem = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "clientPurchaseOrderId": zod.number(),
+  "cpoCode": zod.string(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "totalBudget": zod.number(),
+  "createdById": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "partner": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
+  "createdAt": zod.string()
+}).optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "cacRate": zod.number(),
+  "eventCount": zod.number(),
+  "lineBudget": zod.number()
+}))
+})
+export const ListPartnerPurchaseOrdersResponse = zod.array(ListPartnerPurchaseOrdersResponseItem)
+
+
+/**
+ * @summary Create a partner purchase order
+ */
+
+
+
+
+
+export const CreatePartnerPurchaseOrderBody = zod.object({
+  "partnerId": zod.number(),
+  "clientPurchaseOrderId": zod.number(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "items": zod.array(zod.object({
+  "clientEventId": zod.number(),
+  "eventName": zod.string().min(1),
+  "cacRate": zod.number(),
+  "eventCount": zod.number().min(1)
+})).min(1)
+})
+
+
+/**
+ * @summary Get a partner purchase order (full detail for invoice)
+ */
+export const GetPartnerPurchaseOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetPartnerPurchaseOrderResponse = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "clientPurchaseOrderId": zod.number(),
+  "cpoCode": zod.string(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "totalBudget": zod.number(),
+  "createdById": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "partner": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
+  "createdAt": zod.string()
+}).optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "cacRate": zod.number(),
+  "eventCount": zod.number(),
+  "lineBudget": zod.number()
+}))
+})
+
+
+/**
+ * @summary Update a partner purchase order
+ */
+export const UpdatePartnerPurchaseOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+
+
+
+export const UpdatePartnerPurchaseOrderBody = zod.object({
+  "startDate": zod.string().optional(),
+  "endDate": zod.string().optional(),
+  "items": zod.array(zod.object({
+  "clientEventId": zod.number(),
+  "eventName": zod.string().min(1),
+  "cacRate": zod.number(),
+  "eventCount": zod.number().min(1)
+})).optional()
+})
+
+export const UpdatePartnerPurchaseOrderResponse = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "clientPurchaseOrderId": zod.number(),
+  "cpoCode": zod.string(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullish(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "totalBudget": zod.number(),
+  "createdById": zod.number().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "partner": zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "address": zod.string().nullish(),
+  "pocName": zod.string().nullish(),
+  "pocNumber": zod.string().nullish(),
+  "pocEmail": zod.string().nullish(),
+  "companyEmail": zod.string().nullish(),
+  "companyNumber": zod.string().nullish(),
+  "bankName": zod.string().nullish(),
+  "bankAccountNumber": zod.string().nullish(),
+  "bankAddress": zod.string().nullish(),
+  "swiftCode": zod.string().nullish(),
+  "iban": zod.string().nullish(),
+  "salesTaxNumber": zod.string().nullish(),
+  "ntnNumber": zod.string().nullish(),
+  "paymentTermsId": zod.number().nullish(),
+  "paymentTermName": zod.string().nullish(),
+  "createdAt": zod.string()
+}).optional(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "cacRate": zod.number(),
+  "eventCount": zod.number(),
+  "lineBudget": zod.number()
+}))
+})
+
+
+/**
+ * @summary Delete a partner purchase order
+ */
+export const DeletePartnerPurchaseOrderParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

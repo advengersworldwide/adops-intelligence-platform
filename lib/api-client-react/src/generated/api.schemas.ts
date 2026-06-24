@@ -384,6 +384,95 @@ export interface PartnerPayoutInput {
   payoutRate: number;
 }
 
+export interface ClientPurchaseOrder {
+  id: number;
+  code: string;
+  clientId: number;
+  clientName: string;
+  /** @nullable */
+  buyingHouseName?: string | null;
+  attachmentUrl: string;
+  /** @nullable */
+  attachmentName?: string | null;
+  /** @nullable */
+  createdById?: number | null;
+  /** @nullable */
+  createdByName?: string | null;
+  createdAt: string;
+}
+
+export interface ClientPurchaseOrderInput {
+  clientId: number;
+  /** @minLength 1 */
+  attachmentUrl: string;
+  /** @nullable */
+  attachmentName?: string | null;
+}
+
+export interface ClientPurchaseOrderUpdate {
+  clientId?: number;
+  /** @minLength 1 */
+  attachmentUrl?: string;
+  /** @nullable */
+  attachmentName?: string | null;
+}
+
+export interface PartnerPurchaseOrderItem {
+  id: number;
+  clientEventId: number;
+  eventName: string;
+  cacRate: number;
+  eventCount: number;
+  lineBudget: number;
+}
+
+export interface PartnerPurchaseOrderItemInput {
+  clientEventId: number;
+  /** @minLength 1 */
+  eventName: string;
+  cacRate: number;
+  /** @minimum 1 */
+  eventCount: number;
+}
+
+export interface PartnerPurchaseOrder {
+  id: number;
+  code: string;
+  partnerId: number;
+  partnerName: string;
+  clientPurchaseOrderId: number;
+  cpoCode: string;
+  clientId: number;
+  clientName: string;
+  /** @nullable */
+  buyingHouseName?: string | null;
+  startDate: string;
+  endDate: string;
+  totalBudget: number;
+  /** @nullable */
+  createdById?: number | null;
+  /** @nullable */
+  createdByName?: string | null;
+  createdAt: string;
+  partner?: Partner;
+  items: PartnerPurchaseOrderItem[];
+}
+
+export interface PartnerPurchaseOrderInput {
+  partnerId: number;
+  clientPurchaseOrderId: number;
+  startDate: string;
+  endDate: string;
+  /** @minItems 1 */
+  items: PartnerPurchaseOrderItemInput[];
+}
+
+export interface PartnerPurchaseOrderUpdate {
+  startDate?: string;
+  endDate?: string;
+  items?: PartnerPurchaseOrderItemInput[];
+}
+
 export interface BillingRecord {
   id: number;
   platformId: number;
