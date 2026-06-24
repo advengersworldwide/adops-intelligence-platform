@@ -1244,6 +1244,156 @@ paths:
               schema:
                 $ref: "#/components/schemas/UploadResult"
 
+  # ── Client Purchase Orders ────────────────────────────────────────────────────
+  /client-purchase-orders:
+    get:
+      operationId: listClientPurchaseOrders
+      tags: [purchase-orders]
+      summary: List client purchase orders
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ClientPurchaseOrder" } }
+    post:
+      operationId: createClientPurchaseOrder
+      tags: [purchase-orders]
+      summary: Create a client purchase order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientPurchaseOrderInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientPurchaseOrder" }
+        "400": { description: Validation error }
+
+  /client-purchase-orders/{id}:
+    get:
+      operationId: getClientPurchaseOrder
+      tags: [purchase-orders]
+      summary: Get a client purchase order
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: CPO
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientPurchaseOrder" }
+        "404": { description: Not found }
+    patch:
+      operationId: updateClientPurchaseOrder
+      tags: [purchase-orders]
+      summary: Update a client purchase order
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClientPurchaseOrderUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ClientPurchaseOrder" }
+        "404": { description: Not found }
+    delete:
+      operationId: deleteClientPurchaseOrder
+      tags: [purchase-orders]
+      summary: Delete a client purchase order
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "204": { description: Deleted }
+        "409": { description: Has linked partner purchase orders }
+        "404": { description: Not found }
+
+  /clients/{id}/purchase-orders:
+    get:
+      operationId: listClientPurchaseOrdersByClient
+      tags: [purchase-orders]
+      summary: List a client's purchase orders (for the PPO dropdown)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ClientPurchaseOrder" } }
+
+  # ── Partner Purchase Orders ───────────────────────────────────────────────────
+  /partner-purchase-orders:
+    get:
+      operationId: listPartnerPurchaseOrders
+      tags: [purchase-orders]
+      summary: List partner purchase orders
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/PartnerPurchaseOrder" } }
+    post:
+      operationId: createPartnerPurchaseOrder
+      tags: [purchase-orders]
+      summary: Create a partner purchase order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerPurchaseOrderInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPurchaseOrder" }
+        "400": { description: Validation error }
+
+  /partner-purchase-orders/{id}:
+    get:
+      operationId: getPartnerPurchaseOrder
+      tags: [purchase-orders]
+      summary: Get a partner purchase order (full detail for invoice)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "200":
+          description: PPO
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPurchaseOrder" }
+        "404": { description: Not found }
+    patch:
+      operationId: updatePartnerPurchaseOrder
+      tags: [purchase-orders]
+      summary: Update a partner purchase order
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerPurchaseOrderUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPurchaseOrder" }
+        "404": { description: Not found }
+    delete:
+      operationId: deletePartnerPurchaseOrder
+      tags: [purchase-orders]
+      summary: Delete a partner purchase order
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        "204": { description: Deleted }
+        "404": { description: Not found }
+
 components:
   schemas:
     HealthStatus:
@@ -1642,6 +1792,102 @@ components:
       properties:
         payoutRate:
           type: number
+
+    ClientPurchaseOrder:
+      type: object
+      required: [id, code, clientId, clientName, attachmentUrl, createdAt]
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        clientId: { type: integer }
+        clientName: { type: string }
+        buyingHouseName: { type: ["string", "null"] }
+        attachmentUrl: { type: string }
+        attachmentName: { type: ["string", "null"] }
+        createdById: { type: ["integer", "null"] }
+        createdByName: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    ClientPurchaseOrderInput:
+      type: object
+      required: [clientId, attachmentUrl]
+      properties:
+        clientId: { type: integer }
+        attachmentUrl: { type: string, minLength: 1 }
+        attachmentName: { type: ["string", "null"] }
+
+    ClientPurchaseOrderUpdate:
+      type: object
+      properties:
+        clientId: { type: integer }
+        attachmentUrl: { type: string, minLength: 1 }
+        attachmentName: { type: ["string", "null"] }
+
+    PartnerPurchaseOrderItem:
+      type: object
+      required: [id, clientEventId, eventName, cacRate, eventCount, lineBudget]
+      properties:
+        id: { type: integer }
+        clientEventId: { type: integer }
+        eventName: { type: string }
+        cacRate: { type: number }
+        eventCount: { type: integer }
+        lineBudget: { type: number }
+
+    PartnerPurchaseOrderItemInput:
+      type: object
+      required: [clientEventId, eventName, cacRate, eventCount]
+      properties:
+        clientEventId: { type: integer }
+        eventName: { type: string, minLength: 1 }
+        cacRate: { type: number }
+        eventCount: { type: integer, minimum: 1 }
+
+    PartnerPurchaseOrder:
+      type: object
+      required: [id, code, partnerId, partnerName, clientPurchaseOrderId, cpoCode, clientId, clientName, startDate, endDate, totalBudget, createdAt, items]
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        partnerId: { type: integer }
+        partnerName: { type: string }
+        clientPurchaseOrderId: { type: integer }
+        cpoCode: { type: string }
+        clientId: { type: integer }
+        clientName: { type: string }
+        buyingHouseName: { type: ["string", "null"] }
+        startDate: { type: string }
+        endDate: { type: string }
+        totalBudget: { type: number }
+        createdById: { type: ["integer", "null"] }
+        createdByName: { type: ["string", "null"] }
+        createdAt: { type: string }
+        partner: { $ref: "#/components/schemas/Partner" }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/PartnerPurchaseOrderItem" }
+
+    PartnerPurchaseOrderInput:
+      type: object
+      required: [partnerId, clientPurchaseOrderId, startDate, endDate, items]
+      properties:
+        partnerId: { type: integer }
+        clientPurchaseOrderId: { type: integer }
+        startDate: { type: string }
+        endDate: { type: string }
+        items:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/PartnerPurchaseOrderItemInput" }
+
+    PartnerPurchaseOrderUpdate:
+      type: object
+      properties:
+        startDate: { type: string }
+        endDate: { type: string }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/PartnerPurchaseOrderItemInput" }
 
     BillingRecord:
       type: object
