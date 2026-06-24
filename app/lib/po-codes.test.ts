@@ -9,4 +9,7 @@ describe("formatPoCode", () => {
   it("does not truncate sequences beyond 4 digits", () => {
     expect(formatPoCode("CPO", 2026, 12345)).toBe("CPO-2026-12345");
   });
+  it("works for years other than 2026", () => {
+    expect(formatPoCode("PPO", 2027, 1)).toBe("PPO-2027-0001");
+  });
 });
