@@ -10,7 +10,7 @@ vi.mock("@workspace/db", () => ({
   },
   clientPurchaseOrdersTable: {}, clientsTable: {}, buyingHousesTable: {}, usersTable: {},
 }));
-vi.mock("@/lib/auth/session", () => ({ getSession: vi.fn(async () => ({ id: 7, name: "Tester" })) }));
+vi.mock("@/lib/auth/session", () => ({ getSession: vi.fn(async () => ({ sub: 7, name: "Tester" })) }));
 
 beforeEach(() => { insertReturning.mockReset(); selectChain.mockReset(); });
 
