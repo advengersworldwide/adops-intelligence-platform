@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, Paperclip } from "lucide-react";
+import { Plus, Trash2, Paperclip, Eye, Pencil } from "lucide-react";
 import {
   useListClientPurchaseOrders, useDeleteClientPurchaseOrder, getListClientPurchaseOrdersQueryKey,
+  type ClientPurchaseOrder,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { CreateClientPODialog } from "./CreateClientPODialog";
+import { ClientPODetailDialog } from "./ClientPODetailDialog";
 
 function fmtDate(s: string) { return new Date(s).toLocaleDateString(); }
 
 export function ClientPOTab() {
   const [createOpen, setCreateOpen] = useState(false);
+  const [detail, setDetail] = useState<{ po: ClientPurchaseOrder; edit: boolean } | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
   const canEdit = useHasPermission("Edit Purchase Orders");
@@ -70,6 +73,10 @@ export function ClientPOTab() {
                   {canEdit && (
                     <td className="px-5 py-3">
                       <div className="flex items-center gap-1">
+                        <button onClick={() => setDetail({ po: r, edit: false })} title="View"
+                          className="rounded p-1.5 text-muted-foreground hover:bg-muted" data-testid={`view-cpo-${r.id}`}><Eye className="h-3.5 w-3.5" /></button>
+                        <button onClick={() => setDetail({ po: r, edit: true })} title="Edit"
+                          className="rounded p-1.5 text-muted-foreground hover:bg-muted" data-testid={`edit-cpo-${r.id}`}><Pencil className="h-3.5 w-3.5" /></button>
                         <a href={r.attachmentUrl} target="_blank" rel="noreferrer" title="Attachment"
                            className="rounded p-1.5 text-muted-foreground hover:bg-muted"><Paperclip className="h-3.5 w-3.5" /></a>
                         <button onClick={() => del.mutate({ id: r.id })} title="Delete"
@@ -86,6 +93,7 @@ export function ClientPOTab() {
       </div>
 
       <CreateClientPODialog open={createOpen} onClose={() => setCreateOpen(false)} />
+      <ClientPODetailDialog po={detail?.po ?? null} startInEdit={detail?.edit ?? false} onClose={() => setDetail(null)} />
     </div>
   );
 }

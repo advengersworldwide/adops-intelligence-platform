@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2, Eye, ChevronRight, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Eye, Pencil, ChevronRight, ChevronDown } from "lucide-react";
 import {
   useListPartnerPurchaseOrders,
   useDeletePartnerPurchaseOrder,
   getListPartnerPurchaseOrdersQueryKey,
+  type PartnerPurchaseOrder,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ const fmtDate = (s: string) => new Date(s).toLocaleDateString();
 
 export function PartnerPOTab() {
   const [createOpen, setCreateOpen] = useState(false);
+  const [editPo, setEditPo] = useState<PartnerPurchaseOrder | null>(null);
   const [expanded, setExpanded] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -105,6 +107,7 @@ export function PartnerPOTab() {
                   expanded={expanded === r.id}
                   onToggle={() => setExpanded(expanded === r.id ? null : r.id)}
                   onDelete={() => del.mutate({ id: r.id })}
+                  onEdit={() => setEditPo(r)}
                 />
               ))
             )}
@@ -113,6 +116,7 @@ export function PartnerPOTab() {
       </div>
 
       <CreatePartnerPODialog open={createOpen} onClose={() => setCreateOpen(false)} />
+      <CreatePartnerPODialog open={!!editPo} editPo={editPo} onClose={() => setEditPo(null)} />
     </div>
   );
 }
@@ -125,6 +129,7 @@ function PpoRow({
   expanded,
   onToggle,
   onDelete,
+  onEdit,
 }: {
   r: {
     id: number;
@@ -149,6 +154,7 @@ function PpoRow({
   expanded: boolean;
   onToggle: () => void;
   onDelete: () => void;
+  onEdit: () => void;
 }) {
   return (
     <>
@@ -181,6 +187,14 @@ function PpoRow({
               >
                 <Eye className="h-3.5 w-3.5" />
               </Link>
+              <button
+                onClick={onEdit}
+                title="Edit"
+                className="rounded p-1.5 text-muted-foreground hover:bg-muted"
+                data-testid={`edit-ppo-${r.id}`}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
               <button
                 onClick={onDelete}
                 title="Delete"

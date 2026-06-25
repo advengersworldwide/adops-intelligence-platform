@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   useListPartners, useListPartnerClients, useListClientPurchaseOrdersByClient,
-  useCreatePartnerPurchaseOrder, getListPartnerPurchaseOrdersQueryKey,
+  useCreatePartnerPurchaseOrder, useUpdatePartnerPurchaseOrder, getListPartnerPurchaseOrdersQueryKey,
+  type PartnerPurchaseOrder,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,7 +20,7 @@ const money = (n: number) => `$${n.toLocaleString(undefined, { minimumFractionDi
 
 interface DraftItem { clientEventId: number; eventName: string; cacRate: number; eventCount: number; selected: boolean; }
 
-export function CreatePartnerPODialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function CreatePartnerPODialog({ open, onClose, editPo }: { open: boolean; onClose: () => void; editPo?: PartnerPurchaseOrder | null }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const { data: partners } = useListPartners();
@@ -40,9 +41,19 @@ export function CreatePartnerPODialog({ open, onClose }: { open: boolean; onClos
     [partnerClients, clientId],
   );
 
-  useEffect(() => { if (open) { setPartnerId(""); setClientId(""); setCpoId(""); setStartDate(""); setEndDate(""); setItems([]); } }, [open]);
-  useEffect(() => { setClientId(""); setCpoId(""); setItems([]); }, [partnerId]);
-  useEffect(() => { setCpoId(""); }, [clientId]);
+  useEffect(() => {
+    if (!open) return;
+    if (editPo) {
+      setPartnerId(String(editPo.partnerId));
+      setClientId(String(editPo.clientId));
+      setCpoId(String(editPo.clientPurchaseOrderId));
+      setStartDate(editPo.startDate); setEndDate(editPo.endDate);
+    } else {
+      setPartnerId(""); setClientId(""); setCpoId(""); setStartDate(""); setEndDate(""); setItems([]);
+    }
+  }, [open, editPo]);
+  useEffect(() => { if (editPo) return; setClientId(""); setCpoId(""); setItems([]); }, [partnerId]);
+  useEffect(() => { if (editPo) return; setCpoId(""); }, [clientId]);
 
   useEffect(() => {
     if (!selectedClient) { setItems([]); return; }
@@ -52,7 +63,17 @@ export function CreatePartnerPODialog({ open, onClose }: { open: boolean; onClos
     })));
   }, [selectedClient]);
 
+  useEffect(() => {
+    if (!editPo || items.length === 0) return;
+    setItems(prev => prev.map(i => {
+      const saved = editPo.items.find(s => s.clientEventId === i.clientEventId);
+      return saved ? { ...i, selected: true, eventCount: saved.eventCount } : i;
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editPo, selectedClient]);
+
   const create = useCreatePartnerPurchaseOrder();
+  const update = useUpdatePartnerPurchaseOrder();
   const chosen = items.filter(i => i.selected && i.eventCount > 0);
   const total = totalBudget(chosen.map(i => ({ cacRate: i.cacRate, eventCount: i.eventCount })));
 
@@ -66,34 +87,36 @@ export function CreatePartnerPODialog({ open, onClose }: { open: boolean; onClos
     }
     if (chosen.length === 0) { toast({ title: "Select at least one event with a count", variant: "destructive" }); return; }
     try {
-      await create.mutateAsync({ data: {
-        partnerId: Number(partnerId), clientPurchaseOrderId: Number(cpoId), startDate, endDate,
-        items: chosen.map(i => ({ clientEventId: i.clientEventId, eventName: i.eventName, cacRate: i.cacRate, eventCount: i.eventCount })),
-      }});
+      const payload = { startDate, endDate, items: chosen.map(i => ({ clientEventId: i.clientEventId, eventName: i.eventName, cacRate: i.cacRate, eventCount: i.eventCount })) };
+      if (editPo) {
+        await update.mutateAsync({ id: editPo.id, data: payload });
+      } else {
+        await create.mutateAsync({ data: { partnerId: Number(partnerId), clientPurchaseOrderId: Number(cpoId), ...payload } });
+      }
       qc.invalidateQueries({ queryKey: getListPartnerPurchaseOrdersQueryKey() });
-      toast({ title: "Partner purchase order created" });
+      toast({ title: editPo ? "Partner purchase order updated" : "Partner purchase order created" });
       onClose();
     } catch (e) {
-      toast({ title: e instanceof Error ? e.message : "Create failed", variant: "destructive" });
+      toast({ title: e instanceof Error ? e.message : (editPo ? "Update failed" : "Create failed"), variant: "destructive" });
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Create Partner Purchase Order</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>{editPo ? "Edit Partner Purchase Order" : "Create Partner Purchase Order"}</DialogTitle></DialogHeader>
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Partner <span className="text-destructive">*</span></Label>
-              <Select value={partnerId} onValueChange={setPartnerId}>
+              <Select value={partnerId} onValueChange={setPartnerId} disabled={!!editPo}>
                 <SelectTrigger data-testid="ppo-partner-select"><SelectValue placeholder="Select partner" /></SelectTrigger>
                 <SelectContent>{partners?.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Client <span className="text-destructive">*</span></Label>
-              <Select value={clientId} onValueChange={setClientId} disabled={!partnerId}>
+              <Select value={clientId} onValueChange={setClientId} disabled={!!editPo || !partnerId}>
                 <SelectTrigger data-testid="ppo-client-select"><SelectValue placeholder="Select client" /></SelectTrigger>
                 <SelectContent>{partnerClients?.map(pc => <SelectItem key={pc.clientId} value={String(pc.clientId)}>{pc.clientName}</SelectItem>)}</SelectContent>
               </Select>
@@ -103,7 +126,7 @@ export function CreatePartnerPODialog({ open, onClose }: { open: boolean; onClos
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Client PO <span className="text-destructive">*</span></Label>
-              <Select value={cpoId} onValueChange={setCpoId} disabled={!clientId}>
+              <Select value={cpoId} onValueChange={setCpoId} disabled={!!editPo || !clientId}>
                 <SelectTrigger data-testid="ppo-cpo-select"><SelectValue placeholder="Select CPO" /></SelectTrigger>
                 <SelectContent>
                   {cpos?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.code} ({new Date(c.createdAt).toLocaleDateString()})</SelectItem>)}
@@ -151,8 +174,8 @@ export function CreatePartnerPODialog({ open, onClose }: { open: boolean; onClos
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={onSubmit} disabled={create.isPending} data-testid="submit-ppo-btn">
-              {create.isPending ? "Creating..." : "Create"}
+            <Button onClick={onSubmit} disabled={create.isPending || update.isPending} data-testid="submit-ppo-btn">
+              {create.isPending || update.isPending ? (editPo ? "Saving..." : "Creating...") : (editPo ? "Save" : "Create")}
             </Button>
           </div>
         </div>
