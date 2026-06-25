@@ -7,6 +7,7 @@ import {
   Upload, BarChart3, Settings, ChevronLeft, ChevronRight,
   Zap, LogOut, ChevronDown, ChevronUp,
   Receipt, FileText, CreditCard, DollarSign, Wallet,
+  ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ const topNavItems = [
   { href: "/clients", label: "Clients", icon: Users, permission: "View Clients" },
   { href: "/buying-houses", label: "Buying Houses", icon: Building2, permission: "View Buying Houses" },
   { href: "/partners", label: "Partners", icon: Monitor, permission: "View Partners" },
+  { href: "/purchase-orders", label: "Purchase Orders", icon: ClipboardList, permission: "View Purchase Orders" },
 ];
 
 const financialsItems = [
