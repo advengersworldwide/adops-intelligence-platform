@@ -81,7 +81,7 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
             <tr style={{ backgroundColor: "#2f4a8b", color: "#ffffff" }}>
               {["Client", "Agency", "Duration", "Payable Event", "CAC Rate", "Event Count", "Budget"].map(
                 (h) => (
-                  <th key={h} className="px-3 py-2 text-left font-semibold" style={{ border: "1px solid #2f4a8b", verticalAlign: "middle" }}>
+                  <th key={h} className="px-3 py-2 text-left font-semibold" style={{ border: "1px solid #2f4a8b", verticalAlign: "middle", whiteSpace: "nowrap" }}>
                     {h}
                   </th>
                 ),
@@ -93,7 +93,7 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
               <tr key={it.id}>
                 <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{po.clientName}</td>
                 <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{po.buyingHouseName ?? "—"}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{duration}</td>
+                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", whiteSpace: "nowrap" }}>{duration}</td>
                 <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.eventName}</td>
                 <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.cacRate}</td>
                 <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.eventCount.toLocaleString()}</td>
