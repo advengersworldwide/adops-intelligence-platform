@@ -41,32 +41,36 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
         </div>
 
         {/* Partner (KYC) */}
-        <div className="mt-6">
-          <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide" style={{ backgroundColor: "#2f4a8b", color: "#ffffff" }}>
+        <div style={{ marginTop: "24px" }}>
+          <div style={{
+            backgroundColor: "#2f4a8b",
+            color: "#ffffff",
+            padding: "6px 12px",
+            fontSize: "11px",
+            fontWeight: "600",
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            width: "100%",
+            boxSizing: "border-box",
+          }}>
             PARTNER
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-x-8 gap-y-1 px-3 text-sm">
-            <div>
-              <span style={{ color: "#6b7280" }}>Name:</span> {p?.name ?? "—"}
-            </div>
-            <div>
-              <span style={{ color: "#6b7280" }}>POC:</span> {p?.pocName ?? "—"}
-            </div>
-            <div>
-              <span style={{ color: "#6b7280" }}>Address:</span> {p?.address ?? "—"}
-            </div>
-            <div>
-              <span style={{ color: "#6b7280" }}>Phone:</span>{" "}
-              {p?.pocNumber ?? p?.companyNumber ?? "—"}
-            </div>
-            <div>
-              <span style={{ color: "#6b7280" }}>Email:</span>{" "}
-              {p?.pocEmail ?? p?.companyEmail ?? "—"}
-            </div>
-            <div>
-              <span style={{ color: "#6b7280" }}>NTN / STN:</span> {p?.ntnNumber ?? "—"} /{" "}
-              {p?.salesTaxNumber ?? "—"}
-            </div>
+          <div style={{
+            marginTop: "8px",
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            columnGap: "32px",
+            rowGap: "4px",
+            paddingLeft: "12px",
+            paddingRight: "12px",
+            fontSize: "14px",
+          }}>
+            <div><span style={{ color: "#6b7280" }}>Name:</span> {p?.name ?? "—"}</div>
+            <div><span style={{ color: "#6b7280" }}>POC:</span> {p?.pocName ?? "—"}</div>
+            <div><span style={{ color: "#6b7280" }}>Address:</span> {p?.address ?? "—"}</div>
+            <div><span style={{ color: "#6b7280" }}>Phone:</span> {p?.pocNumber ?? p?.companyNumber ?? "—"}</div>
+            <div><span style={{ color: "#6b7280" }}>Email:</span> {p?.pocEmail ?? p?.companyEmail ?? "—"}</div>
+            <div><span style={{ color: "#6b7280" }}>NTN / STN:</span> {p?.ntnNumber ?? "—"} / {p?.salesTaxNumber ?? "—"}</div>
           </div>
         </div>
 
