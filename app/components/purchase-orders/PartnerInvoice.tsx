@@ -52,6 +52,8 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
             letterSpacing: "0.05em",
             width: "100%",
             boxSizing: "border-box",
+            display: "flex",
+            alignItems: "center",
           }}>
             PARTNER
           </div>
