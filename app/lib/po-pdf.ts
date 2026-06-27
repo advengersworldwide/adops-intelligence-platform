@@ -2,7 +2,15 @@ import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
 export async function downloadInvoicePdf(node: HTMLElement, filename: string): Promise<void> {
-  const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+  const canvas = await html2canvas(node, {
+    scale: 2,
+    backgroundColor: "#ffffff",
+    useCORS: true,
+    height: node.scrollHeight,
+    windowHeight: node.scrollHeight,
+    scrollX: 0,
+    scrollY: 0,
+  });
   const img = canvas.toDataURL("image/png");
   const pdf = new jsPDF({ unit: "pt", format: "a4" });
   const pageW = pdf.internal.pageSize.getWidth();
