@@ -54,7 +54,7 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
             width: "100%",
             boxSizing: "border-box",
           }}>
-            PARTNER
+            Partner
           </div>
           <div style={{
             marginTop: "8px",
@@ -81,7 +81,7 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
             <tr style={{ backgroundColor: "#2f4a8b", color: "#ffffff" }}>
               {["Client", "Agency", "Duration", "Payable Event", "CAC Rate", "Event Count", "Budget"].map(
                 (h) => (
-                  <th key={h} className="px-3 py-2 text-left font-semibold" style={{ border: "1px solid #2f4a8b", verticalAlign: "middle", lineHeight: "1", whiteSpace: "nowrap" }}>
+                  <th key={h} className="px-3 py-2 text-left font-semibold" style={{ border: "1px solid #2f4a8b", verticalAlign: "middle" }}>
                     {h}
                   </th>
                 ),
@@ -91,20 +91,20 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
           <tbody>
             {po.items.map((it) => (
               <tr key={it.id}>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1" }}>{po.clientName}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1" }}>{po.buyingHouseName ?? "—"}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1", whiteSpace: "nowrap" }}>{duration}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1" }}>{it.eventName}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1" }}>{it.cacRate}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1" }}>{it.eventCount.toLocaleString()}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1" }}>{money(it.lineBudget)}</td>
+                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{po.clientName}</td>
+                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{po.buyingHouseName ?? "—"}</td>
+                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{duration}</td>
+                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.eventName}</td>
+                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.cacRate}</td>
+                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.eventCount.toLocaleString()}</td>
+                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{money(it.lineBudget)}</td>
               </tr>
             ))}
             <tr className="font-bold">
-              <td className="px-3 py-2 text-right" colSpan={6} style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1" }}>
+              <td className="px-3 py-2 text-right" colSpan={6} style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>
                 TOTAL
               </td>
-              <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle", lineHeight: "1" }}>{money(po.totalBudget)}</td>
+              <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{money(po.totalBudget)}</td>
             </tr>
           </tbody>
         </table>
