@@ -15,7 +15,18 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
     const p = po.partner;
     const duration = `${fmt(po.startDate)} – ${fmt(po.endDate)}`;
     return (
-      <div ref={ref} className="mx-auto w-[800px] p-12" style={{ backgroundColor: "#ffffff", color: "#1f2937" }} data-testid="invoice-doc">
+      <div
+        ref={ref}
+        className="mx-auto w-[800px] p-12"
+        style={{
+          backgroundColor: "#ffffff",
+          color: "#1f2937",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "1120px",
+        }}
+        data-testid="invoice-doc"
+      >
         {/* Header */}
         <div className="flex items-start justify-between pb-6" style={{ borderBottom: "2px solid #2f4a8b" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -29,12 +40,12 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
           </div>
         </div>
 
-        {/* Vendor (partner KYC) */}
+        {/* Partner (KYC) */}
         <div className="mt-6">
           <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide" style={{ backgroundColor: "#2f4a8b", color: "#ffffff" }}>
             PARTNER
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
+          <div className="mt-2 grid grid-cols-2 gap-x-8 gap-y-1 px-3 text-sm">
             <div>
               <span style={{ color: "#6b7280" }}>Name:</span> {p?.name ?? "—"}
             </div>
@@ -101,8 +112,11 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
           </p>
         </div>
 
+        {/* Spacer — pushes footer to bottom of page */}
+        <div style={{ flex: 1 }} />
+
         {/* Footer — Advengers details */}
-        <div className="mt-10 pt-4 text-center text-xs" style={{ borderTop: "1px solid #d1d5db", color: "#6b7280" }}>
+        <div className="pt-4 text-center text-xs" style={{ borderTop: "1px solid #d1d5db", color: "#6b7280" }}>
           <p className="font-semibold" style={{ color: "#2f4a8b" }}>Advengers</p>
           <p>
             Office #2, 1st Floor, Building #87-C, 11th Commercial Street, Phase II Extension, DHA,
