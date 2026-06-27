@@ -47,6 +47,9 @@ ${styleTags}
 <style>
   @page { size: A4; margin: 0; }
   html, body { margin: 0 !important; padding: 0 !important; background: #ffffff !important; }
+  /* Force background colors (blue header bars) and text colors to print, regardless
+     of the browser's "Background graphics" print setting. */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   /* Make the invoice exactly fill one A4 page so the footer stays pinned to the bottom. */
   #invoice-print-root > * {
     width: 210mm !important;
