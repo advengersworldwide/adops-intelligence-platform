@@ -67,10 +67,19 @@ ${styleTags}
 
   await waitForAssets(win);
 
+  // Chrome derives the "Save as PDF" filename from the parent document's title
+  // (not the iframe's) when printing an iframe, so set it to the PO code and
+  // restore it afterwards.
+  const originalTitle = document.title;
+  document.title = title;
+
   win.focus();
   win.print();
 
-  const cleanup = () => iframe.remove();
+  const cleanup = () => {
+    document.title = originalTitle;
+    iframe.remove();
+  };
   win.addEventListener("afterprint", cleanup, { once: true });
   // Fallback cleanup in case afterprint never fires (some browsers/headless).
   setTimeout(cleanup, 60000);
