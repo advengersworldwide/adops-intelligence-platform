@@ -384,6 +384,19 @@ export interface PartnerPayoutInput {
   payoutRate: number;
 }
 
+export interface ClientPurchaseOrderAttachment {
+  url: string;
+  /** @nullable */
+  name?: string | null;
+}
+
+export interface ClientPurchaseOrderAttachmentInput {
+  /** @minLength 1 */
+  url: string;
+  /** @nullable */
+  name?: string | null;
+}
+
 export interface ClientPurchaseOrder {
   id: number;
   code: string;
@@ -394,6 +407,7 @@ export interface ClientPurchaseOrder {
   attachmentUrl: string;
   /** @nullable */
   attachmentName?: string | null;
+  attachments: ClientPurchaseOrderAttachment[];
   /** @nullable */
   createdById?: number | null;
   /** @nullable */
@@ -403,18 +417,14 @@ export interface ClientPurchaseOrder {
 
 export interface ClientPurchaseOrderInput {
   clientId: number;
-  /** @minLength 1 */
-  attachmentUrl: string;
-  /** @nullable */
-  attachmentName?: string | null;
+  /** @minItems 1 */
+  attachments: ClientPurchaseOrderAttachmentInput[];
 }
 
 export interface ClientPurchaseOrderUpdate {
   clientId?: number;
-  /** @minLength 1 */
-  attachmentUrl?: string;
-  /** @nullable */
-  attachmentName?: string | null;
+  /** @minItems 1 */
+  attachments?: ClientPurchaseOrderAttachmentInput[];
 }
 
 export interface PartnerPurchaseOrderItem {

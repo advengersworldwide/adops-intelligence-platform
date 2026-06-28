@@ -19,10 +19,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = UpdateClientPurchaseOrderBody.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+  const attachments = parsed.data.attachments?.map((a) => ({ url: a.url, name: a.name ?? null }));
   const [row] = await db.update(clientPurchaseOrdersTable).set({
     ...(parsed.data.clientId !== undefined ? { clientId: parsed.data.clientId } : {}),
-    ...(parsed.data.attachmentUrl !== undefined ? { attachmentUrl: parsed.data.attachmentUrl } : {}),
-    ...(parsed.data.attachmentName !== undefined ? { attachmentName: parsed.data.attachmentName } : {}),
+    ...(attachments && attachments.length > 0
+      ? { attachments, attachmentUrl: attachments[0].url, attachmentName: attachments[0].name }
+      : {}),
   }).where(eq(clientPurchaseOrdersTable.id, Number(id))).returning();
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(await mapCpoRow(row));

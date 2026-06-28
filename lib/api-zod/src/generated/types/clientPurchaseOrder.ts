@@ -5,6 +5,7 @@
  * AdOps Intelligence Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { ClientPurchaseOrderAttachment } from './clientPurchaseOrderAttachment';
 
 export interface ClientPurchaseOrder {
   id: number;
@@ -16,6 +17,7 @@ export interface ClientPurchaseOrder {
   attachmentUrl: string;
   /** @nullable */
   attachmentName?: string | null;
+  attachments: ClientPurchaseOrderAttachment[];
   /** @nullable */
   createdById?: number | null;
   /** @nullable */

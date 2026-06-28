@@ -25,9 +25,16 @@ export async function mapCpoRow(r: Row) {
     const [u] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, r.createdById));
     createdByName = u?.name ?? null;
   }
+  // `attachments` is the source of truth; fall back to the legacy single
+  // columns for rows created before multi-attachment support.
+  const attachments = r.attachments?.length
+    ? r.attachments
+    : r.attachmentUrl
+      ? [{ url: r.attachmentUrl, name: r.attachmentName }]
+      : [];
   return {
     id: r.id, code: r.code, clientId: r.clientId, clientName: client?.name ?? "—",
-    buyingHouseName, attachmentUrl: r.attachmentUrl, attachmentName: r.attachmentName,
+    buyingHouseName, attachmentUrl: r.attachmentUrl, attachmentName: r.attachmentName, attachments,
     createdById: r.createdById ?? null, createdByName, createdAt: r.createdAt.toISOString(),
   };
 }
@@ -52,11 +59,14 @@ export async function POST(req: Request): Promise<Response> {
   const parsed = CreateClientPurchaseOrderBody.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   const user = await getSession();
+  const attachments = parsed.data.attachments.map((a) => ({ url: a.url, name: a.name ?? null }));
+  const [first] = attachments;
   const [row] = await db.insert(clientPurchaseOrdersTable).values({
     code: await nextCpoCode(),
     clientId: parsed.data.clientId,
-    attachmentUrl: parsed.data.attachmentUrl,
-    attachmentName: parsed.data.attachmentName ?? null,
+    attachmentUrl: first.url,
+    attachmentName: first.name,
+    attachments,
     createdById: user?.sub ?? null,
   }).returning();
   return NextResponse.json(await mapCpoRow(row), { status: 201 });

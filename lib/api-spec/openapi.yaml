@@ -1793,9 +1793,23 @@ components:
         payoutRate:
           type: number
 
+    ClientPurchaseOrderAttachment:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+        name: { type: ["string", "null"] }
+
+    ClientPurchaseOrderAttachmentInput:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, minLength: 1 }
+        name: { type: ["string", "null"] }
+
     ClientPurchaseOrder:
       type: object
-      required: [id, code, clientId, clientName, attachmentUrl, createdAt]
+      required: [id, code, clientId, clientName, attachmentUrl, attachments, createdAt]
       properties:
         id: { type: integer }
         code: { type: string }
@@ -1804,24 +1818,31 @@ components:
         buyingHouseName: { type: ["string", "null"] }
         attachmentUrl: { type: string }
         attachmentName: { type: ["string", "null"] }
+        attachments:
+          type: array
+          items: { $ref: "#/components/schemas/ClientPurchaseOrderAttachment" }
         createdById: { type: ["integer", "null"] }
         createdByName: { type: ["string", "null"] }
         createdAt: { type: string }
 
     ClientPurchaseOrderInput:
       type: object
-      required: [clientId, attachmentUrl]
+      required: [clientId, attachments]
       properties:
         clientId: { type: integer }
-        attachmentUrl: { type: string, minLength: 1 }
-        attachmentName: { type: ["string", "null"] }
+        attachments:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/ClientPurchaseOrderAttachmentInput" }
 
     ClientPurchaseOrderUpdate:
       type: object
       properties:
         clientId: { type: integer }
-        attachmentUrl: { type: string, minLength: 1 }
-        attachmentName: { type: ["string", "null"] }
+        attachments:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/ClientPurchaseOrderAttachmentInput" }
 
     PartnerPurchaseOrderItem:
       type: object

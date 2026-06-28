@@ -22,8 +22,13 @@ async function post(body: unknown) {
 }
 
 describe("POST /api/client-purchase-orders", () => {
-  it("returns 400 when clientId/attachmentUrl missing", async () => {
+  it("returns 400 when clientId/attachments missing", async () => {
     const res = await post({ clientId: 1 });
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 400 when attachments is empty", async () => {
+    const res = await post({ clientId: 1, attachments: [] });
     expect(res.status).toBe(400);
   });
 
@@ -34,12 +39,17 @@ describe("POST /api/client-purchase-orders", () => {
       .mockResolvedValueOnce([{ name: "Tester" }]);         // mapCpoRow user
     insertReturning.mockResolvedValueOnce([{
       id: 1, code: "CPO-2026-0001", clientId: 1, attachmentUrl: "http://x/f.pdf",
-      attachmentName: "f.pdf", createdById: 7, createdAt: new Date("2026-06-24T00:00:00Z"),
+      attachmentName: "f.pdf", attachments: [{ url: "http://x/f.pdf", name: "f.pdf" }],
+      createdById: 7, createdAt: new Date("2026-06-24T00:00:00Z"),
     }]);
-    const res = await post({ clientId: 1, attachmentUrl: "http://x/f.pdf", attachmentName: "f.pdf" });
+    const res = await post({
+      clientId: 1,
+      attachments: [{ url: "http://x/f.pdf", name: "f.pdf" }, { url: "http://x/g.png", name: "g.png" }],
+    });
     expect(res.status).toBe(201);
     const json = await res.json();
     expect(json.code).toBe("CPO-2026-0001");
     expect(json.clientName).toBe("JazzCash");
+    expect(json.attachments).toHaveLength(1);
   });
 });

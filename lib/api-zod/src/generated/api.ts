@@ -1315,6 +1315,10 @@ export const ListClientPurchaseOrdersResponseItem = zod.object({
   "buyingHouseName": zod.string().nullish(),
   "attachmentUrl": zod.string(),
   "attachmentName": zod.string().nullish(),
+  "attachments": zod.array(zod.object({
+  "url": zod.string(),
+  "name": zod.string().nullish()
+})),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -1328,10 +1332,13 @@ export const ListClientPurchaseOrdersResponse = zod.array(ListClientPurchaseOrde
 
 
 
+
 export const CreateClientPurchaseOrderBody = zod.object({
   "clientId": zod.number(),
-  "attachmentUrl": zod.string().min(1),
-  "attachmentName": zod.string().nullish()
+  "attachments": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "name": zod.string().nullish()
+})).min(1)
 })
 
 
@@ -1350,6 +1357,10 @@ export const GetClientPurchaseOrderResponse = zod.object({
   "buyingHouseName": zod.string().nullish(),
   "attachmentUrl": zod.string(),
   "attachmentName": zod.string().nullish(),
+  "attachments": zod.array(zod.object({
+  "url": zod.string(),
+  "name": zod.string().nullish()
+})),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -1366,10 +1377,13 @@ export const UpdateClientPurchaseOrderParams = zod.object({
 
 
 
+
 export const UpdateClientPurchaseOrderBody = zod.object({
   "clientId": zod.number().optional(),
-  "attachmentUrl": zod.string().min(1).optional(),
-  "attachmentName": zod.string().nullish()
+  "attachments": zod.array(zod.object({
+  "url": zod.string().min(1),
+  "name": zod.string().nullish()
+})).min(1).optional()
 })
 
 export const UpdateClientPurchaseOrderResponse = zod.object({
@@ -1380,6 +1394,10 @@ export const UpdateClientPurchaseOrderResponse = zod.object({
   "buyingHouseName": zod.string().nullish(),
   "attachmentUrl": zod.string(),
   "attachmentName": zod.string().nullish(),
+  "attachments": zod.array(zod.object({
+  "url": zod.string(),
+  "name": zod.string().nullish()
+})),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -1409,6 +1427,10 @@ export const ListClientPurchaseOrdersByClientResponseItem = zod.object({
   "buyingHouseName": zod.string().nullish(),
   "attachmentUrl": zod.string(),
   "attachmentName": zod.string().nullish(),
+  "attachments": zod.array(zod.object({
+  "url": zod.string(),
+  "name": zod.string().nullish()
+})),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string()

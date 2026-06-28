@@ -78,7 +78,7 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
         {/* Line items */}
         <table className="mt-6 w-full border-collapse text-sm">
           <thead>
-            <tr style={{ backgroundColor: "#2f4a8b", color: "#ffffff" }}>
+            <tr style={{ backgroundColor: "#2f4a8b", color: "#ffffff", textTransform: "uppercase", fontSize: "11px" }}>
               {["Client", "Agency", "Duration", "Payable Event", "CAC Rate", "Event Count", "Budget"].map(
                 (h) => (
                   <th key={h} className="px-3 py-2 text-left font-semibold" style={{ border: "1px solid #2f4a8b", verticalAlign: "middle" }}>

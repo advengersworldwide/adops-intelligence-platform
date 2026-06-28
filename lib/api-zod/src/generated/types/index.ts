@@ -31,6 +31,8 @@ export * from './clientEventInput';
 export * from './clientEventUpdate';
 export * from './clientInput';
 export * from './clientPurchaseOrder';
+export * from './clientPurchaseOrderAttachment';
+export * from './clientPurchaseOrderAttachmentInput';
 export * from './clientPurchaseOrderInput';
 export * from './clientPurchaseOrderUpdate';
 export * from './clientUpdate';

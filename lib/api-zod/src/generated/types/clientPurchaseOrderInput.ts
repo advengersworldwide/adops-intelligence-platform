@@ -5,11 +5,10 @@
  * AdOps Intelligence Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { ClientPurchaseOrderAttachmentInput } from './clientPurchaseOrderAttachmentInput';
 
 export interface ClientPurchaseOrderInput {
   clientId: number;
-  /** @minLength 1 */
-  attachmentUrl: string;
-  /** @nullable */
-  attachmentName?: string | null;
+  /** @minItems 1 */
+  attachments: ClientPurchaseOrderAttachmentInput[];
 }
