@@ -5,6 +5,7 @@ import { paymentTermsTable } from "./payment-terms";
 export const partnersTable = pgTable("partners", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  codePrefix: text("code_prefix").notNull(),
   ...kycColumns,
   paymentTermsId: integer("payment_terms_id")
     .references(() => paymentTermsTable.id, { onDelete: "set null" }),

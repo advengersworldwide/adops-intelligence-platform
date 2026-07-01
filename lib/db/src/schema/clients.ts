@@ -8,6 +8,7 @@ import { z } from "zod/v4";
 export const clientsTable = pgTable("clients", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  codePrefix: text("code_prefix").notNull(),
   buyingHouseId: integer("buying_house_id")
     .references(() => buyingHousesTable.id, { onDelete: "set null" }),
   ...kycColumns,
