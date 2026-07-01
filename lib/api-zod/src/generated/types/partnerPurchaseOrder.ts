@@ -23,6 +23,8 @@ export interface PartnerPurchaseOrder {
   endDate: string;
   totalBudget: number;
   /** @nullable */
+  notes?: string | null;
+  /** @nullable */
   createdById?: number | null;
   /** @nullable */
   createdByName?: string | null;

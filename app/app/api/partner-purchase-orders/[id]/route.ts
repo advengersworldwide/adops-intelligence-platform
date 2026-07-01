@@ -21,7 +21,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = UpdatePartnerPurchaseOrderBody.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
-  const { startDate, endDate, items } = parsed.data;
+  const { startDate, endDate, items, notes } = parsed.data;
 
   if (items !== undefined) {
     await db.delete(partnerPurchaseOrderItemsTable).where(eq(partnerPurchaseOrderItemsTable.partnerPurchaseOrderId, ppoId));
@@ -38,6 +38,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const [row] = await db.update(partnerPurchaseOrdersTable).set({
     ...(startDate !== undefined ? { startDate } : {}),
     ...(endDate !== undefined ? { endDate } : {}),
+    ...(notes !== undefined ? { notes: notes ?? null } : {}),
     ...setTotal,
   }).where(eq(partnerPurchaseOrdersTable.id, ppoId)).returning();
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });

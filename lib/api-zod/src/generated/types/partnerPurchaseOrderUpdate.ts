@@ -10,5 +10,7 @@ import type { PartnerPurchaseOrderItemInput } from './partnerPurchaseOrderItemIn
 export interface PartnerPurchaseOrderUpdate {
   startDate?: string;
   endDate?: string;
+  /** @nullable */
+  notes?: string | null;
   items?: PartnerPurchaseOrderItemInput[];
 }

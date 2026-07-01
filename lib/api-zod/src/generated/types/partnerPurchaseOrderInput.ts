@@ -12,6 +12,8 @@ export interface PartnerPurchaseOrderInput {
   clientPurchaseOrderId: number;
   startDate: string;
   endDate: string;
+  /** @nullable */
+  notes?: string | null;
   /** @minItems 1 */
   items: PartnerPurchaseOrderItemInput[];
 }

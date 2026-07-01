@@ -1454,6 +1454,7 @@ export const ListPartnerPurchaseOrdersResponseItem = zod.object({
   "startDate": zod.string(),
   "endDate": zod.string(),
   "totalBudget": zod.number(),
+  "notes": zod.string().nullish(),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
@@ -1502,6 +1503,7 @@ export const CreatePartnerPurchaseOrderBody = zod.object({
   "clientPurchaseOrderId": zod.number(),
   "startDate": zod.string(),
   "endDate": zod.string(),
+  "notes": zod.string().nullish(),
   "items": zod.array(zod.object({
   "clientEventId": zod.number(),
   "eventName": zod.string().min(1),
@@ -1531,6 +1533,7 @@ export const GetPartnerPurchaseOrderResponse = zod.object({
   "startDate": zod.string(),
   "endDate": zod.string(),
   "totalBudget": zod.number(),
+  "notes": zod.string().nullish(),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
@@ -1579,6 +1582,7 @@ export const UpdatePartnerPurchaseOrderParams = zod.object({
 export const UpdatePartnerPurchaseOrderBody = zod.object({
   "startDate": zod.string().optional(),
   "endDate": zod.string().optional(),
+  "notes": zod.string().nullish(),
   "items": zod.array(zod.object({
   "clientEventId": zod.number(),
   "eventName": zod.string().min(1),
@@ -1600,6 +1604,7 @@ export const UpdatePartnerPurchaseOrderResponse = zod.object({
   "startDate": zod.string(),
   "endDate": zod.string(),
   "totalBudget": zod.number(),
+  "notes": zod.string().nullish(),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),

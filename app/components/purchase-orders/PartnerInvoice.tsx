@@ -123,6 +123,14 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
           ))}
         </ul>
 
+        {/* Notes — only rendered when the PO has notes */}
+        {po.notes && po.notes.trim() && (
+          <div className="mt-6 text-xs" style={{ color: "#4b5563" }}>
+            <p className="font-semibold" style={{ color: "#2f4a8b" }}>Notes</p>
+            <p className="mt-1" style={{ whiteSpace: "pre-wrap", lineHeight: "1.6" }}>{po.notes}</p>
+          </div>
+        )}
+
         {/* Spacer — pushes footer to bottom of page */}
         <div style={{ flex: 1 }} />
 

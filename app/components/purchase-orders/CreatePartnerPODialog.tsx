@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -30,6 +31,7 @@ export function CreatePartnerPODialog({ open, onClose, editPo }: { open: boolean
   const [cpoId, setCpoId] = useState<string>("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [notes, setNotes] = useState("");
   const [items, setItems] = useState<DraftItem[]>([]);
 
   // Cascade sources — passing 0 naturally disables via the generated enabled: !!(id) default
@@ -51,9 +53,9 @@ export function CreatePartnerPODialog({ open, onClose, editPo }: { open: boolean
       setPartnerId(String(editPo.partnerId));
       setClientId(String(editPo.clientId));
       setCpoId(String(editPo.clientPurchaseOrderId));
-      setStartDate(editPo.startDate); setEndDate(editPo.endDate);
+      setStartDate(editPo.startDate); setEndDate(editPo.endDate); setNotes(editPo.notes ?? "");
     } else {
-      setPartnerId(""); setClientId(""); setCpoId(""); setStartDate(""); setEndDate(""); setItems([]);
+      setPartnerId(""); setClientId(""); setCpoId(""); setStartDate(""); setEndDate(""); setNotes(""); setItems([]);
     }
   }, [open, editPo]);
   useEffect(() => { if (editPo) return; setClientId(""); setCpoId(""); setItems([]); }, [partnerId]);
@@ -91,7 +93,7 @@ export function CreatePartnerPODialog({ open, onClose, editPo }: { open: boolean
     }
     if (chosen.length === 0) { toast({ title: "Select at least one event with a count", variant: "destructive" }); return; }
     try {
-      const payload = { startDate, endDate, items: chosen.map(i => ({ clientEventId: i.clientEventId, eventName: i.eventName, cacRate: i.cacRate, eventCount: i.eventCount })) };
+      const payload = { startDate, endDate, notes: notes.trim() || null, items: chosen.map(i => ({ clientEventId: i.clientEventId, eventName: i.eventName, cacRate: i.cacRate, eventCount: i.eventCount })) };
       if (editPo) {
         await update.mutateAsync({ id: editPo.id, data: payload });
       } else {
@@ -174,6 +176,12 @@ export function CreatePartnerPODialog({ open, onClose, editPo }: { open: boolean
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Notes <span className="text-muted-foreground font-normal">(optional — shown on the invoice)</span></Label>
+            <Textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
+              placeholder="Add any notes to appear on the generated purchase order" data-testid="ppo-notes" />
           </div>
 
           <div className="flex items-center justify-between border-t border-border pt-3">

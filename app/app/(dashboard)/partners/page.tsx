@@ -54,9 +54,9 @@ function PartnersPage() {
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getListPartnersQueryKey() });
         setCreateOpen(false);
-        toast({ title: "Platform created" });
+        toast({ title: "Partner created" });
       },
-      onError: () => toast({ title: "Failed to create platform", variant: "destructive" }),
+      onError: () => toast({ title: "Failed to create partner", variant: "destructive" }),
     },
   });
 
@@ -64,9 +64,9 @@ function PartnersPage() {
     mutation: {
       onSuccess: () => {
         qc.invalidateQueries({ queryKey: getListPartnersQueryKey() });
-        toast({ title: "Platform deleted" });
+        toast({ title: "Partner deleted" });
       },
-      onError: () => toast({ title: "Failed to delete platform", variant: "destructive" }),
+      onError: () => toast({ title: "Failed to delete partner", variant: "destructive" }),
     },
   });
 
@@ -78,19 +78,19 @@ function PartnersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Platforms</h1>
-          <p className="text-sm text-muted-foreground">{platforms?.length ?? 0} DSP platforms</p>
+          <h1 className="text-xl font-bold text-foreground">Partners</h1>
+          <p className="text-sm text-muted-foreground">{platforms?.length ?? 0} DSP partners</p>
         </div>
         {canEdit && (
           <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-platform-btn">
-            <Plus className="h-3.5 w-3.5" /> Add Platform
+            <Plus className="h-3.5 w-3.5" /> Add Partners
           </Button>
         )}
       </div>
 
       <div className="relative w-72">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search platforms..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 text-sm" />
+        <Input placeholder="Search partners..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 text-sm" />
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
@@ -112,7 +112,7 @@ function PartnersPage() {
                 </tr>
               ))
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">No platforms found</td></tr>
+              <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">No partners found</td></tr>
             ) : (
               filtered.map(p => {
                 const an = analyticsMap.get(p.id);
@@ -177,7 +177,7 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Add Platform</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Add Partner</DialogTitle></DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField control={form.control} name="name" render={({ field }) => (
@@ -195,11 +195,11 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
               )} />
             </div>
             <FormField control={form.control} name="pocEmail" render={({ field }) => (
-              <FormItem><FormLabel>POC Email</FormLabel><FormControl><Input type="email" placeholder="poc@platform.com" {...field} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>POC Email</FormLabel><FormControl><Input type="email" placeholder="poc@ppartner.com" {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <div className="grid grid-cols-2 gap-3">
               <FormField control={form.control} name="companyEmail" render={({ field }) => (
-                <FormItem><FormLabel>Company Email</FormLabel><FormControl><Input type="email" placeholder="billing@platform.com" {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Company Email</FormLabel><FormControl><Input type="email" placeholder="billing@partner.com" {...field} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="companyNumber" render={({ field }) => (
                 <FormItem><FormLabel>Company Number</FormLabel><FormControl><Input type="tel" placeholder="Reg. number" {...field} /></FormControl><FormMessage /></FormItem>

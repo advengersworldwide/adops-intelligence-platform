@@ -41,6 +41,7 @@ export async function mapPpoRow(r: Row) {
     clientPurchaseOrderId: r.clientPurchaseOrderId, cpoCode: cpo?.code ?? "—",
     clientId: client?.id ?? 0, clientName: client?.name ?? "—", buyingHouseName,
     startDate: r.startDate, endDate: r.endDate, totalBudget: Number(r.totalBudget),
+    notes: r.notes ?? null,
     createdById: r.createdById ?? null, createdByName, createdAt: r.createdAt.toISOString(),
     partner: partner ? mapPartnerKyc(partner, paymentTermName) : undefined,
     items: itemRows.map(it => ({
@@ -79,13 +80,13 @@ export async function POST(req: Request): Promise<Response> {
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreatePartnerPurchaseOrderBody.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
-  const { partnerId, clientPurchaseOrderId, startDate, endDate, items } = parsed.data;
+  const { partnerId, clientPurchaseOrderId, startDate, endDate, items, notes } = parsed.data;
   const user = await getSession();
   const total = totalBudget(items.map(i => ({ cacRate: i.cacRate, eventCount: i.eventCount })));
 
   const [ppo] = await db.insert(partnerPurchaseOrdersTable).values({
     code: await nextPpoCode(), partnerId, clientPurchaseOrderId, startDate, endDate,
-    totalBudget: String(total), createdById: user?.sub ?? null,
+    totalBudget: String(total), notes: notes ?? null, createdById: user?.sub ?? null,
   }).returning();
 
   await db.insert(partnerPurchaseOrderItemsTable).values(items.map(i => ({

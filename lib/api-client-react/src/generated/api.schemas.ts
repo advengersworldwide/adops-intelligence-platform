@@ -460,6 +460,8 @@ export interface PartnerPurchaseOrder {
   endDate: string;
   totalBudget: number;
   /** @nullable */
+  notes?: string | null;
+  /** @nullable */
   createdById?: number | null;
   /** @nullable */
   createdByName?: string | null;
@@ -473,6 +475,8 @@ export interface PartnerPurchaseOrderInput {
   clientPurchaseOrderId: number;
   startDate: string;
   endDate: string;
+  /** @nullable */
+  notes?: string | null;
   /** @minItems 1 */
   items: PartnerPurchaseOrderItemInput[];
 }
@@ -480,6 +484,8 @@ export interface PartnerPurchaseOrderInput {
 export interface PartnerPurchaseOrderUpdate {
   startDate?: string;
   endDate?: string;
+  /** @nullable */
+  notes?: string | null;
   items?: PartnerPurchaseOrderItemInput[];
 }
 
