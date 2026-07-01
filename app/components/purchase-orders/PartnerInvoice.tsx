@@ -8,7 +8,14 @@ const money = (n: number) =>
 const fmt = (s: string) =>
   new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
 
-const CLAUSE = "[Clause text to be provided by Advengers.]";
+const clauses = (paymentTerm: string | null | undefined): string[] => [
+  `Payment terms: ${paymentTerm && paymentTerm.trim() ? paymentTerm : "as agreed with the partner"}`,
+  "Please make sure final billing does not exceed the specified PO amount",
+  "Billing will be processed based on the reporting methodology aligned",
+  "All payments will be made via bank transfer to the specified bank account",
+  "Please notify any discrepancies in the PO details and/or amount within 3 business days of receiving the PO",
+  "This is a system generated document and does not require a physical signature",
+];
 
 export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOrder }>(
   function PartnerInvoice({ po }, ref) {
@@ -109,13 +116,12 @@ export const PartnerInvoice = forwardRef<HTMLDivElement, { po: PartnerPurchaseOr
           </tbody>
         </table>
 
-        {/* Clause + computer-generated note */}
-        <div className="mt-6 space-y-3 text-xs" style={{ color: "#4b5563" }}>
-          <p>{CLAUSE}</p>
-          <p className="font-medium">
-            This is a computer-generated document and does not require a signature or stamp.
-          </p>
-        </div>
+        {/* Terms & clauses */}
+        <ul className="mt-6 text-xs" style={{ color: "#4b5563", listStyleType: "disc", paddingLeft: "18px", lineHeight: "1.7" }}>
+          {clauses(p?.paymentTermName).map((c, i) => (
+            <li key={i}>{c}</li>
+          ))}
+        </ul>
 
         {/* Spacer — pushes footer to bottom of page */}
         <div style={{ flex: 1 }} />

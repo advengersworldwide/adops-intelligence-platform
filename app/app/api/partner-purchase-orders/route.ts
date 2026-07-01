@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq, and, gte, lt, count } from "drizzle-orm";
 import {
   db, partnerPurchaseOrdersTable, partnerPurchaseOrderItemsTable, partnersTable,
-  clientPurchaseOrdersTable, clientsTable, buyingHousesTable, usersTable,
+  clientPurchaseOrdersTable, clientsTable, buyingHousesTable, usersTable, paymentTermsTable,
 } from "@workspace/db";
 import { CreatePartnerPurchaseOrderBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
@@ -28,6 +28,12 @@ export async function mapPpoRow(r: Row) {
     const [u] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, r.createdById));
     createdByName = u?.name ?? null;
   }
+  let paymentTermName: string | null = null;
+  if (partner?.paymentTermsId != null) {
+    const [pt] = await db.select({ name: paymentTermsTable.name }).from(paymentTermsTable)
+      .where(eq(paymentTermsTable.id, partner.paymentTermsId));
+    paymentTermName = pt?.name ?? null;
+  }
   const itemRows = await db.select().from(partnerPurchaseOrderItemsTable)
     .where(eq(partnerPurchaseOrderItemsTable.partnerPurchaseOrderId, r.id));
   return {
@@ -36,7 +42,7 @@ export async function mapPpoRow(r: Row) {
     clientId: client?.id ?? 0, clientName: client?.name ?? "—", buyingHouseName,
     startDate: r.startDate, endDate: r.endDate, totalBudget: Number(r.totalBudget),
     createdById: r.createdById ?? null, createdByName, createdAt: r.createdAt.toISOString(),
-    partner: partner ? mapPartnerKyc(partner) : undefined,
+    partner: partner ? mapPartnerKyc(partner, paymentTermName) : undefined,
     items: itemRows.map(it => ({
       id: it.id, clientEventId: it.clientEventId, eventName: it.eventName,
       cacRate: Number(it.cacRate), eventCount: it.eventCount, lineBudget: Number(it.lineBudget),
@@ -44,13 +50,13 @@ export async function mapPpoRow(r: Row) {
   };
 }
 
-function mapPartnerKyc(p: typeof partnersTable.$inferSelect) {
+function mapPartnerKyc(p: typeof partnersTable.$inferSelect, paymentTermName: string | null) {
   return {
     id: p.id, name: p.name, address: p.address, pocName: p.pocName, pocNumber: p.pocNumber,
     pocEmail: p.pocEmail, companyEmail: p.companyEmail, companyNumber: p.companyNumber,
     bankName: p.bankName, bankAccountNumber: p.bankAccountNumber, bankAddress: p.bankAddress,
     swiftCode: p.swiftCode, iban: p.iban, salesTaxNumber: p.salesTaxNumber, ntnNumber: p.ntnNumber,
-    paymentTermsId: p.paymentTermsId ?? null, paymentTermName: null,
+    paymentTermsId: p.paymentTermsId ?? null, paymentTermName,
     createdAt: p.createdAt.toISOString(),
   };
 }

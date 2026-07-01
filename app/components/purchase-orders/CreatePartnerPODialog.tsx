@@ -36,6 +36,10 @@ export function CreatePartnerPODialog({ open, onClose, editPo }: { open: boolean
   const { data: partnerClients } = useListPartnerClients(partnerId ? Number(partnerId) : 0);
   const { data: cpos } = useListClientPurchaseOrdersByClient(clientId ? Number(clientId) : 0);
 
+  const selectedPartner = useMemo(
+    () => partners?.find(p => p.id === Number(partnerId)),
+    [partners, partnerId],
+  );
   const selectedClient = useMemo(
     () => partnerClients?.find(pc => pc.clientId === Number(clientId)),
     [partnerClients, clientId],
@@ -113,6 +117,11 @@ export function CreatePartnerPODialog({ open, onClose, editPo }: { open: boolean
                 <SelectTrigger data-testid="ppo-partner-select"><SelectValue placeholder="Select partner" /></SelectTrigger>
                 <SelectContent>{partners?.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}</SelectContent>
               </Select>
+              {selectedPartner && (
+                <p className="text-xs text-muted-foreground" data-testid="ppo-payment-terms">
+                  Payment terms: <span className="font-medium text-foreground">{selectedPartner.paymentTermName ?? "—"}</span>
+                </p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Client <span className="text-destructive">*</span></Label>
