@@ -19,13 +19,13 @@ export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
 
   const [kyc, setKyc] = useState<KycState>(() => kycFromRecord(partner));
   const [paymentTermsId, setPaymentTermsId] = useState<string>(partner.paymentTermsId != null ? String(partner.paymentTermsId) : "none");
-  const [codePrefix, setCodePrefix] = useState<string>(partner.codePrefix);
+  const [codePrefix, setCodePrefix] = useState<string>(partner.codePrefix ?? "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setKyc(kycFromRecord(partner));
     setPaymentTermsId(partner.paymentTermsId != null ? String(partner.paymentTermsId) : "none");
-    setCodePrefix(partner.codePrefix);
+    setCodePrefix(partner.codePrefix ?? "");
   }, [partner]);
 
   async function handleSave() {
