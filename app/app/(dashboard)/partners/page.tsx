@@ -20,9 +20,11 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import { derivePrefix } from "@/lib/po-codes";
 
 const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  codePrefix: z.string().regex(/^[A-Z0-9]{4,8}$/, "4–8 uppercase letters/numbers"),
   address: z.string().optional(),
   pocName: z.string().optional(),
   pocNumber: z.string().regex(/^[+\d\s()\-]*$/, "Invalid phone number").optional().or(z.literal("")),
@@ -167,11 +169,18 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
 }) {
   const form = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
-    defaultValues: { name: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" },
+    defaultValues: { name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" },
   });
 
+  const nameValue = form.watch("name");
   useEffect(() => {
-    if (open) form.reset({ name: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" });
+    if (!form.getValues("codePrefix") && nameValue) {
+      form.setValue("codePrefix", derivePrefix(nameValue), { shouldValidate: true });
+    }
+  }, [nameValue, form]);
+
+  useEffect(() => {
+    if (open) form.reset({ name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" });
   }, [open, form]);
 
   return (
@@ -182,6 +191,19 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem><FormLabel>Name <span className="text-destructive">*</span></FormLabel><FormControl><Input placeholder="e.g. The Trade Desk" {...field} data-testid="platform-name-input" /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="codePrefix" render={({ field }) => (
+              <FormItem>
+                <FormLabel>PO Code Prefix</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. SAND" maxLength={8}
+                    {...field}
+                    onChange={e => field.onChange(e.target.value.toUpperCase())}
+                    data-testid="partner-prefix-input" />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">4–8 letters/numbers. Used to generate partner PO codes (e.g. SAND-0126-0001).</p>
+                <FormMessage />
+              </FormItem>
             )} />
             <FormField control={form.control} name="address" render={({ field }) => (
               <FormItem><FormLabel>Address</FormLabel><FormControl><Input placeholder="Company address" {...field} /></FormControl><FormMessage /></FormItem>
