@@ -52,11 +52,11 @@ export const ListClientsResponse = zod.array(ListClientsResponseItem)
  * @summary Create a new client
  */
 
-export const createClientBodyCodePrefixMin = 4;
-export const createClientBodyCodePrefixMax = 8;
+export const createClientBodyCodePrefixMin = 2;
+export const createClientBodyCodePrefixMax = 4;
 
 
-export const createClientBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{4,8}$');
+export const createClientBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{2,4}$');
 
 
 export const CreateClientBody = zod.object({
@@ -108,11 +108,11 @@ export const UpdateClientParams = zod.object({
 })
 
 
-export const updateClientBodyCodePrefixMin = 4;
-export const updateClientBodyCodePrefixMax = 8;
+export const updateClientBodyCodePrefixMin = 2;
+export const updateClientBodyCodePrefixMax = 4;
 
 
-export const updateClientBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{4,8}$');
+export const updateClientBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{2,4}$');
 
 
 export const UpdateClientBody = zod.object({
@@ -336,11 +336,11 @@ export const ListPartnersResponse = zod.array(ListPartnersResponseItem)
  * @summary Create a new platform
  */
 
-export const createPartnerBodyCodePrefixMin = 4;
-export const createPartnerBodyCodePrefixMax = 8;
+export const createPartnerBodyCodePrefixMin = 2;
+export const createPartnerBodyCodePrefixMax = 4;
 
 
-export const createPartnerBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{4,8}$');
+export const createPartnerBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{2,4}$');
 
 
 export const CreatePartnerBody = zod.object({
@@ -400,11 +400,11 @@ export const UpdatePartnerParams = zod.object({
   "id": zod.coerce.number()
 })
 
-export const updatePartnerBodyCodePrefixMin = 4;
-export const updatePartnerBodyCodePrefixMax = 8;
+export const updatePartnerBodyCodePrefixMin = 2;
+export const updatePartnerBodyCodePrefixMax = 4;
 
 
-export const updatePartnerBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{4,8}$');
+export const updatePartnerBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{2,4}$');
 
 
 export const UpdatePartnerBody = zod.object({

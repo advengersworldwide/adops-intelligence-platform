@@ -24,7 +24,7 @@ import { derivePrefix } from "@/lib/po-codes";
 
 const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  codePrefix: z.string().regex(/^[A-Z0-9]{4,8}$/, "4–8 uppercase letters/numbers"),
+  codePrefix: z.string().regex(/^[A-Z0-9]{2,4}$/, "2–4 uppercase letters/numbers"),
   address: z.string().optional(),
   pocName: z.string().optional(),
   pocNumber: z.string().regex(/^[+\d\s()\-]*$/, "Invalid phone number").optional().or(z.literal("")),
@@ -196,12 +196,12 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
               <FormItem>
                 <FormLabel>PO Code Prefix</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. SAND" maxLength={8}
+                  <Input placeholder="e.g. SB" maxLength={4}
                     {...field}
                     onChange={e => field.onChange(e.target.value.toUpperCase())}
                     data-testid="partner-prefix-input" />
                 </FormControl>
-                <p className="text-xs text-muted-foreground">4–8 letters/numbers. Used to generate partner PO codes (e.g. SAND-0126-0001).</p>
+                <p className="text-xs text-muted-foreground">2–4 letters/numbers. Used to generate partner PO codes (e.g. SB-0126-0001).</p>
                 <FormMessage />
               </FormItem>
             )} />

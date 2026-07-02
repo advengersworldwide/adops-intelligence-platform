@@ -80,9 +80,9 @@ export interface ClientInput {
   /** @minLength 1 */
   name: string;
   /**
-     * @minLength 4
-     * @maxLength 8
-     * @pattern ^[A-Z0-9]{4,8}$
+     * @minLength 2
+     * @maxLength 4
+     * @pattern ^[A-Z0-9]{2,4}$
      */
   codePrefix: string;
   /** @nullable */
@@ -93,9 +93,9 @@ export interface ClientUpdate {
   /** @minLength 1 */
   name?: string;
   /**
-     * @minLength 4
-     * @maxLength 8
-     * @pattern ^[A-Z0-9]{4,8}$
+     * @minLength 2
+     * @maxLength 4
+     * @pattern ^[A-Z0-9]{2,4}$
      */
   codePrefix?: string;
   /** @nullable */
@@ -306,9 +306,9 @@ export interface PartnerInput {
   /** @minLength 1 */
   name: string;
   /**
-     * @minLength 4
-     * @maxLength 8
-     * @pattern ^[A-Z0-9]{4,8}$
+     * @minLength 2
+     * @maxLength 4
+     * @pattern ^[A-Z0-9]{2,4}$
      */
   codePrefix: string;
   /** @nullable */
@@ -344,9 +344,9 @@ export interface PartnerInput {
 export interface PartnerUpdate {
   name?: string;
   /**
-     * @minLength 4
-     * @maxLength 8
-     * @pattern ^[A-Z0-9]{4,8}$
+     * @minLength 2
+     * @maxLength 4
+     * @pattern ^[A-Z0-9]{2,4}$
      */
   codePrefix?: string;
   /** @nullable */

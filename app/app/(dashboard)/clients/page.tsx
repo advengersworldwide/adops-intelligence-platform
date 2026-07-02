@@ -24,7 +24,7 @@ import { derivePrefix } from "@/lib/po-codes";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  codePrefix: z.string().regex(/^[A-Z0-9]{4,8}$/, "4–8 uppercase letters/numbers"),
+  codePrefix: z.string().regex(/^[A-Z0-9]{2,4}$/, "2–4 uppercase letters/numbers"),
   buyingHouseId: z.number().nullable().optional(),
 });
 type ClientForm = z.infer<typeof clientSchema>;
@@ -203,12 +203,12 @@ function ClientDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, ti
               <FormItem>
                 <FormLabel>PO Code Prefix</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. EPAY" maxLength={8}
+                  <Input placeholder="e.g. EP" maxLength={4}
                     {...field}
                     onChange={e => field.onChange(e.target.value.toUpperCase())}
                     data-testid="client-prefix-input" />
                 </FormControl>
-                <p className="text-xs text-muted-foreground">4–8 letters/numbers. Used to generate purchase-order codes (e.g. EPAY-0126-0001).</p>
+                <p className="text-xs text-muted-foreground">2–4 letters/numbers. Used to generate purchase-order codes (e.g. EP-0126-0001).</p>
                 <FormMessage />
               </FormItem>
             )} />

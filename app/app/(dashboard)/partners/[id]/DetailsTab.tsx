@@ -29,8 +29,8 @@ export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
   }, [partner]);
 
   async function handleSave() {
-    if (!/^[A-Z0-9]{4,8}$/.test(codePrefix)) {
-      toast({ title: "PO code prefix must be 4–8 uppercase letters/numbers", variant: "destructive" });
+    if (!/^[A-Z0-9]{2,4}$/.test(codePrefix)) {
+      toast({ title: "PO code prefix must be 2–4 uppercase letters/numbers", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -51,10 +51,10 @@ export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
       <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
       <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">PO Code Prefix</span>
-        <Input value={codePrefix} disabled={!canEdit} maxLength={8}
+        <Input value={codePrefix} disabled={!canEdit} maxLength={4}
           onChange={e => setCodePrefix(e.target.value.toUpperCase())}
           data-testid="partner-edit-prefix-input" />
-        <p className="text-xs text-muted-foreground">4–8 letters/numbers. e.g. SAND-0126-0001</p>
+        <p className="text-xs text-muted-foreground">2–4 letters/numbers. e.g. SB-0126-0001</p>
       </div>
       <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">Payment Terms</span>
