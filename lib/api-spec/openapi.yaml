@@ -1436,10 +1436,11 @@ components:
     # ── Client ──────────────────────────────────────────────────────────────────
     Client:
       type: object
-      required: [id, name, createdAt]
+      required: [id, name, codePrefix, createdAt]
       properties:
         id: { type: integer }
         name: { type: string }
+        codePrefix: { type: string }
         buyingHouseId: { type: ["integer", "null"] }
         buyingHouseName: { type: ["string", "null"] }
         address: { type: ["string", "null"] }
@@ -1463,15 +1464,17 @@ components:
 
     ClientInput:
       type: object
-      required: [name]
+      required: [name, codePrefix]
       properties:
         name: { type: string, minLength: 1 }
+        codePrefix: { type: string, minLength: 4, maxLength: 8, pattern: "^[A-Z0-9]{4,8}$" }
         buyingHouseId: { type: ["integer", "null"] }
 
     ClientUpdate:
       type: object
       properties:
         name: { type: string, minLength: 1 }
+        codePrefix: { type: string, minLength: 4, maxLength: 8, pattern: "^[A-Z0-9]{4,8}$" }
         buyingHouseId: { type: ["integer", "null"] }
         address: { type: ["string", "null"] }
         pocName: { type: ["string", "null"] }
@@ -1631,11 +1634,13 @@ components:
     # ── Partner ──────────────────────────────────────────────────────────────────
     Partner:
       type: object
-      required: [id, name, createdAt]
+      required: [id, name, codePrefix, createdAt]
       properties:
         id:
           type: integer
         name:
+          type: string
+        codePrefix:
           type: string
         address:
           type: ["string", "null"]
@@ -1672,11 +1677,16 @@ components:
 
     PartnerInput:
       type: object
-      required: [name]
+      required: [name, codePrefix]
       properties:
         name:
           type: string
           minLength: 1
+        codePrefix:
+          type: string
+          minLength: 4
+          maxLength: 8
+          pattern: "^[A-Z0-9]{4,8}$"
         address:
           type: ["string", "null"]
         pocName:
@@ -1711,6 +1721,11 @@ components:
       properties:
         name:
           type: string
+        codePrefix:
+          type: string
+          minLength: 4
+          maxLength: 8
+          pattern: "^[A-Z0-9]{4,8}$"
         address:
           type: ["string", "null"]
         pocName:

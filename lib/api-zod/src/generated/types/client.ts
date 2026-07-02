@@ -9,6 +9,7 @@
 export interface Client {
   id: number;
   name: string;
+  codePrefix: string;
   /** @nullable */
   buyingHouseId?: number | null;
   /** @nullable */

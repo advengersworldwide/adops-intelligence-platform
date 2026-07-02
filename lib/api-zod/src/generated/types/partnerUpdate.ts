@@ -8,6 +8,12 @@
 
 export interface PartnerUpdate {
   name?: string;
+  /**
+     * @minLength 4
+     * @maxLength 8
+     * @pattern ^[A-Z0-9]{4,8}$
+     */
+  codePrefix?: string;
   /** @nullable */
   address?: string | null;
   /** @nullable */

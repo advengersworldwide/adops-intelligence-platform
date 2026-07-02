@@ -23,6 +23,7 @@ export const HealthCheckResponse = zod.object({
 export const ListClientsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
   "address": zod.string().nullish(),
@@ -51,10 +52,16 @@ export const ListClientsResponse = zod.array(ListClientsResponseItem)
  * @summary Create a new client
  */
 
+export const createClientBodyCodePrefixMin = 4;
+export const createClientBodyCodePrefixMax = 8;
+
+
+export const createClientBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{4,8}$');
 
 
 export const CreateClientBody = zod.object({
   "name": zod.string().min(1),
+  "codePrefix": zod.string().min(createClientBodyCodePrefixMin).max(createClientBodyCodePrefixMax).regex(createClientBodyCodePrefixRegExp),
   "buyingHouseId": zod.number().nullish()
 })
 
@@ -69,6 +76,7 @@ export const GetClientParams = zod.object({
 export const GetClientResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
   "address": zod.string().nullish(),
@@ -100,10 +108,16 @@ export const UpdateClientParams = zod.object({
 })
 
 
+export const updateClientBodyCodePrefixMin = 4;
+export const updateClientBodyCodePrefixMax = 8;
+
+
+export const updateClientBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{4,8}$');
 
 
 export const UpdateClientBody = zod.object({
   "name": zod.string().min(1).optional(),
+  "codePrefix": zod.string().min(updateClientBodyCodePrefixMin).max(updateClientBodyCodePrefixMax).regex(updateClientBodyCodePrefixRegExp).optional(),
   "buyingHouseId": zod.number().nullish(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
@@ -126,6 +140,7 @@ export const UpdateClientBody = zod.object({
 export const UpdateClientResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "buyingHouseId": zod.number().nullish(),
   "buyingHouseName": zod.string().nullish(),
   "address": zod.string().nullish(),
@@ -296,6 +311,7 @@ export const DeletePaymentTermParams = zod.object({
 export const ListPartnersResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -320,10 +336,16 @@ export const ListPartnersResponse = zod.array(ListPartnersResponseItem)
  * @summary Create a new platform
  */
 
+export const createPartnerBodyCodePrefixMin = 4;
+export const createPartnerBodyCodePrefixMax = 8;
+
+
+export const createPartnerBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{4,8}$');
 
 
 export const CreatePartnerBody = zod.object({
   "name": zod.string().min(1),
+  "codePrefix": zod.string().min(createPartnerBodyCodePrefixMin).max(createPartnerBodyCodePrefixMax).regex(createPartnerBodyCodePrefixRegExp),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -351,6 +373,7 @@ export const GetPartnerParams = zod.object({
 export const GetPartnerResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -377,8 +400,16 @@ export const UpdatePartnerParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const updatePartnerBodyCodePrefixMin = 4;
+export const updatePartnerBodyCodePrefixMax = 8;
+
+
+export const updatePartnerBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{4,8}$');
+
+
 export const UpdatePartnerBody = zod.object({
   "name": zod.string().optional(),
+  "codePrefix": zod.string().min(updatePartnerBodyCodePrefixMin).max(updatePartnerBodyCodePrefixMax).regex(updatePartnerBodyCodePrefixRegExp).optional(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -398,6 +429,7 @@ export const UpdatePartnerBody = zod.object({
 export const UpdatePartnerResponse = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -1461,6 +1493,7 @@ export const ListPartnerPurchaseOrdersResponseItem = zod.object({
   "partner": zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -1540,6 +1573,7 @@ export const GetPartnerPurchaseOrderResponse = zod.object({
   "partner": zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -1611,6 +1645,7 @@ export const UpdatePartnerPurchaseOrderResponse = zod.object({
   "partner": zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "codePrefix": zod.string(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),

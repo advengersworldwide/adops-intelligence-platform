@@ -34,6 +34,7 @@ export interface PaymentTermInput {
 export interface Client {
   id: number;
   name: string;
+  codePrefix: string;
   /** @nullable */
   buyingHouseId?: number | null;
   /** @nullable */
@@ -78,6 +79,12 @@ export interface Client {
 export interface ClientInput {
   /** @minLength 1 */
   name: string;
+  /**
+     * @minLength 4
+     * @maxLength 8
+     * @pattern ^[A-Z0-9]{4,8}$
+     */
+  codePrefix: string;
   /** @nullable */
   buyingHouseId?: number | null;
 }
@@ -85,6 +92,12 @@ export interface ClientInput {
 export interface ClientUpdate {
   /** @minLength 1 */
   name?: string;
+  /**
+     * @minLength 4
+     * @maxLength 8
+     * @pattern ^[A-Z0-9]{4,8}$
+     */
+  codePrefix?: string;
   /** @nullable */
   buyingHouseId?: number | null;
   /** @nullable */
@@ -255,6 +268,7 @@ export interface BuyingHouseBillingRecord {
 export interface Partner {
   id: number;
   name: string;
+  codePrefix: string;
   /** @nullable */
   address?: string | null;
   /** @nullable */
@@ -291,6 +305,12 @@ export interface Partner {
 export interface PartnerInput {
   /** @minLength 1 */
   name: string;
+  /**
+     * @minLength 4
+     * @maxLength 8
+     * @pattern ^[A-Z0-9]{4,8}$
+     */
+  codePrefix: string;
   /** @nullable */
   address?: string | null;
   /** @nullable */
@@ -323,6 +343,12 @@ export interface PartnerInput {
 
 export interface PartnerUpdate {
   name?: string;
+  /**
+     * @minLength 4
+     * @maxLength 8
+     * @pattern ^[A-Z0-9]{4,8}$
+     */
+  codePrefix?: string;
   /** @nullable */
   address?: string | null;
   /** @nullable */

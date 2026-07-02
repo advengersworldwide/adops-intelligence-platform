@@ -9,6 +9,7 @@
 export interface Partner {
   id: number;
   name: string;
+  codePrefix: string;
   /** @nullable */
   address?: string | null;
   /** @nullable */
