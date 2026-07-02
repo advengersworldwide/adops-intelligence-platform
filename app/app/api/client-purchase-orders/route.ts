@@ -39,13 +39,17 @@ export async function mapCpoRow(r: Row) {
   };
 }
 
-async function nextCpoCode(): Promise<string> {
-  const year = new Date().getFullYear();
-  const start = new Date(year, 0, 1);
-  const end = new Date(year + 1, 0, 1);
+async function nextCpoCode(clientId: number): Promise<string> {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const [{ value }] = await db.select({ value: count() }).from(clientPurchaseOrdersTable)
-    .where(and(gte(clientPurchaseOrdersTable.createdAt, start), lt(clientPurchaseOrdersTable.createdAt, end)));
-  return formatPoCode("CPO", year, Number(value) + 1);
+    .where(and(gte(clientPurchaseOrdersTable.createdAt, monthStart), lt(clientPurchaseOrdersTable.createdAt, monthEnd)));
+  const [client] = await db.select({ codePrefix: clientsTable.codePrefix })
+    .from(clientsTable).where(eq(clientsTable.id, clientId));
+  const prefix = client?.codePrefix?.trim();
+  if (!prefix) throw new Error("Set a PO code prefix for this client first");
+  return formatPoCode(prefix, now, Number(value) + 1);
 }
 
 export async function GET(): Promise<Response> {
@@ -59,10 +63,13 @@ export async function POST(req: Request): Promise<Response> {
   const parsed = CreateClientPurchaseOrderBody.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   const user = await getSession();
+  let code: string;
+  try { code = await nextCpoCode(parsed.data.clientId); }
+  catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Failed" }, { status: 400 }); }
   const attachments = parsed.data.attachments.map((a) => ({ url: a.url, name: a.name ?? null }));
   const [first] = attachments;
   const [row] = await db.insert(clientPurchaseOrdersTable).values({
-    code: await nextCpoCode(),
+    code,
     clientId: parsed.data.clientId,
     attachmentUrl: first.url,
     attachmentName: first.name,

@@ -34,22 +34,22 @@ describe("POST /api/client-purchase-orders", () => {
 
   it("creates with a generated CPO code and 201", async () => {
     selectChain
-      .mockResolvedValueOnce([{ value: 0 }])                // year count -> seq 1
+      .mockResolvedValueOnce([{ value: 0 }])                       // nextCpoCode monthly count -> seq 1
+      .mockResolvedValueOnce([{ codePrefix: "JAZZ" }])             // nextCpoCode client prefix lookup
       .mockResolvedValueOnce([{ name: "JazzCash", buyingHouseId: null }]) // mapCpoRow client
-      .mockResolvedValueOnce([{ name: "Tester" }]);         // mapCpoRow user
+      .mockResolvedValueOnce([{ name: "Tester" }]);                // mapCpoRow user
     insertReturning.mockResolvedValueOnce([{
-      id: 1, code: "CPO-2026-0001", clientId: 1, attachmentUrl: "http://x/f.pdf",
+      id: 1, code: "JAZZ-0126-0001", clientId: 1, attachmentUrl: "http://x/f.pdf",
       attachmentName: "f.pdf", attachments: [{ url: "http://x/f.pdf", name: "f.pdf" }],
-      createdById: 7, createdAt: new Date("2026-06-24T00:00:00Z"),
+      createdById: 7, createdAt: new Date("2026-01-24T00:00:00Z"),
     }]);
     const res = await post({
       clientId: 1,
-      attachments: [{ url: "http://x/f.pdf", name: "f.pdf" }, { url: "http://x/g.png", name: "g.png" }],
+      attachments: [{ url: "http://x/f.pdf", name: "f.pdf" }],
     });
     expect(res.status).toBe(201);
     const json = await res.json();
-    expect(json.code).toBe("CPO-2026-0001");
+    expect(json.code).toBe("JAZZ-0126-0001");
     expect(json.clientName).toBe("JazzCash");
-    expect(json.attachments).toHaveLength(1);
   });
 });

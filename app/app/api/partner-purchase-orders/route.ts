@@ -62,12 +62,17 @@ function mapPartnerKyc(p: typeof partnersTable.$inferSelect, paymentTermName: st
   };
 }
 
-async function nextPpoCode(): Promise<string> {
-  const year = new Date().getFullYear();
-  const start = new Date(year, 0, 1), end = new Date(year + 1, 0, 1);
+async function nextPpoCode(partnerId: number): Promise<string> {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
   const [{ value }] = await db.select({ value: count() }).from(partnerPurchaseOrdersTable)
-    .where(and(gte(partnerPurchaseOrdersTable.createdAt, start), lt(partnerPurchaseOrdersTable.createdAt, end)));
-  return formatPoCode("PPO", year, Number(value) + 1);
+    .where(and(gte(partnerPurchaseOrdersTable.createdAt, monthStart), lt(partnerPurchaseOrdersTable.createdAt, monthEnd)));
+  const [partner] = await db.select({ codePrefix: partnersTable.codePrefix })
+    .from(partnersTable).where(eq(partnersTable.id, partnerId));
+  const prefix = partner?.codePrefix?.trim();
+  if (!prefix) throw new Error("Set a PO code prefix for this partner first");
+  return formatPoCode(prefix, now, Number(value) + 1);
 }
 
 export async function GET(): Promise<Response> {
@@ -84,8 +89,12 @@ export async function POST(req: Request): Promise<Response> {
   const user = await getSession();
   const total = totalBudget(items.map(i => ({ cacRate: i.cacRate, eventCount: i.eventCount })));
 
+  let code: string;
+  try { code = await nextPpoCode(partnerId); }
+  catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Failed" }, { status: 400 }); }
+
   const [ppo] = await db.insert(partnerPurchaseOrdersTable).values({
-    code: await nextPpoCode(), partnerId, clientPurchaseOrderId, startDate, endDate,
+    code, partnerId, clientPurchaseOrderId, startDate, endDate,
     totalBudget: String(total), notes: notes ?? null, createdById: user?.sub ?? null,
   }).returning();
 
