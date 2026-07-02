@@ -85,7 +85,7 @@ function PartnersPage() {
         </div>
         {canEdit && (
           <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-platform-btn">
-            <Plus className="h-3.5 w-3.5" /> Add Partners
+            <Plus className="h-3.5 w-3.5" /> Add Partner
           </Button>
         )}
       </div>
