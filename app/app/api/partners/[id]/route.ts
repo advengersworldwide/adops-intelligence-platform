@@ -10,7 +10,7 @@ async function mapRow(r: typeof partnersTable.$inferSelect) {
     ? await db.select({ name: paymentTermsTable.name }).from(paymentTermsTable).where(eq(paymentTermsTable.id, r.paymentTermsId))
     : [];
   return {
-    id: r.id, name: r.name, address: r.address, pocName: r.pocName, pocNumber: r.pocNumber, pocEmail: r.pocEmail,
+    id: r.id, name: r.name, codePrefix: r.codePrefix, address: r.address, pocName: r.pocName, pocNumber: r.pocNumber, pocEmail: r.pocEmail,
     companyEmail: r.companyEmail, companyNumber: r.companyNumber, bankName: r.bankName,
     bankAccountNumber: r.bankAccountNumber, bankAddress: r.bankAddress, swiftCode: r.swiftCode, iban: r.iban,
     salesTaxNumber: r.salesTaxNumber, ntnNumber: r.ntnNumber,

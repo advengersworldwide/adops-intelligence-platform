@@ -17,7 +17,7 @@ async function mapRow(r: typeof clientsTable.$inferSelect) {
     paymentTermName = pt?.name ?? null;
   }
   return {
-    id: r.id, name: r.name, buyingHouseId: r.buyingHouseId ?? null, buyingHouseName,
+    id: r.id, name: r.name, codePrefix: r.codePrefix, buyingHouseId: r.buyingHouseId ?? null, buyingHouseName,
     address: r.address, pocName: r.pocName, pocNumber: r.pocNumber, pocEmail: r.pocEmail,
     companyEmail: r.companyEmail, companyNumber: r.companyNumber,
     bankName: r.bankName, bankAccountNumber: r.bankAccountNumber, bankAddress: r.bankAddress,
@@ -55,7 +55,7 @@ export async function PATCH(
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   const d = parsed.data;
   const updates: Record<string, unknown> = {};
-  const textKeys = ["name","buyingHouseId","address","pocName","pocNumber","pocEmail","companyEmail","companyNumber","bankName","bankAccountNumber","bankAddress","swiftCode","iban","salesTaxNumber","ntnNumber","paymentTermsId"] as const;
+  const textKeys = ["name","codePrefix","buyingHouseId","address","pocName","pocNumber","pocEmail","companyEmail","companyNumber","bankName","bankAccountNumber","bankAddress","swiftCode","iban","salesTaxNumber","ntnNumber","paymentTermsId"] as const;
   for (const k of textKeys) if ((d as Record<string, unknown>)[k] !== undefined) updates[k] = (d as Record<string, unknown>)[k];
   if (d.salesTaxPct !== undefined) updates.salesTaxPct = d.salesTaxPct != null ? String(d.salesTaxPct) : null;
   if (d.withholdingTaxPct !== undefined) updates.withholdingTaxPct = d.withholdingTaxPct != null ? String(d.withholdingTaxPct) : null;

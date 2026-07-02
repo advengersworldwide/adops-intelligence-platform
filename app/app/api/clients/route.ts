@@ -17,7 +17,7 @@ async function mapRow(r: typeof clientsTable.$inferSelect) {
     paymentTermName = pt?.name ?? null;
   }
   return {
-    id: r.id, name: r.name, buyingHouseId: r.buyingHouseId ?? null, buyingHouseName,
+    id: r.id, name: r.name, codePrefix: r.codePrefix, buyingHouseId: r.buyingHouseId ?? null, buyingHouseName,
     address: r.address, pocName: r.pocName, pocNumber: r.pocNumber, pocEmail: r.pocEmail,
     companyEmail: r.companyEmail, companyNumber: r.companyNumber,
     bankName: r.bankName, bankAccountNumber: r.bankAccountNumber, bankAddress: r.bankAddress,
@@ -43,6 +43,7 @@ export async function POST(req: Request): Promise<Response> {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   const [row] = await db.insert(clientsTable).values({
     name: parsed.data.name,
+    codePrefix: parsed.data.codePrefix,
     buyingHouseId: parsed.data.buyingHouseId ?? null,
   }).returning();
   return NextResponse.json(GetClientResponse.parse(await mapRow(row)), { status: 201 });
