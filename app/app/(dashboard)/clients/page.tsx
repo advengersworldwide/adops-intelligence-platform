@@ -20,15 +20,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import { derivePrefix } from "@/lib/po-codes";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  codePrefix: z.string().regex(/^[A-Z0-9]{4,8}$/, "4–8 uppercase letters/numbers"),
   buyingHouseId: z.number().nullable().optional(),
 });
 type ClientForm = z.infer<typeof clientSchema>;
 
 interface ClientRow {
-  id: number; name: string;
+  id: number; name: string; codePrefix: string;
   buyingHouseId: number | null; buyingHouseName: string | null;
   createdAt: string;
 }
@@ -149,6 +151,7 @@ function ClientsContent() {
         buyingHouses={buyingHouses ?? []}
         defaultValues={editClient ? {
           name: editClient.name,
+          codePrefix: editClient.codePrefix,
           buyingHouseId: editClient.buyingHouseId ?? null,
         } : undefined}
         onSubmit={(data) => {
@@ -169,11 +172,18 @@ function ClientDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, ti
 }) {
   const form = useForm<ClientForm>({
     resolver: zodResolver(clientSchema),
-    defaultValues: defaultValues ?? { name: "", buyingHouseId: null },
+    defaultValues: defaultValues ?? { name: "", codePrefix: "", buyingHouseId: null },
   });
 
+  const nameValue = form.watch("name");
   useEffect(() => {
-    if (open) form.reset(defaultValues ?? { name: "", buyingHouseId: null });
+    if (!form.getValues("codePrefix") && nameValue) {
+      form.setValue("codePrefix", derivePrefix(nameValue), { shouldValidate: true });
+    }
+  }, [nameValue, form]);
+
+  useEffect(() => {
+    if (open) form.reset(defaultValues ?? { name: "", codePrefix: "", buyingHouseId: null });
   }, [open, defaultValues, form]);
 
   return (
@@ -186,6 +196,19 @@ function ClientDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, ti
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl><Input placeholder="Client name" {...field} data-testid="client-name-input" /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="codePrefix" render={({ field }) => (
+              <FormItem>
+                <FormLabel>PO Code Prefix</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. EPAY" maxLength={8}
+                    {...field}
+                    onChange={e => field.onChange(e.target.value.toUpperCase())}
+                    data-testid="client-prefix-input" />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">4–8 letters/numbers. Used to generate purchase-order codes (e.g. EPAY-0126-0001).</p>
                 <FormMessage />
               </FormItem>
             )} />
