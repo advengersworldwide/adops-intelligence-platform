@@ -54,6 +54,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
   const [salesTaxPct, setSalesTaxPct] = useState("");
   const [withholdingTaxPct, setWithholdingTaxPct] = useState("");
   const [paymentTermsId, setPaymentTermsId] = useState("none");
+  const [codePrefix, setCodePrefix] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -62,14 +63,20 @@ function DetailsTab({ clientId }: { clientId: number }) {
     setSalesTaxPct(client.salesTaxPct != null ? String(client.salesTaxPct) : "");
     setWithholdingTaxPct(client.withholdingTaxPct != null ? String(client.withholdingTaxPct) : "");
     setPaymentTermsId(client.paymentTermsId != null ? String(client.paymentTermsId) : "none");
+    setCodePrefix(client.codePrefix ?? "");
   }, [client]);
 
   async function handleSave() {
     if (!client) return;
+    if (!/^[A-Z0-9]{2,4}$/.test(codePrefix)) {
+      toast({ title: "PO code prefix must be 2–4 uppercase letters/numbers", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       await updateClient.mutateAsync({ id: clientId, data: {
         ...kycToPayload(kyc),
+        codePrefix,
         salesTaxPct: salesTaxPct.trim() !== "" ? parseFloat(salesTaxPct) : null,
         withholdingTaxPct: withholdingTaxPct.trim() !== "" ? parseFloat(withholdingTaxPct) : null,
         paymentTermsId: paymentTermsId === "none" ? null : parseInt(paymentTermsId, 10),
@@ -83,6 +90,13 @@ function DetailsTab({ clientId }: { clientId: number }) {
   return (
     <div className="space-y-6">
       <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
+      <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
+        <span className="text-xs font-medium text-muted-foreground">PO Code Prefix</span>
+        <Input value={codePrefix} disabled={!canEdit} maxLength={4}
+          onChange={e => setCodePrefix(e.target.value.toUpperCase())}
+          data-testid="client-edit-prefix-input" />
+        <p className="text-xs text-muted-foreground">2–4 letters/numbers. e.g. EP-0126-0001</p>
+      </div>
       <div className="rounded-lg border border-border bg-card p-5 space-y-4">
         <h3 className="text-sm font-semibold text-foreground">Tax Rates & Payment</h3>
         <div className="grid gap-4 sm:grid-cols-3">
