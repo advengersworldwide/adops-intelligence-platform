@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { db, rolesTable, usersTable } from "@workspace/db";
+import { db, rolesTable, usersTable, taxSettingsTable } from "@workspace/db";
 
 const DEFAULT_ROLES = [
   {
@@ -9,7 +9,7 @@ const DEFAULT_ROLES = [
       "View Dashboard", "View Clients", "Edit Clients",
       "View Partners", "Edit Partners",
       "View Buying Houses", "Edit Buying Houses",
-      "View Transactions", "View Billings", "View Payments", "View Cost", "Upload Data",
+      "View Transactions", "View Billings", "View Billing Detail", "View Payments", "View Cost", "Upload Data",
       "View Analytics", "Manage Settings",
       "View Purchase Orders", "Edit Purchase Orders",
     ] as string[],
@@ -20,7 +20,7 @@ const DEFAULT_ROLES = [
     permissions: [
       "View Dashboard", "View Clients", "View Partners",
       "View Buying Houses",
-      "View Transactions", "View Billings", "View Payments", "View Cost", "View Analytics",
+      "View Transactions", "View Billings", "View Billing Detail", "View Payments", "View Cost", "View Analytics",
       "View Purchase Orders",
     ] as string[],
     isSystem: true,
@@ -31,7 +31,7 @@ const DEFAULT_ROLES = [
       "View Dashboard", "View Clients", "Edit Clients",
       "View Partners", "Edit Partners",
       "View Buying Houses", "Edit Buying Houses",
-      "View Transactions", "View Billings", "View Payments", "View Cost", "Upload Data",
+      "View Transactions", "View Billings", "View Billing Detail", "View Payments", "View Cost", "Upload Data",
       "View Analytics",
       "View Purchase Orders", "Edit Purchase Orders",
     ] as string[],
@@ -68,6 +68,16 @@ async function seedDefaults() {
       console.log("[seed] default admin created");
     }
   }
+  const existingTax = await db.select().from(taxSettingsTable).limit(1);
+  if (existingTax.length === 0) {
+    await db.insert(taxSettingsTable).values({
+      remittanceTaxPct: "15",
+      salesTaxPct: "15",
+      withholdingTaxPct: "7",
+    });
+    console.log("[seed] default tax settings created");
+  }
+
   console.log("[seed] done");
 }
 
