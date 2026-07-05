@@ -18,3 +18,8 @@ export * from "./bill-transactions";
 export * from "./payments";
 export * from "./payment-bills";
 export * from "./cost-resources";
+export * from "./tax-settings";
+export * from "./billings";
+export * from "./billing-lines";
+export * from "./billing-event-items";
+export * from "./payment-billings";

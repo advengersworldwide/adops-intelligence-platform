@@ -1,8 +1,9 @@
-import { pgTable, serial, text, numeric, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, numeric, date, timestamp } from "drizzle-orm/pg-core";
 
 export const paymentsTable = pgTable("payments", {
   id: serial("id").primaryKey(),
   mode: text("mode").notNull(),
+  paymentDate: date("payment_date"),
   totalAmount: numeric("total_amount", { precision: 14, scale: 2 }).notNull(),
   notes: text("notes"),
   chequeImageUrl: text("cheque_image_url"),

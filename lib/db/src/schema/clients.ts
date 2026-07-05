@@ -12,8 +12,7 @@ export const clientsTable = pgTable("clients", {
   buyingHouseId: integer("buying_house_id")
     .references(() => buyingHousesTable.id, { onDelete: "set null" }),
   ...kycColumns,
-  salesTaxPct: numeric("sales_tax_pct", { precision: 6, scale: 2 }),
-  withholdingTaxPct: numeric("withholding_tax_pct", { precision: 6, scale: 2 }),
+  bulkDiscountPct: numeric("bulk_discount_pct", { precision: 6, scale: 2 }),
   paymentTermsId: integer("payment_terms_id")
     .references(() => paymentTermsTable.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
