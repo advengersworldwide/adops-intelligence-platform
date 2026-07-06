@@ -2657,7 +2657,7 @@ components:
           items: { $ref: "#/components/schemas/BillingEventItem" }
     BillingSummary:
       type: object
-      required: [id, clientId, clientName, buyingHouseName, cpoCode, period, status,
+      required: [id, clientId, clientName, buyingHouseName, cpoCode, clientPurchaseOrderId, period, status,
                  forexSellingRate, forexBuyingRate, bulkDiscountPct, whtApplied,
                  remittanceTaxPct, salesTaxPct, withholdingTaxPct,
                  totalInvoice, netReceivable, netMargin, lines, createdAt]
@@ -2667,6 +2667,7 @@ components:
         clientName: { type: string }
         buyingHouseName: { type: ["string", "null"] }
         cpoCode: { type: string }
+        clientPurchaseOrderId: { type: integer }
         period: { type: string }
         status: { type: string }
         invoiceCode: { type: ["string", "null"] }

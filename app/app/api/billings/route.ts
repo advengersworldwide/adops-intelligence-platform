@@ -59,7 +59,8 @@ export async function mapBilling(b: BillingRow) {
 
   return {
     id: b.id, clientId: b.clientId, clientName: client?.name ?? "—", buyingHouseName,
-    cpoCode: cpo?.code ?? "—", period: b.period, status: b.status, invoiceCode: b.invoiceCode ?? null,
+    cpoCode: cpo?.code ?? "—", clientPurchaseOrderId: b.clientPurchaseOrderId,
+    period: b.period, status: b.status, invoiceCode: b.invoiceCode ?? null,
     forexSellingRate: Number(b.forexSellingRate), forexBuyingRate: Number(b.forexBuyingRate),
     bulkDiscountPct: Number(b.bulkDiscountPct), whtApplied: b.whtApplied,
     remittanceTaxPct: Number(b.remittanceTaxPct), salesTaxPct: Number(b.salesTaxPct),

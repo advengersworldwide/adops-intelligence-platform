@@ -48,6 +48,7 @@ export function CreateBillingDialog({ open, editBilling, onClose, onSuccess }: {
   useEffect(() => {
     if (open && editBilling) {
       setClientId(editBilling.clientId); setPeriod(editBilling.period);
+      setCpoId(editBilling.clientPurchaseOrderId);
       setForexSell(editBilling.forexSellingRate); setForexBuy(editBilling.forexBuyingRate);
       setBd(editBilling.bulkDiscountPct); setWht(editBilling.whtApplied); setNotes(editBilling.notes ?? "");
       setLines((editBilling.lines ?? []).map(l => ({

@@ -937,6 +937,7 @@ export interface BillingSummary {
   /** @nullable */
   buyingHouseName: string | null;
   cpoCode: string;
+  clientPurchaseOrderId: number;
   period: string;
   status: string;
   /** @nullable */
