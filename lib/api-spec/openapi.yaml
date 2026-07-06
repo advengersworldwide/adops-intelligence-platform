@@ -38,6 +38,10 @@ tags:
     description: Global cost model catalog
   - name: payment-terms
     description: Global payment terms catalog
+  - name: tax-settings
+    description: Global tax configuration
+  - name: billings
+    description: PO/event-based billing, summary and detail
 
 paths:
   /healthz:
@@ -1318,7 +1322,9 @@ paths:
       operationId: listClientPurchaseOrdersByClient
       tags: [purchase-orders]
       summary: List a client's purchase orders (for the PPO dropdown)
-      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: period, in: query, schema: { type: ["string", "null"] } }
       responses:
         "200":
           description: List
@@ -1332,6 +1338,8 @@ paths:
       operationId: listPartnerPurchaseOrders
       tags: [purchase-orders]
       summary: List partner purchase orders
+      parameters:
+        - { name: clientPurchaseOrderId, in: query, schema: { type: ["integer", "null"] } }
       responses:
         "200":
           description: List
@@ -1393,6 +1401,132 @@ paths:
       responses:
         "204": { description: Deleted }
         "404": { description: Not found }
+
+  # ── Tax Settings ──────────────────────────────────────────────────────────────
+  /tax-settings:
+    get:
+      operationId: getTaxSettings
+      tags: [tax-settings]
+      responses:
+        "200":
+          description: The global tax settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxSettings" }
+    put:
+      operationId: updateTaxSettings
+      tags: [tax-settings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TaxSettingsInput" }
+      responses:
+        "200":
+          description: Updated tax settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaxSettings" }
+
+  # ── Billings ──────────────────────────────────────────────────────────────────
+  /billings:
+    get:
+      operationId: listBillings
+      tags: [billings]
+      parameters:
+        - { name: clientId, in: query, schema: { type: ["integer", "null"] } }
+        - { name: period,   in: query, schema: { type: ["string", "null"] } }
+        - { name: status,   in: query, schema: { type: ["string", "null"] } }
+      responses:
+        "200":
+          description: List of billings
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/BillingSummary" }
+    post:
+      operationId: createBilling
+      tags: [billings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BillingInput" }
+      responses:
+        "201":
+          description: Created billing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BillingDetail" }
+
+  /billings/{id}:
+    get:
+      operationId: getBilling
+      tags: [billings]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Billing detail
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BillingDetail" }
+    patch:
+      operationId: updateBilling
+      tags: [billings]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BillingInput" }
+      responses:
+        "200":
+          description: Updated billing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BillingDetail" }
+    delete:
+      operationId: deleteBilling
+      tags: [billings]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+
+  /billings/{id}/status:
+    patch:
+      operationId: updateBillingStatus
+      tags: [billings]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/BillingStatusInput" }
+      responses:
+        "200":
+          description: Updated billing
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BillingDetail" }
+
+  /billings/{id}/invoice:
+    post:
+      operationId: generateBillingInvoice
+      tags: [billings]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Billing with generated invoiceCode
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/BillingDetail" }
+        "409": { description: Billing is not approved }
 
 components:
   schemas:
@@ -1456,8 +1590,7 @@ components:
         iban: { type: ["string", "null"] }
         salesTaxNumber: { type: ["string", "null"] }
         ntnNumber: { type: ["string", "null"] }
-        salesTaxPct: { type: ["number", "null"] }
-        withholdingTaxPct: { type: ["number", "null"] }
+        bulkDiscountPct: { type: ["number", "null"] }
         paymentTermsId: { type: ["integer", "null"] }
         paymentTermName: { type: ["string", "null"] }
         createdAt: { type: string }
@@ -1489,8 +1622,7 @@ components:
         iban: { type: ["string", "null"] }
         salesTaxNumber: { type: ["string", "null"] }
         ntnNumber: { type: ["string", "null"] }
-        salesTaxPct: { type: ["number", "null"] }
-        withholdingTaxPct: { type: ["number", "null"] }
+        bulkDiscountPct: { type: ["number", "null"] }
         paymentTermsId: { type: ["integer", "null"] }
 
     ClientEvent:
@@ -2345,9 +2477,9 @@ components:
 
     PaymentAllocation:
       type: object
-      required: [billId, amountApplied]
+      required: [billingId, amountApplied]
       properties:
-        billId:
+        billingId:
           type: integer
         amountApplied:
           type: number
@@ -2363,6 +2495,8 @@ components:
         chequeImageUrl:
           type: ["string", "null"]
         receiptUrl:
+          type: ["string", "null"]
+        paymentDate:
           type: ["string", "null"]
         allocations:
           type: array
@@ -2385,6 +2519,8 @@ components:
           type: ["string", "null"]
         receiptUrl:
           type: ["string", "null"]
+        paymentDate:
+          type: ["string", "null"]
         createdBy:
           type: ["string", "null"]
         createdAt:
@@ -2393,11 +2529,11 @@ components:
           type: array
           items:
             type: object
-            required: [billId, billNumber, amountApplied]
+            required: [billingId, billingLabel, amountApplied]
             properties:
-              billId:
+              billingId:
                 type: integer
-              billNumber:
+              billingLabel:
                 type: string
               amountApplied:
                 type: number
@@ -2440,3 +2576,115 @@ components:
       properties:
         url:
           type: string
+
+    # ── Tax Settings ──────────────────────────────────────────────────────────────
+    TaxSettings:
+      type: object
+      required: [id, remittanceTaxPct, salesTaxPct, withholdingTaxPct]
+      properties:
+        id: { type: integer }
+        remittanceTaxPct: { type: number }
+        salesTaxPct: { type: number }
+        withholdingTaxPct: { type: number }
+    TaxSettingsInput:
+      type: object
+      required: [remittanceTaxPct, salesTaxPct, withholdingTaxPct]
+      properties:
+        remittanceTaxPct: { type: number }
+        salesTaxPct: { type: number }
+        withholdingTaxPct: { type: number }
+
+    # ── Billings ──────────────────────────────────────────────────────────────────
+    BillingEventItemInput:
+      type: object
+      required: [clientEventId, eventName, billableRate, payoutRate, eventCount]
+      properties:
+        clientEventId: { type: integer }
+        eventName: { type: string }
+        billableRate: { type: number }
+        payoutRate: { type: number }
+        eventCount: { type: integer }
+    BillingLineInput:
+      type: object
+      required: [partnerId, items]
+      properties:
+        partnerId: { type: integer }
+        partnerPurchaseOrderId: { type: ["integer", "null"] }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/BillingEventItemInput" }
+    BillingInput:
+      type: object
+      required: [clientId, clientPurchaseOrderId, period, forexSellingRate, forexBuyingRate, bulkDiscountPct, whtApplied, lines]
+      properties:
+        clientId: { type: integer }
+        clientPurchaseOrderId: { type: integer }
+        period: { type: string }
+        forexSellingRate: { type: number }
+        forexBuyingRate: { type: number }
+        bulkDiscountPct: { type: number }
+        whtApplied: { type: boolean }
+        notes: { type: ["string", "null"] }
+        lines:
+          type: array
+          items: { $ref: "#/components/schemas/BillingLineInput" }
+    BillingStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [pending, approved, dispute] }
+    BillingEventItem:
+      type: object
+      required: [id, clientEventId, eventName, billableRate, payoutRate, eventCount]
+      properties:
+        id: { type: integer }
+        clientEventId: { type: integer }
+        eventName: { type: string }
+        billableRate: { type: number }
+        payoutRate: { type: number }
+        eventCount: { type: integer }
+    BillingLine:
+      type: object
+      required: [id, partnerId, partnerName, items]
+      properties:
+        id: { type: integer }
+        partnerId: { type: integer }
+        partnerName: { type: string }
+        partnerPurchaseOrderId: { type: ["integer", "null"] }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/BillingEventItem" }
+    BillingSummary:
+      type: object
+      required: [id, clientId, clientName, buyingHouseName, cpoCode, period, status,
+                 forexSellingRate, forexBuyingRate, bulkDiscountPct, whtApplied,
+                 remittanceTaxPct, salesTaxPct, withholdingTaxPct,
+                 totalInvoice, netReceivable, netMargin, lines, createdAt]
+      properties:
+        id: { type: integer }
+        clientId: { type: integer }
+        clientName: { type: string }
+        buyingHouseName: { type: ["string", "null"] }
+        cpoCode: { type: string }
+        period: { type: string }
+        status: { type: string }
+        invoiceCode: { type: ["string", "null"] }
+        forexSellingRate: { type: number }
+        forexBuyingRate: { type: number }
+        bulkDiscountPct: { type: number }
+        whtApplied: { type: boolean }
+        remittanceTaxPct: { type: number }
+        salesTaxPct: { type: number }
+        withholdingTaxPct: { type: number }
+        totalInvoice: { type: number }
+        netReceivable: { type: number }
+        netMargin: { type: number }
+        notes: { type: ["string", "null"] }
+        createdByName: { type: ["string", "null"] }
+        createdAt: { type: string }
+        lines:
+          type: array
+          items: { $ref: "#/components/schemas/BillingLine" }
+    BillingDetail:
+      allOf:
+        - $ref: "#/components/schemas/BillingSummary"
