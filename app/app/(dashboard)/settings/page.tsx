@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   useListCostModels, useCreateCostModel, useDeleteCostModel, getListCostModelsQueryKey,
   useListPaymentTerms, useCreatePaymentTerm, useDeletePaymentTerm, getListPaymentTermsQueryKey,
+  useGetTaxSettings, useUpdateTaxSettings, getGetTaxSettingsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PermissionGuard } from "@/components/PermissionGuard";
@@ -534,6 +535,9 @@ export default function SettingsPage() {
                 </div>
               </div>
 
+              {/* Tax Settings */}
+              <TaxSettingsCard />
+
               {/* About */}
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
@@ -916,6 +920,42 @@ function CatalogTab({
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+function TaxSettingsCard() {
+  const { data } = useGetTaxSettings();
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  const [form, setForm] = useState({ remittanceTaxPct: 0, salesTaxPct: 0, withholdingTaxPct: 0 });
+  useEffect(() => { if (data) setForm({
+    remittanceTaxPct: data.remittanceTaxPct, salesTaxPct: data.salesTaxPct, withholdingTaxPct: data.withholdingTaxPct,
+  }); }, [data]);
+  const save = useUpdateTaxSettings({ mutation: {
+    onSuccess: () => { qc.invalidateQueries({ queryKey: getGetTaxSettingsQueryKey() }); toast({ title: "Tax settings saved" }); },
+    onError: () => toast({ title: "Failed to save", variant: "destructive" }),
+  }});
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+      <div className="flex items-center gap-2 mb-1">
+        <Globe className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold text-foreground">Tax Settings</h2>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        {(["remittanceTaxPct", "salesTaxPct", "withholdingTaxPct"] as const).map(k => (
+          <label key={k} className="text-xs space-y-1">
+            <span className="text-muted-foreground">
+              {k === "remittanceTaxPct" ? "Remittance %" : k === "salesTaxPct" ? "Sales Tax %" : "Withholding %"}
+            </span>
+            <Input type="number" step="0.01" value={form[k]}
+              onChange={e => setForm(f => ({ ...f, [k]: parseFloat(e.target.value) || 0 }))} />
+          </label>
+        ))}
+      </div>
+      <Button size="sm" onClick={() => save.mutate({ data: form })} disabled={save.isPending}>
+        {save.isPending ? "Saving..." : "Save"}
+      </Button>
     </div>
   );
 }
