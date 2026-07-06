@@ -61,7 +61,8 @@ export const createClientBodyCodePrefixRegExp = new RegExp('^[A-Z0-9]{2,4}$');
 export const CreateClientBody = zod.object({
   "name": zod.string().min(1),
   "codePrefix": zod.string().min(createClientBodyCodePrefixMin).max(createClientBodyCodePrefixMax).regex(createClientBodyCodePrefixRegExp),
-  "buyingHouseId": zod.number().nullish()
+  "buyingHouseId": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish()
 })
 
 

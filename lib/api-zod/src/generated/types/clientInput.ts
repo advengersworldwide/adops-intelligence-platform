@@ -17,4 +17,6 @@ export interface ClientInput {
   codePrefix: string;
   /** @nullable */
   buyingHouseId?: number | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }
