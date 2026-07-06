@@ -75,8 +75,11 @@ async function nextPpoCode(partnerId: number): Promise<string> {
   return formatPoCode(prefix, now, Number(value) + 1);
 }
 
-export async function GET(): Promise<Response> {
-  const rows = await db.select().from(partnerPurchaseOrdersTable).orderBy(partnerPurchaseOrdersTable.createdAt);
+export async function GET(req: Request): Promise<Response> {
+  const cpoId = new URL(req.url).searchParams.get("clientPurchaseOrderId");
+  const rows = await db.select().from(partnerPurchaseOrdersTable)
+    .where(cpoId ? eq(partnerPurchaseOrdersTable.clientPurchaseOrderId, Number(cpoId)) : undefined)
+    .orderBy(partnerPurchaseOrdersTable.createdAt);
   return NextResponse.json(await Promise.all(rows.map(mapPpoRow)));
 }
 
