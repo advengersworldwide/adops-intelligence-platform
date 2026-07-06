@@ -5,8 +5,6 @@
  * AdOps Intelligence Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { BillingSummary } from './billingSummary';
 
-export interface PaymentAllocation {
-  billingId: number;
-  amountApplied: number;
-}
+export type BillingDetail = BillingSummary;

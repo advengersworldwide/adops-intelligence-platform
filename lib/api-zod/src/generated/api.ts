@@ -39,8 +39,7 @@ export const ListClientsResponseItem = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -92,8 +91,7 @@ export const GetClientResponse = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -132,8 +130,7 @@ export const UpdateClientBody = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "paymentTermsId": zod.number().nullish()
 })
 
@@ -156,8 +153,7 @@ export const UpdateClientResponse = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "salesTaxPct": zod.number().nullish(),
-  "withholdingTaxPct": zod.number().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -1213,11 +1209,12 @@ export const ListPaymentsResponseItem = zod.object({
   "notes": zod.string().nullish(),
   "chequeImageUrl": zod.string().nullish(),
   "receiptUrl": zod.string().nullish(),
+  "paymentDate": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "allocations": zod.array(zod.object({
-  "billId": zod.number(),
-  "billNumber": zod.string(),
+  "billingId": zod.number(),
+  "billingLabel": zod.string(),
   "amountApplied": zod.number()
 }))
 })
@@ -1229,8 +1226,9 @@ export const CreatePaymentBody = zod.object({
   "notes": zod.string().nullish(),
   "chequeImageUrl": zod.string().nullish(),
   "receiptUrl": zod.string().nullish(),
+  "paymentDate": zod.string().nullish(),
   "allocations": zod.array(zod.object({
-  "billId": zod.number(),
+  "billingId": zod.number(),
   "amountApplied": zod.number()
 }))
 })
@@ -1245,8 +1243,9 @@ export const UpdatePaymentBody = zod.object({
   "notes": zod.string().nullish(),
   "chequeImageUrl": zod.string().nullish(),
   "receiptUrl": zod.string().nullish(),
+  "paymentDate": zod.string().nullish(),
   "allocations": zod.array(zod.object({
-  "billId": zod.number(),
+  "billingId": zod.number(),
   "amountApplied": zod.number()
 }))
 })
@@ -1258,11 +1257,12 @@ export const UpdatePaymentResponse = zod.object({
   "notes": zod.string().nullish(),
   "chequeImageUrl": zod.string().nullish(),
   "receiptUrl": zod.string().nullish(),
+  "paymentDate": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "allocations": zod.array(zod.object({
-  "billId": zod.number(),
-  "billNumber": zod.string(),
+  "billingId": zod.number(),
+  "billingLabel": zod.string(),
   "amountApplied": zod.number()
 }))
 })
@@ -1451,6 +1451,10 @@ export const ListClientPurchaseOrdersByClientParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const ListClientPurchaseOrdersByClientQueryParams = zod.object({
+  "period": zod.coerce.string().nullish()
+})
+
 export const ListClientPurchaseOrdersByClientResponseItem = zod.object({
   "id": zod.number(),
   "code": zod.string(),
@@ -1473,6 +1477,10 @@ export const ListClientPurchaseOrdersByClientResponse = zod.array(ListClientPurc
 /**
  * @summary List partner purchase orders
  */
+export const ListPartnerPurchaseOrdersQueryParams = zod.object({
+  "clientPurchaseOrderId": zod.coerce.number().nullish()
+})
+
 export const ListPartnerPurchaseOrdersResponseItem = zod.object({
   "id": zod.number(),
   "code": zod.string(),
@@ -1679,6 +1687,300 @@ export const UpdatePartnerPurchaseOrderResponse = zod.object({
  */
 export const DeletePartnerPurchaseOrderParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+export const GetTaxSettingsResponse = zod.object({
+  "id": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "salesTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number()
+})
+
+
+export const UpdateTaxSettingsBody = zod.object({
+  "remittanceTaxPct": zod.number(),
+  "salesTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number()
+})
+
+export const UpdateTaxSettingsResponse = zod.object({
+  "id": zod.number(),
+  "remittanceTaxPct": zod.number(),
+  "salesTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number()
+})
+
+
+export const ListBillingsQueryParams = zod.object({
+  "clientId": zod.coerce.number().nullish(),
+  "period": zod.coerce.string().nullish(),
+  "status": zod.coerce.string().nullish()
+})
+
+export const ListBillingsResponseItem = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullable(),
+  "cpoCode": zod.string(),
+  "period": zod.string(),
+  "status": zod.string(),
+  "invoiceCode": zod.string().nullish(),
+  "forexSellingRate": zod.number(),
+  "forexBuyingRate": zod.number(),
+  "bulkDiscountPct": zod.number(),
+  "whtApplied": zod.boolean(),
+  "remittanceTaxPct": zod.number(),
+  "salesTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "totalInvoice": zod.number(),
+  "netReceivable": zod.number(),
+  "netMargin": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "lines": zod.array(zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number(),
+  "eventCount": zod.number()
+}))
+}))
+})
+export const ListBillingsResponse = zod.array(ListBillingsResponseItem)
+
+
+export const CreateBillingBody = zod.object({
+  "clientId": zod.number(),
+  "clientPurchaseOrderId": zod.number(),
+  "period": zod.string(),
+  "forexSellingRate": zod.number(),
+  "forexBuyingRate": zod.number(),
+  "bulkDiscountPct": zod.number(),
+  "whtApplied": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "lines": zod.array(zod.object({
+  "partnerId": zod.number(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "items": zod.array(zod.object({
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number(),
+  "eventCount": zod.number()
+}))
+}))
+})
+
+
+export const GetBillingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetBillingResponse = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullable(),
+  "cpoCode": zod.string(),
+  "period": zod.string(),
+  "status": zod.string(),
+  "invoiceCode": zod.string().nullish(),
+  "forexSellingRate": zod.number(),
+  "forexBuyingRate": zod.number(),
+  "bulkDiscountPct": zod.number(),
+  "whtApplied": zod.boolean(),
+  "remittanceTaxPct": zod.number(),
+  "salesTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "totalInvoice": zod.number(),
+  "netReceivable": zod.number(),
+  "netMargin": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "lines": zod.array(zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number(),
+  "eventCount": zod.number()
+}))
+}))
+})
+
+
+export const UpdateBillingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateBillingBody = zod.object({
+  "clientId": zod.number(),
+  "clientPurchaseOrderId": zod.number(),
+  "period": zod.string(),
+  "forexSellingRate": zod.number(),
+  "forexBuyingRate": zod.number(),
+  "bulkDiscountPct": zod.number(),
+  "whtApplied": zod.boolean(),
+  "notes": zod.string().nullish(),
+  "lines": zod.array(zod.object({
+  "partnerId": zod.number(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "items": zod.array(zod.object({
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number(),
+  "eventCount": zod.number()
+}))
+}))
+})
+
+export const UpdateBillingResponse = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullable(),
+  "cpoCode": zod.string(),
+  "period": zod.string(),
+  "status": zod.string(),
+  "invoiceCode": zod.string().nullish(),
+  "forexSellingRate": zod.number(),
+  "forexBuyingRate": zod.number(),
+  "bulkDiscountPct": zod.number(),
+  "whtApplied": zod.boolean(),
+  "remittanceTaxPct": zod.number(),
+  "salesTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "totalInvoice": zod.number(),
+  "netReceivable": zod.number(),
+  "netMargin": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "lines": zod.array(zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number(),
+  "eventCount": zod.number()
+}))
+}))
+})
+
+
+export const DeleteBillingParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+export const UpdateBillingStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateBillingStatusBody = zod.object({
+  "status": zod.enum(['pending', 'approved', 'dispute'])
+})
+
+export const UpdateBillingStatusResponse = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullable(),
+  "cpoCode": zod.string(),
+  "period": zod.string(),
+  "status": zod.string(),
+  "invoiceCode": zod.string().nullish(),
+  "forexSellingRate": zod.number(),
+  "forexBuyingRate": zod.number(),
+  "bulkDiscountPct": zod.number(),
+  "whtApplied": zod.boolean(),
+  "remittanceTaxPct": zod.number(),
+  "salesTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "totalInvoice": zod.number(),
+  "netReceivable": zod.number(),
+  "netMargin": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "lines": zod.array(zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number(),
+  "eventCount": zod.number()
+}))
+}))
+})
+
+
+export const GenerateBillingInvoiceParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GenerateBillingInvoiceResponse = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "clientName": zod.string(),
+  "buyingHouseName": zod.string().nullable(),
+  "cpoCode": zod.string(),
+  "period": zod.string(),
+  "status": zod.string(),
+  "invoiceCode": zod.string().nullish(),
+  "forexSellingRate": zod.number(),
+  "forexBuyingRate": zod.number(),
+  "bulkDiscountPct": zod.number(),
+  "whtApplied": zod.boolean(),
+  "remittanceTaxPct": zod.number(),
+  "salesTaxPct": zod.number(),
+  "withholdingTaxPct": zod.number(),
+  "totalInvoice": zod.number(),
+  "netReceivable": zod.number(),
+  "netMargin": zod.number(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "lines": zod.array(zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "clientEventId": zod.number(),
+  "eventName": zod.string(),
+  "billableRate": zod.number(),
+  "payoutRate": zod.number(),
+  "eventCount": zod.number()
+}))
+}))
 })
 
 

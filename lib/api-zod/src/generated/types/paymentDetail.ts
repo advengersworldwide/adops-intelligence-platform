@@ -18,6 +18,8 @@ export interface PaymentDetail {
   /** @nullable */
   receiptUrl?: string | null;
   /** @nullable */
+  paymentDate?: string | null;
+  /** @nullable */
   createdBy?: string | null;
   createdAt: string;
   allocations: PaymentDetailAllocationsItem[];

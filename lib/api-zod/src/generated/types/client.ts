@@ -41,9 +41,7 @@ export interface Client {
   /** @nullable */
   ntnNumber?: string | null;
   /** @nullable */
-  salesTaxPct?: number | null;
-  /** @nullable */
-  withholdingTaxPct?: number | null;
+  bulkDiscountPct?: number | null;
   /** @nullable */
   paymentTermsId?: number | null;
   /** @nullable */

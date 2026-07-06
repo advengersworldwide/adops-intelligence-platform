@@ -66,9 +66,7 @@ export interface Client {
   /** @nullable */
   ntnNumber?: string | null;
   /** @nullable */
-  salesTaxPct?: number | null;
-  /** @nullable */
-  withholdingTaxPct?: number | null;
+  bulkDiscountPct?: number | null;
   /** @nullable */
   paymentTermsId?: number | null;
   /** @nullable */
@@ -127,9 +125,7 @@ export interface ClientUpdate {
   /** @nullable */
   ntnNumber?: string | null;
   /** @nullable */
-  salesTaxPct?: number | null;
-  /** @nullable */
-  withholdingTaxPct?: number | null;
+  bulkDiscountPct?: number | null;
   /** @nullable */
   paymentTermsId?: number | null;
 }
@@ -795,7 +791,7 @@ export interface BillInput {
 }
 
 export interface PaymentAllocation {
-  billId: number;
+  billingId: number;
   amountApplied: number;
 }
 
@@ -807,12 +803,14 @@ export interface PaymentInput {
   chequeImageUrl?: string | null;
   /** @nullable */
   receiptUrl?: string | null;
+  /** @nullable */
+  paymentDate?: string | null;
   allocations: PaymentAllocation[];
 }
 
 export type PaymentDetailAllocationsItem = {
-  billId: number;
-  billNumber: string;
+  billingId: number;
+  billingLabel: string;
   amountApplied: number;
 };
 
@@ -826,6 +824,8 @@ export interface PaymentDetail {
   chequeImageUrl?: string | null;
   /** @nullable */
   receiptUrl?: string | null;
+  /** @nullable */
+  paymentDate?: string | null;
   /** @nullable */
   createdBy?: string | null;
   createdAt: string;
@@ -855,6 +855,109 @@ export interface CostResourceInput {
 export interface UploadResult {
   url: string;
 }
+
+export interface TaxSettings {
+  id: number;
+  remittanceTaxPct: number;
+  salesTaxPct: number;
+  withholdingTaxPct: number;
+}
+
+export interface TaxSettingsInput {
+  remittanceTaxPct: number;
+  salesTaxPct: number;
+  withholdingTaxPct: number;
+}
+
+export interface BillingEventItemInput {
+  clientEventId: number;
+  eventName: string;
+  billableRate: number;
+  payoutRate: number;
+  eventCount: number;
+}
+
+export interface BillingLineInput {
+  partnerId: number;
+  /** @nullable */
+  partnerPurchaseOrderId?: number | null;
+  items: BillingEventItemInput[];
+}
+
+export interface BillingInput {
+  clientId: number;
+  clientPurchaseOrderId: number;
+  period: string;
+  forexSellingRate: number;
+  forexBuyingRate: number;
+  bulkDiscountPct: number;
+  whtApplied: boolean;
+  /** @nullable */
+  notes?: string | null;
+  lines: BillingLineInput[];
+}
+
+export type BillingStatusInputStatus = typeof BillingStatusInputStatus[keyof typeof BillingStatusInputStatus];
+
+
+export const BillingStatusInputStatus = {
+  pending: 'pending',
+  approved: 'approved',
+  dispute: 'dispute',
+} as const;
+
+export interface BillingStatusInput {
+  status: BillingStatusInputStatus;
+}
+
+export interface BillingEventItem {
+  id: number;
+  clientEventId: number;
+  eventName: string;
+  billableRate: number;
+  payoutRate: number;
+  eventCount: number;
+}
+
+export interface BillingLine {
+  id: number;
+  partnerId: number;
+  partnerName: string;
+  /** @nullable */
+  partnerPurchaseOrderId?: number | null;
+  items: BillingEventItem[];
+}
+
+export interface BillingSummary {
+  id: number;
+  clientId: number;
+  clientName: string;
+  /** @nullable */
+  buyingHouseName: string | null;
+  cpoCode: string;
+  period: string;
+  status: string;
+  /** @nullable */
+  invoiceCode?: string | null;
+  forexSellingRate: number;
+  forexBuyingRate: number;
+  bulkDiscountPct: number;
+  whtApplied: boolean;
+  remittanceTaxPct: number;
+  salesTaxPct: number;
+  withholdingTaxPct: number;
+  totalInvoice: number;
+  netReceivable: number;
+  netMargin: number;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdByName?: string | null;
+  createdAt: string;
+  lines: BillingLine[];
+}
+
+export type BillingDetail = BillingSummary;
 
 export type ListBillingRecordsParams = {
 /**
@@ -981,5 +1084,34 @@ period?: string | null;
 
 export type UploadPaymentAttachmentBody = {
   file: Blob;
+};
+
+export type ListClientPurchaseOrdersByClientParams = {
+/**
+ * @nullable
+ */
+period?: string | null;
+};
+
+export type ListPartnerPurchaseOrdersParams = {
+/**
+ * @nullable
+ */
+clientPurchaseOrderId?: number | null;
+};
+
+export type ListBillingsParams = {
+/**
+ * @nullable
+ */
+clientId?: number | null;
+/**
+ * @nullable
+ */
+period?: string | null;
+/**
+ * @nullable
+ */
+status?: string | null;
 };
 

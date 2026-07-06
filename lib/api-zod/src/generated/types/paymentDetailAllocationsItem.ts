@@ -7,7 +7,7 @@
  */
 
 export type PaymentDetailAllocationsItem = {
-  billId: number;
-  billNumber: string;
+  billingId: number;
+  billingLabel: string;
   amountApplied: number;
 };

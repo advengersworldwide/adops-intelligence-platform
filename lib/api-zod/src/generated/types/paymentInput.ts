@@ -15,5 +15,7 @@ export interface PaymentInput {
   chequeImageUrl?: string | null;
   /** @nullable */
   receiptUrl?: string | null;
+  /** @nullable */
+  paymentDate?: string | null;
   allocations: PaymentAllocation[];
 }

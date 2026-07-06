@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PaymentAllocation {
-  billingId: number;
-  amountApplied: number;
-}
+export type ListPartnerPurchaseOrdersParams = {
+/**
+ * @nullable
+ */
+clientPurchaseOrderId?: number | null;
+};
