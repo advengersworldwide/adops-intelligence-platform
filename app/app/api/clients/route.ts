@@ -23,8 +23,7 @@ async function mapRow(r: typeof clientsTable.$inferSelect) {
     bankName: r.bankName, bankAccountNumber: r.bankAccountNumber, bankAddress: r.bankAddress,
     swiftCode: r.swiftCode, iban: r.iban,
     salesTaxNumber: r.salesTaxNumber, ntnNumber: r.ntnNumber,
-    salesTaxPct: r.salesTaxPct != null ? Number(r.salesTaxPct) : null,
-    withholdingTaxPct: r.withholdingTaxPct != null ? Number(r.withholdingTaxPct) : null,
+    bulkDiscountPct: r.bulkDiscountPct != null ? Number(r.bulkDiscountPct) : null,
     paymentTermsId: r.paymentTermsId ?? null, paymentTermName,
     createdAt: r.createdAt.toISOString(),
   };
@@ -45,6 +44,7 @@ export async function POST(req: Request): Promise<Response> {
     name: parsed.data.name,
     codePrefix: parsed.data.codePrefix,
     buyingHouseId: parsed.data.buyingHouseId ?? null,
+    bulkDiscountPct: parsed.data.bulkDiscountPct != null ? String(parsed.data.bulkDiscountPct) : null,
   }).returning();
   return NextResponse.json(GetClientResponse.parse(await mapRow(row)), { status: 201 });
 }

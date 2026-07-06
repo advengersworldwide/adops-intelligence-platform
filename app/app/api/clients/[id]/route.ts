@@ -23,8 +23,7 @@ async function mapRow(r: typeof clientsTable.$inferSelect) {
     bankName: r.bankName, bankAccountNumber: r.bankAccountNumber, bankAddress: r.bankAddress,
     swiftCode: r.swiftCode, iban: r.iban,
     salesTaxNumber: r.salesTaxNumber, ntnNumber: r.ntnNumber,
-    salesTaxPct: r.salesTaxPct != null ? Number(r.salesTaxPct) : null,
-    withholdingTaxPct: r.withholdingTaxPct != null ? Number(r.withholdingTaxPct) : null,
+    bulkDiscountPct: r.bulkDiscountPct != null ? Number(r.bulkDiscountPct) : null,
     paymentTermsId: r.paymentTermsId ?? null, paymentTermName,
     createdAt: r.createdAt.toISOString(),
   };
@@ -57,8 +56,7 @@ export async function PATCH(
   const updates: Record<string, unknown> = {};
   const textKeys = ["name","codePrefix","buyingHouseId","address","pocName","pocNumber","pocEmail","companyEmail","companyNumber","bankName","bankAccountNumber","bankAddress","swiftCode","iban","salesTaxNumber","ntnNumber","paymentTermsId"] as const;
   for (const k of textKeys) if ((d as Record<string, unknown>)[k] !== undefined) updates[k] = (d as Record<string, unknown>)[k];
-  if (d.salesTaxPct !== undefined) updates.salesTaxPct = d.salesTaxPct != null ? String(d.salesTaxPct) : null;
-  if (d.withholdingTaxPct !== undefined) updates.withholdingTaxPct = d.withholdingTaxPct != null ? String(d.withholdingTaxPct) : null;
+  if (d.bulkDiscountPct !== undefined) updates.bulkDiscountPct = d.bulkDiscountPct != null ? String(d.bulkDiscountPct) : null;
   const [row] = await db.update(clientsTable).set(updates).where(eq(clientsTable.id, p.data.id)).returning();
   if (!row) return NextResponse.json({ error: "Client not found" }, { status: 404 });
   return NextResponse.json(UpdateClientResponse.parse(await mapRow(row)));

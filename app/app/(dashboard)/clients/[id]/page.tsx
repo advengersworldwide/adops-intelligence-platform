@@ -51,8 +51,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
   const updateClient = useUpdateClient();
 
   const [kyc, setKyc] = useState<KycState>(EMPTY_KYC);
-  const [salesTaxPct, setSalesTaxPct] = useState("");
-  const [withholdingTaxPct, setWithholdingTaxPct] = useState("");
+  const [bulkDiscountPct, setBulkDiscountPct] = useState("");
   const [paymentTermsId, setPaymentTermsId] = useState("none");
   const [codePrefix, setCodePrefix] = useState("");
   const [saving, setSaving] = useState(false);
@@ -60,8 +59,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
   useEffect(() => {
     if (!client) return;
     setKyc(kycFromRecord(client));
-    setSalesTaxPct(client.salesTaxPct != null ? String(client.salesTaxPct) : "");
-    setWithholdingTaxPct(client.withholdingTaxPct != null ? String(client.withholdingTaxPct) : "");
+    setBulkDiscountPct(client.bulkDiscountPct != null ? String(client.bulkDiscountPct) : "");
     setPaymentTermsId(client.paymentTermsId != null ? String(client.paymentTermsId) : "none");
     setCodePrefix(client.codePrefix ?? "");
   }, [client]);
@@ -77,8 +75,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
       await updateClient.mutateAsync({ id: clientId, data: {
         ...kycToPayload(kyc),
         codePrefix,
-        salesTaxPct: salesTaxPct.trim() !== "" ? parseFloat(salesTaxPct) : null,
-        withholdingTaxPct: withholdingTaxPct.trim() !== "" ? parseFloat(withholdingTaxPct) : null,
+        bulkDiscountPct: bulkDiscountPct.trim() !== "" ? parseFloat(bulkDiscountPct) : null,
         paymentTermsId: paymentTermsId === "none" ? null : parseInt(paymentTermsId, 10),
       }});
       await qc.invalidateQueries({ queryKey: getGetClientQueryKey(clientId) });
@@ -101,14 +98,9 @@ function DetailsTab({ clientId }: { clientId: number }) {
         <h3 className="text-sm font-semibold text-foreground">Tax Rates & Payment</h3>
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Sales Tax %</span>
-            <Input type="number" step="0.01" value={salesTaxPct} disabled={!canEdit}
-              onChange={e => setSalesTaxPct(e.target.value)} placeholder="e.g. 13" />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Withholding Tax %</span>
-            <Input type="number" step="0.01" value={withholdingTaxPct} disabled={!canEdit}
-              onChange={e => setWithholdingTaxPct(e.target.value)} placeholder="e.g. 10" />
+            <span className="text-xs font-medium text-muted-foreground">Bulk Discount %</span>
+            <Input type="number" step="0.01" min={0} value={bulkDiscountPct} disabled={!canEdit}
+              onChange={e => setBulkDiscountPct(e.target.value)} placeholder="e.g. 5" />
           </label>
           <div className="space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">Payment Terms</span>
