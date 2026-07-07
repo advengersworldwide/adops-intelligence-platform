@@ -96,7 +96,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
       </div>
       <div className="rounded-lg border border-border bg-card p-5 space-y-4">
         <h3 className="text-sm font-semibold text-foreground">Tax Rates & Payment</h3>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <label className="block space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">Bulk Discount %</span>
             <Input type="number" step="0.01" min={0} value={bulkDiscountPct} disabled={!canEdit}
