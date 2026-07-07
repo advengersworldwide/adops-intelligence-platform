@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { Plus, Trash2, Pencil, Upload } from "lucide-react";
 import {
   useListPayments, useCreatePayment, useUpdatePayment, useDeletePayment,
-  useListBills,
+  useListBillings,
   getListPaymentsQueryKey,
 } from "@workspace/api-client-react";
 import type { PaymentDetail } from "@workspace/api-client-react";
@@ -29,7 +29,7 @@ function fmtNum(n: number | null | undefined, d = 2) {
 }
 
 const allocationSchema = z.object({
-  billId: z.number(),
+  billingId: z.number(),
   amountApplied: z.number().min(0),
 });
 
@@ -38,6 +38,7 @@ const paymentSchema = z.object({
   notes: z.string().optional(),
   chequeImageUrl: z.string().optional(),
   receiptUrl: z.string().optional(),
+  paymentDate: z.string().optional(),
   allocations: z.array(allocationSchema).min(1, "Select at least one bill"),
 });
 type PaymentForm = z.infer<typeof paymentSchema>;
@@ -82,7 +83,7 @@ export default function PaymentsPage() {
           <table className="w-full min-w-max">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {["#", "Mode", "Total (PKR)", "Bills", "Notes", "Date", "Attachments", "Actions"].map(h => (
+                {["#", "Mode", "Total (PKR)", "Billings", "Notes", "Date Received", "Created", "Attachments", "Actions"].map(h => (
                   <th key={h} className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -91,11 +92,11 @@ export default function PaymentsPage() {
               {isLoading ? (
                 [...Array(3)].map((_, i) => (
                   <tr key={i} className="border-b border-border">
-                    {[...Array(8)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
+                    {[...Array(9)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
                   </tr>
                 ))
               ) : !payments?.length ? (
-                <tr><td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground">No payments yet</td></tr>
+                <tr><td colSpan={9} className="px-5 py-10 text-center text-sm text-muted-foreground">No payments yet</td></tr>
               ) : payments.map((p, i) => (
                 <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20">
                   <td className="px-3 py-2 text-xs text-muted-foreground">{i + 1}</td>
@@ -103,12 +104,13 @@ export default function PaymentsPage() {
                   <td className="px-3 py-2 text-xs font-semibold">{fmtNum(p.totalAmount)}</td>
                   <td className="px-3 py-2 text-xs">
                     {p.allocations.map(a => (
-                      <div key={a.billId} className="text-[10px]">
-                        {a.billNumber}: PKR {fmtNum(a.amountApplied)}
+                      <div key={a.billingId} className="text-[10px]">
+                        {a.billingLabel}: PKR {fmtNum(a.amountApplied)}
                       </div>
                     ))}
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[160px] truncate">{p.notes ?? "—"}</td>
+                  <td className="px-3 py-2 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
                   <td className="px-3 py-2 text-xs">{new Date(p.createdAt).toLocaleDateString()}</td>
                   <td className="px-3 py-2 text-xs">
                     {p.chequeImageUrl && <a href={p.chequeImageUrl} target="_blank" rel="noreferrer" className="text-primary underline mr-2 text-[10px]">Cheque</a>}
@@ -150,7 +152,8 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
   onSuccess: () => void;
 }) {
   const { toast } = useToast();
-  const { data: bills } = useListBills({});
+  const { data: billings } = useListBillings({});
+  const { data: payments } = useListPayments();
   const chequeRef = useRef<HTMLInputElement>(null);
   const receiptRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -163,26 +166,40 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
       notes: editPayment?.notes ?? "",
       chequeImageUrl: editPayment?.chequeImageUrl ?? "",
       receiptUrl: editPayment?.receiptUrl ?? "",
-      allocations: editPayment?.allocations.map(a => ({ billId: a.billId, amountApplied: a.amountApplied })) ?? [],
+      paymentDate: editPayment?.paymentDate ?? "",
+      allocations: editPayment?.allocations.map(a => ({ billingId: a.billingId, amountApplied: a.amountApplied })) ?? [],
     },
   });
 
   const mode = form.watch("mode");
   const allocations = form.watch("allocations");
 
-  const toggleBill = (billId: number, totalPending: number) => {
+  // Sum of amounts already allocated to each billing across all OTHER payments
+  // (excluding the payment currently being edited, so its own allocations don't
+  // count against itself and reduce the pending amount shown to the user).
+  const allocatedElsewhereByBilling = new Map<number, number>();
+  for (const pmt of payments ?? []) {
+    if (isEdit && pmt.id === editPayment.id) continue;
+    for (const a of pmt.allocations) {
+      allocatedElsewhereByBilling.set(a.billingId, (allocatedElsewhereByBilling.get(a.billingId) ?? 0) + a.amountApplied);
+    }
+  }
+
+  const settleableBillings = (billings ?? []).filter(b => b.status === "approved");
+
+  const toggleBilling = (billingId: number, pending: number) => {
     const current = form.getValues("allocations");
-    const exists = current.find(a => a.billId === billId);
+    const exists = current.find(a => a.billingId === billingId);
     if (exists) {
-      form.setValue("allocations", current.filter(a => a.billId !== billId));
+      form.setValue("allocations", current.filter(a => a.billingId !== billingId));
     } else {
-      form.setValue("allocations", [...current, { billId, amountApplied: totalPending }]);
+      form.setValue("allocations", [...current, { billingId, amountApplied: pending }]);
     }
   };
 
-  const updateAllocation = (billId: number, amount: number) => {
+  const updateAllocation = (billingId: number, amount: number) => {
     const current = form.getValues("allocations");
-    form.setValue("allocations", current.map(a => a.billId === billId ? { ...a, amountApplied: amount } : a));
+    form.setValue("allocations", current.map(a => a.billingId === billingId ? { ...a, amountApplied: amount } : a));
   };
 
   const handleFileUpload = async (type: "cheque" | "receipt", file: File) => {
@@ -218,6 +235,7 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
       notes: data.notes ?? null,
       chequeImageUrl: data.chequeImageUrl || null,
       receiptUrl: data.receiptUrl || null,
+      paymentDate: data.paymentDate || null,
       allocations: data.allocations,
     };
     if (isEdit) {
@@ -285,20 +303,29 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
               </FormItem>
             )} />
 
+            <FormField control={form.control} name="paymentDate" render={({ field }) => (
+              <FormItem><FormLabel>Date Received</FormLabel>
+                <FormControl><Input type="date" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+
             <div>
-              <p className="text-sm font-medium mb-2">Bills to settle</p>
+              <p className="text-sm font-medium mb-2">Billings to settle</p>
               <div className="border border-border rounded-lg divide-y divide-border max-h-56 overflow-y-auto">
-                {(bills ?? []).filter(b => b.status !== "paid").map(bill => {
-                  const alloc = allocations.find(a => a.billId === bill.id);
+                {settleableBillings.map(billing => {
+                  const alloc = allocations.find(a => a.billingId === billing.id);
+                  const pending = billing.netReceivable - (allocatedElsewhereByBilling.get(billing.id) ?? 0);
+                  const label = billing.invoiceCode ?? `Billing #${billing.id}`;
                   return (
-                    <div key={bill.id} className="px-3 py-2">
+                    <div key={billing.id} className="px-3 py-2">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <input type="checkbox" checked={!!alloc}
-                            onChange={() => toggleBill(bill.id, bill.totalPending)}
+                            onChange={() => toggleBilling(billing.id, pending)}
                             className="cursor-pointer" />
-                          <span className="text-xs font-semibold">{bill.billNumber}</span>
-                          <span className="text-[10px] text-muted-foreground">Pending: PKR {fmtNum(bill.totalPending)}</span>
+                          <span className="text-xs font-semibold">{label}</span>
+                          <span className="text-[10px] text-muted-foreground">Pending: PKR {fmtNum(pending)}</span>
                         </div>
                         {alloc && (
                           <Input
@@ -306,7 +333,7 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
                             step="0.01"
                             className="w-32 h-6 text-xs"
                             value={alloc.amountApplied}
-                            onChange={e => updateAllocation(bill.id, parseFloat(e.target.value) || 0)}
+                            onChange={e => updateAllocation(billing.id, parseFloat(e.target.value) || 0)}
                           />
                         )}
                       </div>
