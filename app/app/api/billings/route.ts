@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import {
   db, billingsTable, billingLinesTable, billingEventItemsTable,
   clientsTable, buyingHousesTable, clientPurchaseOrdersTable, partnersTable,
-  usersTable, taxSettingsTable,
+  usersTable, taxSettingsTable, paymentTermsTable,
 } from "@workspace/db";
 import { CreateBillingBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
@@ -15,13 +15,20 @@ type BillingRow = typeof billingsTable.$inferSelect;
 
 // Full billing shape used by both list (BillingSummary) and detail (BillingDetail).
 export async function mapBilling(b: BillingRow) {
-  const [client] = await db.select({ name: clientsTable.name, buyingHouseId: clientsTable.buyingHouseId })
-    .from(clientsTable).where(eq(clientsTable.id, b.clientId));
+  const [client] = await db.select({
+    name: clientsTable.name, buyingHouseId: clientsTable.buyingHouseId, paymentTermsId: clientsTable.paymentTermsId,
+  }).from(clientsTable).where(eq(clientsTable.id, b.clientId));
   let buyingHouseName: string | null = null;
   if (client?.buyingHouseId != null) {
     const [bh] = await db.select({ name: buyingHousesTable.name })
       .from(buyingHousesTable).where(eq(buyingHousesTable.id, client.buyingHouseId));
     buyingHouseName = bh?.name ?? null;
+  }
+  let paymentTerms: string | null = null;
+  if (client?.paymentTermsId != null) {
+    const [pt] = await db.select({ name: paymentTermsTable.name })
+      .from(paymentTermsTable).where(eq(paymentTermsTable.id, client.paymentTermsId));
+    paymentTerms = pt?.name ?? null;
   }
   const [cpo] = await db.select({ code: clientPurchaseOrdersTable.code })
     .from(clientPurchaseOrdersTable).where(eq(clientPurchaseOrdersTable.id, b.clientPurchaseOrderId));
@@ -66,7 +73,9 @@ export async function mapBilling(b: BillingRow) {
     remittanceTaxPct: Number(b.remittanceTaxPct), salesTaxPct: Number(b.salesTaxPct),
     withholdingTaxPct: Number(b.withholdingTaxPct),
     totalInvoice, netReceivable, netMargin,
-    notes: b.notes ?? null, createdByName, createdAt: b.createdAt.toISOString(), lines,
+    notes: b.notes ?? null, createdByName, createdAt: b.createdAt.toISOString(),
+    invoiceGeneratedAt: b.invoiceGeneratedAt ? b.invoiceGeneratedAt.toISOString() : null,
+    paymentTerms, lines,
   };
 }
 

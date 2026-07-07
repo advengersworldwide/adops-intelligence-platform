@@ -34,5 +34,9 @@ export interface BillingSummary {
   /** @nullable */
   createdByName?: string | null;
   createdAt: string;
+  /** @nullable */
+  invoiceGeneratedAt?: string | null;
+  /** @nullable */
+  paymentTerms?: string | null;
   lines: BillingLine[];
 }

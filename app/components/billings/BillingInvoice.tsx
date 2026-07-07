@@ -49,7 +49,7 @@ export const BillingInvoice = forwardRef<HTMLDivElement, { b: BillingDetail }>(
             <p className="mt-1 text-sm">
               Invoice No: <span className="font-semibold">{b.invoiceCode ?? "—"}</span>
             </p>
-            <p className="text-sm">Date: {fmt(b.createdAt)}</p>
+            <p className="text-sm">Date: {fmt(b.invoiceGeneratedAt ?? b.createdAt)}</p>
           </div>
         </div>
 
@@ -127,6 +127,8 @@ export const BillingInvoice = forwardRef<HTMLDivElement, { b: BillingDetail }>(
             <p className="mt-1" style={{ whiteSpace: "pre-wrap", lineHeight: "1.6" }}>{b.notes}</p>
           </div>
         )}
+
+        <p className="mt-6 text-xs" style={{ color: "#4b5563" }}>Payment Terms: {b.paymentTerms ?? "As agreed"}</p>
 
         <p className="mt-6 text-xs" style={{ color: "#4b5563" }}>
           This is a system generated document and does not require a physical signature.

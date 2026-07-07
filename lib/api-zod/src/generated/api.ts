@@ -1742,6 +1742,8 @@ export const ListBillingsResponseItem = zod.object({
   "notes": zod.string().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
+  "invoiceGeneratedAt": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
@@ -1810,6 +1812,8 @@ export const GetBillingResponse = zod.object({
   "notes": zod.string().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
+  "invoiceGeneratedAt": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
@@ -1876,6 +1880,8 @@ export const UpdateBillingResponse = zod.object({
   "notes": zod.string().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
+  "invoiceGeneratedAt": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
@@ -1929,6 +1935,8 @@ export const UpdateBillingStatusResponse = zod.object({
   "notes": zod.string().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
+  "invoiceGeneratedAt": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
@@ -1973,6 +1981,8 @@ export const GenerateBillingInvoiceResponse = zod.object({
   "notes": zod.string().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
+  "invoiceGeneratedAt": zod.string().nullish(),
+  "paymentTerms": zod.string().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),

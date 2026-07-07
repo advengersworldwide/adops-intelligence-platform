@@ -2684,6 +2684,8 @@ components:
         notes: { type: ["string", "null"] }
         createdByName: { type: ["string", "null"] }
         createdAt: { type: string }
+        invoiceGeneratedAt: { type: ["string", "null"] }
+        paymentTerms: { type: ["string", "null"] }
         lines:
           type: array
           items: { $ref: "#/components/schemas/BillingLine" }
