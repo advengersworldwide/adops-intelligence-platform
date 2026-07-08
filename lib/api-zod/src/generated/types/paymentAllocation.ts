@@ -8,5 +8,6 @@
 
 export interface PaymentAllocation {
   billingId: number;
+  /** @minimum 0 */
   amountApplied: number;
 }

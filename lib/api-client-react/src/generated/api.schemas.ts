@@ -794,6 +794,7 @@ export interface BillInput {
 
 export interface PaymentAllocation {
   billingId: number;
+  /** @minimum 0 */
   amountApplied: number;
 }
 
@@ -813,6 +814,7 @@ export interface PaymentInput {
 export type PaymentDetailAllocationsItem = {
   billingId: number;
   billingLabel: string;
+  /** @minimum 0 */
   amountApplied: number;
 };
 

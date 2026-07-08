@@ -1203,6 +1203,10 @@ export const DeleteBillParams = zod.object({
 /**
  * @summary List all payments
  */
+export const listPaymentsResponseAllocationsItemAmountAppliedMin = 0;
+
+
+
 export const ListPaymentsResponseItem = zod.object({
   "id": zod.number(),
   "mode": zod.string(),
@@ -1216,10 +1220,14 @@ export const ListPaymentsResponseItem = zod.object({
   "allocations": zod.array(zod.object({
   "billingId": zod.number(),
   "billingLabel": zod.string(),
-  "amountApplied": zod.number()
+  "amountApplied": zod.number().min(listPaymentsResponseAllocationsItemAmountAppliedMin)
 }))
 })
 export const ListPaymentsResponse = zod.array(ListPaymentsResponseItem)
+
+
+export const createPaymentBodyAllocationsItemAmountAppliedMin = 0;
+
 
 
 export const CreatePaymentBody = zod.object({
@@ -1230,7 +1238,7 @@ export const CreatePaymentBody = zod.object({
   "paymentDate": zod.string().nullish(),
   "allocations": zod.array(zod.object({
   "billingId": zod.number(),
-  "amountApplied": zod.number()
+  "amountApplied": zod.number().min(createPaymentBodyAllocationsItemAmountAppliedMin)
 }))
 })
 
@@ -1238,6 +1246,10 @@ export const CreatePaymentBody = zod.object({
 export const UpdatePaymentParams = zod.object({
   "id": zod.coerce.number()
 })
+
+export const updatePaymentBodyAllocationsItemAmountAppliedMin = 0;
+
+
 
 export const UpdatePaymentBody = zod.object({
   "mode": zod.string(),
@@ -1247,9 +1259,13 @@ export const UpdatePaymentBody = zod.object({
   "paymentDate": zod.string().nullish(),
   "allocations": zod.array(zod.object({
   "billingId": zod.number(),
-  "amountApplied": zod.number()
+  "amountApplied": zod.number().min(updatePaymentBodyAllocationsItemAmountAppliedMin)
 }))
 })
+
+export const updatePaymentResponseAllocationsItemAmountAppliedMin = 0;
+
+
 
 export const UpdatePaymentResponse = zod.object({
   "id": zod.number(),
@@ -1264,7 +1280,7 @@ export const UpdatePaymentResponse = zod.object({
   "allocations": zod.array(zod.object({
   "billingId": zod.number(),
   "billingLabel": zod.string(),
-  "amountApplied": zod.number()
+  "amountApplied": zod.number().min(updatePaymentResponseAllocationsItemAmountAppliedMin)
 }))
 })
 

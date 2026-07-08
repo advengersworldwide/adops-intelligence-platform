@@ -2482,8 +2482,7 @@ components:
       properties:
         billingId:
           type: integer
-        amountApplied:
-          type: number
+        amountApplied: { type: number, minimum: 0 }
 
     PaymentInput:
       type: object
@@ -2536,8 +2535,7 @@ components:
                 type: integer
               billingLabel:
                 type: string
-              amountApplied:
-                type: number
+              amountApplied: { type: number, minimum: 0 }
 
     CostResource:
       type: object

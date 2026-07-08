@@ -9,5 +9,6 @@
 export type PaymentDetailAllocationsItem = {
   billingId: number;
   billingLabel: string;
+  /** @minimum 0 */
   amountApplied: number;
 };

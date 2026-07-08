@@ -31,7 +31,7 @@ export async function POST(req: Request): Promise<Response> {
     if (a.amountApplied > remaining + 0.01) {
       const [bl] = await db.select().from(billingsTable).where(eq(billingsTable.id, a.billingId));
       const label = bl?.invoiceCode ?? `#${a.billingId}`;
-      return NextResponse.json({ error: `Payment for ${label} exceeds remaining PKR ${remaining}` }, { status: 400 });
+      return NextResponse.json({ error: `Payment for ${label} exceeds remaining PKR ${remaining.toFixed(2)}` }, { status: 400 });
     }
   }
   try {
