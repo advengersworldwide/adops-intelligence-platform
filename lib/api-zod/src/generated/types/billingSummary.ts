@@ -28,6 +28,7 @@ export interface BillingSummary {
   withholdingTaxPct: number;
   totalInvoice: number;
   netReceivable: number;
+  amountPaid: number;
   netMargin: number;
   /** @nullable */
   notes?: string | null;

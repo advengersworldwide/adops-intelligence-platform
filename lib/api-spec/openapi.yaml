@@ -2660,7 +2660,7 @@ components:
       required: [id, clientId, clientName, buyingHouseName, cpoCode, clientPurchaseOrderId, period, status,
                  forexSellingRate, forexBuyingRate, bulkDiscountPct, whtApplied,
                  remittanceTaxPct, salesTaxPct, withholdingTaxPct,
-                 totalInvoice, netReceivable, netMargin, lines, createdAt]
+                 totalInvoice, netReceivable, amountPaid, netMargin, lines, createdAt]
       properties:
         id: { type: integer }
         clientId: { type: integer }
@@ -2680,6 +2680,7 @@ components:
         withholdingTaxPct: { type: number }
         totalInvoice: { type: number }
         netReceivable: { type: number }
+        amountPaid: { type: number }
         netMargin: { type: number }
         notes: { type: ["string", "null"] }
         createdByName: { type: ["string", "null"] }

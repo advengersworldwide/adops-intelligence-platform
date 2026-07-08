@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import {
   db, billingsTable, billingLinesTable, billingEventItemsTable,
   clientsTable, buyingHousesTable, clientPurchaseOrdersTable, partnersTable,
-  usersTable, taxSettingsTable, paymentTermsTable,
+  usersTable, taxSettingsTable, paymentTermsTable, paymentBillingsTable,
 } from "@workspace/db";
 import { CreateBillingBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
@@ -64,6 +64,10 @@ export async function mapBilling(b: BillingRow) {
     });
   }
 
+  const paidRows = await db.select({ amt: paymentBillingsTable.amountApplied })
+    .from(paymentBillingsTable).where(eq(paymentBillingsTable.billingId, b.id));
+  const amountPaid = paidRows.reduce((s, r) => s + Number(r.amt), 0);
+
   return {
     id: b.id, clientId: b.clientId, clientName: client?.name ?? "—", buyingHouseName,
     cpoCode: cpo?.code ?? "—", clientPurchaseOrderId: b.clientPurchaseOrderId,
@@ -72,11 +76,29 @@ export async function mapBilling(b: BillingRow) {
     bulkDiscountPct: Number(b.bulkDiscountPct), whtApplied: b.whtApplied,
     remittanceTaxPct: Number(b.remittanceTaxPct), salesTaxPct: Number(b.salesTaxPct),
     withholdingTaxPct: Number(b.withholdingTaxPct),
-    totalInvoice, netReceivable, netMargin,
+    totalInvoice, netReceivable, amountPaid, netMargin,
     notes: b.notes ?? null, createdByName, createdAt: b.createdAt.toISOString(),
     invoiceGeneratedAt: b.invoiceGeneratedAt ? b.invoiceGeneratedAt.toISOString() : null,
     paymentTerms, lines,
   };
+}
+
+// Net receivable (amount owed) for a single billing, computed from its snapshot rates + lines.
+export async function billingNetReceivable(billingId: number): Promise<number> {
+  const [b] = await db.select().from(billingsTable).where(eq(billingsTable.id, billingId));
+  if (!b) return 0;
+  const lineRows = await db.select().from(billingLinesTable).where(eq(billingLinesTable.billingId, billingId));
+  let net = 0;
+  for (const ln of lineRows) {
+    const items = await db.select().from(billingEventItemsTable).where(eq(billingEventItemsTable.billingLineId, ln.id));
+    net += computeBilling({
+      events: items.map(it => ({ eventCount: it.eventCount, billableRate: Number(it.billableRate), payoutRate: Number(it.payoutRate) })),
+      forexSellingRate: Number(b.forexSellingRate), forexBuyingRate: Number(b.forexBuyingRate),
+      remittanceTaxPct: Number(b.remittanceTaxPct), salesTaxPct: Number(b.salesTaxPct),
+      withholdingTaxPct: Number(b.withholdingTaxPct), bulkDiscountPct: Number(b.bulkDiscountPct), whtApplied: b.whtApplied,
+    }).netReceivable;
+  }
+  return net;
 }
 
 export async function GET(req: Request): Promise<Response> {

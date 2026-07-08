@@ -72,7 +72,7 @@ async function nextPpoCode(partnerId: number): Promise<string> {
     .from(partnersTable).where(eq(partnersTable.id, partnerId));
   const prefix = partner?.codePrefix?.trim();
   if (!prefix) throw new Error("Set a PO code prefix for this partner first");
-  return formatPoCode(prefix, now, Number(value) + 1);
+  return "PPO-" + formatPoCode(prefix, now, Number(value) + 1);
 }
 
 export async function GET(req: Request): Promise<Response> {

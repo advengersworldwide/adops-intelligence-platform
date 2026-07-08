@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { db, paymentsTable, paymentBillingsTable, billingsTable } from "@workspace/db";
 import { UpdatePaymentParams, UpdatePaymentBody, DeletePaymentParams, UpdatePaymentResponse } from "@workspace/api-zod";
+import { billingNetReceivable } from "../../billings/route";
 
 export const runtime = "nodejs";
 
@@ -22,6 +23,19 @@ export async function PATCH(
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = UpdatePaymentBody.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
+  for (const a of parsed.data.allocations) {
+    const netReceivable = await billingNetReceivable(a.billingId);
+    const otherPaidRows = await db.select({ amt: paymentBillingsTable.amountApplied })
+      .from(paymentBillingsTable)
+      .where(and(eq(paymentBillingsTable.billingId, a.billingId), ne(paymentBillingsTable.paymentId, p.data.id)));
+    const otherPaid = otherPaidRows.reduce((s, r) => s + Number(r.amt), 0);
+    const remaining = netReceivable - otherPaid;
+    if (a.amountApplied > remaining + 0.01) {
+      const [bl] = await db.select().from(billingsTable).where(eq(billingsTable.id, a.billingId));
+      const label = bl?.invoiceCode ?? `#${a.billingId}`;
+      return NextResponse.json({ error: `Payment for ${label} exceeds remaining PKR ${remaining}` }, { status: 400 });
+    }
+  }
   try {
     const totalAmount = parsed.data.allocations.reduce((s, a) => s + a.amountApplied, 0);
     const [payment] = await db.update(paymentsTable).set({ mode: parsed.data.mode, totalAmount: String(totalAmount), notes: parsed.data.notes ?? null, chequeImageUrl: parsed.data.chequeImageUrl ?? null, receiptUrl: parsed.data.receiptUrl ?? null, paymentDate: parsed.data.paymentDate ?? null }).where(eq(paymentsTable.id, p.data.id)).returning();

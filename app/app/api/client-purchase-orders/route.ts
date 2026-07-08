@@ -49,7 +49,7 @@ async function nextCpoCode(clientId: number): Promise<string> {
     .from(clientsTable).where(eq(clientsTable.id, clientId));
   const prefix = client?.codePrefix?.trim();
   if (!prefix) throw new Error("Set a PO code prefix for this client first");
-  return formatPoCode(prefix, now, Number(value) + 1);
+  return "CPO-" + formatPoCode(prefix, now, Number(value) + 1);
 }
 
 export async function GET(): Promise<Response> {
