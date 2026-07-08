@@ -9,6 +9,7 @@ import type { BillingSummary, BillingDetail } from "@workspace/api-client-react"
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { computeBilling } from "@/lib/compute-billing";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,28 @@ import { CreateBillingDialog } from "@/components/billings/CreateBillingDialog";
 import { StatusSelect } from "@/components/billings/StatusSelect";
 
 function fmt(n: number) { return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+type PayStatus = "paid" | "partial" | "unpaid";
+
+const PAY_STATUS_STYLES: Record<PayStatus, string> = {
+  paid: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+  partial: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+  unpaid: "bg-muted text-muted-foreground",
+};
+
+const PAY_STATUS_LABELS: Record<PayStatus, string> = {
+  paid: "Paid",
+  partial: "Partial",
+  unpaid: "Unpaid",
+};
+
+function paymentProgress(b: BillingSummary) {
+  const paid = b.amountPaid;
+  const pending = Math.max(0, b.netReceivable - b.amountPaid);
+  const pct = b.netReceivable > 0 ? Math.min(100, (b.amountPaid / b.netReceivable) * 100) : 0;
+  const payStatus: PayStatus = pending <= 0.01 && b.netReceivable > 0 ? "paid" : b.amountPaid > 0 ? "partial" : "unpaid";
+  return { paid, pending, pct, payStatus };
+}
 
 function lineCompute(b: BillingSummary, line: BillingSummary["lines"][number]) {
   return computeBilling({
@@ -62,7 +85,7 @@ export default function BillingSummaryPage() {
           <table className="w-full min-w-max">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {["", "Client", "Agency", "Month", "CPO", "Total Invoice (PKR)", "Status", "Actions"].map(h => (
+                {["", "Client", "Agency", "Month", "CPO", "Total Invoice (PKR)", "Paid (PKR)", "Pending (PKR)", "Progress", "Status", "Actions"].map(h => (
                   <th key={h} className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -70,10 +93,10 @@ export default function BillingSummaryPage() {
             <tbody>
               {isLoading ? (
                 [...Array(3)].map((_, i) => (
-                  <tr key={i} className="border-b border-border">{[...Array(8)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>
+                  <tr key={i} className="border-b border-border">{[...Array(11)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>
                 ))
               ) : !billings?.length ? (
-                <tr><td colSpan={8} className="px-5 py-10 text-center text-sm text-muted-foreground">No billings yet</td></tr>
+                <tr><td colSpan={11} className="px-5 py-10 text-center text-sm text-muted-foreground">No billings yet</td></tr>
               ) : billings.map(b => (
                 <BillingGroup key={b.id} b={b} expanded={expanded === b.id}
                   onToggle={() => setExpanded(expanded === b.id ? null : b.id)}
@@ -95,6 +118,8 @@ export default function BillingSummaryPage() {
 function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
   b: BillingSummary; expanded: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void;
 }) {
+  const { paid, pending, pct, payStatus } = paymentProgress(b);
+
   return (
     <>
       <tr className="border-b border-border hover:bg-muted/20">
@@ -106,6 +131,16 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
         <td className="px-3 py-2 text-xs">{b.period}</td>
         <td className="px-3 py-2 text-xs">{b.cpoCode}</td>
         <td className="px-3 py-2 text-xs font-semibold">{fmt(b.totalInvoice)}</td>
+        <td className="px-3 py-2 text-xs">{fmt(paid)}</td>
+        <td className="px-3 py-2 text-xs">{fmt(pending)}</td>
+        <td className="px-3 py-2">
+          <div className="flex items-center gap-2 min-w-[110px]">
+            <Progress value={pct} className="h-1.5 flex-1" />
+            <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap", PAY_STATUS_STYLES[payStatus])}>
+              {PAY_STATUS_LABELS[payStatus]}
+            </span>
+          </div>
+        </td>
         <td className="px-3 py-2"><StatusSelect billingId={b.id} status={b.status} /></td>
         <td className="px-3 py-2">
           <div className="flex gap-1">
@@ -127,7 +162,7 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
             </td>
             <td className="px-3 py-2" colSpan={2}>USD {fmt(c.netTotalUsd)} · Forex {b.forexSellingRate} · PKR {fmt(c.netTotalPkr)}</td>
             <td className="px-3 py-2">Gross {fmt(c.grossTotalPkr)} · Tax {fmt(c.salesTax)} · <b>Inv {fmt(c.totalInvoice)}</b></td>
-            <td colSpan={2}></td>
+            <td colSpan={5}></td>
           </tr>
         );
       })}

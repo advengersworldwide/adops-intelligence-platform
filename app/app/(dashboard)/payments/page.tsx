@@ -187,7 +187,15 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
 
   const settleableBillings = (billings ?? []).filter(b => b.status === "approved");
 
+  // Map billingId -> pending (remaining receivable), used for both the row display
+  // and to validate allocations don't exceed what's actually owed.
+  const pendingByBilling = new Map<number, number>();
+  for (const billing of settleableBillings) {
+    pendingByBilling.set(billing.id, billing.netReceivable - (allocatedElsewhereByBilling.get(billing.id) ?? 0));
+  }
+
   const toggleBilling = (billingId: number, pending: number) => {
+    if (pending <= 0.01) return; // fully paid, can't be added
     const current = form.getValues("allocations");
     const exists = current.find(a => a.billingId === billingId);
     if (exists) {
@@ -199,8 +207,19 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
 
   const updateAllocation = (billingId: number, amount: number) => {
     const current = form.getValues("allocations");
-    form.setValue("allocations", current.map(a => a.billingId === billingId ? { ...a, amountApplied: amount } : a));
+    const pending = pendingByBilling.get(billingId);
+    const clamped = pending != null ? Math.min(amount, pending) : amount;
+    form.setValue("allocations", current.map(a => a.billingId === billingId ? { ...a, amountApplied: clamped } : a));
   };
+
+  // Any allocation that (still) exceeds its billing's pending amount — should not
+  // normally happen given the clamp in updateAllocation, but guards against stale
+  // defaults (e.g. an edited payment whose original amount now exceeds pending).
+  const overpaidAllocations = allocations.filter(a => {
+    const pending = pendingByBilling.get(a.billingId);
+    return pending != null && a.amountApplied > pending + 0.01;
+  });
+  const hasOverpay = overpaidAllocations.length > 0;
 
   const handleFileUpload = async (type: "cheque" | "receipt", file: File) => {
     setUploading(true);
@@ -315,28 +334,40 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
               <div className="border border-border rounded-lg divide-y divide-border max-h-56 overflow-y-auto">
                 {settleableBillings.map(billing => {
                   const alloc = allocations.find(a => a.billingId === billing.id);
-                  const pending = billing.netReceivable - (allocatedElsewhereByBilling.get(billing.id) ?? 0);
+                  const pending = pendingByBilling.get(billing.id) ?? 0;
+                  const fullyPaid = pending <= 0.01;
                   const label = billing.invoiceCode ?? `Billing #${billing.id}`;
+                  const isOverpaid = !!alloc && alloc.amountApplied > pending + 0.01;
                   return (
                     <div key={billing.id} className="px-3 py-2">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
-                          <input type="checkbox" checked={!!alloc}
+                          <input type="checkbox" checked={!!alloc} disabled={fullyPaid}
                             onChange={() => toggleBilling(billing.id, pending)}
-                            className="cursor-pointer" />
-                          <span className="text-xs font-semibold">{label}</span>
-                          <span className="text-[10px] text-muted-foreground">Pending: PKR {fmtNum(pending)}</span>
+                            className="cursor-pointer disabled:cursor-not-allowed disabled:opacity-50" />
+                          <span className={cn("text-xs font-semibold", fullyPaid && "text-muted-foreground")}>{label}</span>
+                          {fullyPaid ? (
+                            <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">Pending: PKR {fmtNum(pending)}</span>
+                          )}
                         </div>
                         {alloc && (
                           <Input
                             type="number"
                             step="0.01"
-                            className="w-32 h-6 text-xs"
+                            max={pending}
+                            className={cn("w-32 h-6 text-xs", isOverpaid && "border-red-600 focus-visible:ring-red-600")}
                             value={alloc.amountApplied}
                             onChange={e => updateAllocation(billing.id, parseFloat(e.target.value) || 0)}
                           />
                         )}
                       </div>
+                      {isOverpaid && (
+                        <p className="text-[10px] text-red-600 mt-1">Amount exceeds pending for {label}</p>
+                      )}
                     </div>
                   );
                 })}
@@ -353,7 +384,7 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
 
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-              <Button type="submit" disabled={isPending || uploading}>
+              <Button type="submit" disabled={isPending || uploading || hasOverpay}>
                 {isPending ? "Saving..." : isEdit ? "Update" : "Record Payment"}
               </Button>
             </div>
