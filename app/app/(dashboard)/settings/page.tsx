@@ -21,6 +21,7 @@ import { PermissionGuard } from "@/components/PermissionGuard";
 const ALL_PERMISSIONS = [
   "View Transactions",
   "View Billings",
+  "View Billing Detail",
   "View Payments",
   "View Cost",
   "View Analytics",
