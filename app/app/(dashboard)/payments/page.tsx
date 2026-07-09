@@ -288,8 +288,8 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
             )} />
 
             {mode === "cheque" && (
-              <FormItem>
-                <FormLabel>Cheque Image</FormLabel>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Cheque Image</label>
                 <div className="flex gap-2 items-center">
                   <Input type="file" accept="image/*,.pdf" ref={chequeRef}
                     onChange={e => e.target.files?.[0] && handleFileUpload("cheque", e.target.files[0])}
@@ -298,11 +298,11 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
                     <a href={form.watch("chequeImageUrl")} target="_blank" rel="noreferrer" className="text-xs text-primary underline whitespace-nowrap">View</a>
                   )}
                 </div>
-              </FormItem>
+              </div>
             )}
 
-            <FormItem>
-              <FormLabel>Payment Receipt / Attachment <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Payment Receipt / Attachment <span className="text-muted-foreground font-normal">(optional)</span></label>
               <div className="flex gap-2 items-center">
                 <Input type="file" accept="image/*,.pdf" ref={receiptRef}
                   onChange={e => e.target.files?.[0] && handleFileUpload("receipt", e.target.files[0])}
@@ -311,7 +311,7 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
                   <a href={form.watch("receiptUrl")} target="_blank" rel="noreferrer" className="text-xs text-primary underline whitespace-nowrap">View</a>
                 )}
               </div>
-            </FormItem>
+            </div>
 
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem><FormLabel>Notes</FormLabel>
