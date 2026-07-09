@@ -301,19 +301,17 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
               </FormItem>
             )}
 
-            {mode === "online" && (
-              <FormItem>
-                <FormLabel>Payment Receipt</FormLabel>
-                <div className="flex gap-2 items-center">
-                  <Input type="file" accept="image/*,.pdf" ref={receiptRef}
-                    onChange={e => e.target.files?.[0] && handleFileUpload("receipt", e.target.files[0])}
-                    className="text-xs" disabled={uploading} />
-                  {form.watch("receiptUrl") && (
-                    <a href={form.watch("receiptUrl")} target="_blank" rel="noreferrer" className="text-xs text-primary underline whitespace-nowrap">View</a>
-                  )}
-                </div>
-              </FormItem>
-            )}
+            <FormItem>
+              <FormLabel>Payment Receipt / Attachment <span className="text-muted-foreground font-normal">(optional)</span></FormLabel>
+              <div className="flex gap-2 items-center">
+                <Input type="file" accept="image/*,.pdf" ref={receiptRef}
+                  onChange={e => e.target.files?.[0] && handleFileUpload("receipt", e.target.files[0])}
+                  className="text-xs" disabled={uploading} />
+                {form.watch("receiptUrl") && (
+                  <a href={form.watch("receiptUrl")} target="_blank" rel="noreferrer" className="text-xs text-primary underline whitespace-nowrap">View</a>
+                )}
+              </div>
+            </FormItem>
 
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem><FormLabel>Notes</FormLabel>
