@@ -85,7 +85,7 @@ export default function BillingSummaryPage() {
           <table className="w-full min-w-max">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {["", "Client", "Agency", "Month", "CPO", "Total Invoice (PKR)", "Paid (PKR)", "Pending (PKR)", "Progress", "Status", "Actions"].map(h => (
+                {["", "Client", "Partner(s)", "Agency", "Month", "CPO", "Total Invoice (PKR)", "Paid (PKR)", "Pending (PKR)", "Progress", "Status", "Actions"].map(h => (
                   <th key={h} className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -93,10 +93,10 @@ export default function BillingSummaryPage() {
             <tbody>
               {isLoading ? (
                 [...Array(3)].map((_, i) => (
-                  <tr key={i} className="border-b border-border">{[...Array(11)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>
+                  <tr key={i} className="border-b border-border">{[...Array(12)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>
                 ))
               ) : !billings?.length ? (
-                <tr><td colSpan={11} className="px-5 py-10 text-center text-sm text-muted-foreground">No billings yet</td></tr>
+                <tr><td colSpan={12} className="px-5 py-10 text-center text-sm text-muted-foreground">No billings yet</td></tr>
               ) : billings.map(b => (
                 <BillingGroup key={b.id} b={b} expanded={expanded === b.id}
                   onToggle={() => setExpanded(expanded === b.id ? null : b.id)}
@@ -127,6 +127,9 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
           <button onClick={onToggle}><ChevronRight className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")} /></button>
         </td>
         <td className="px-3 py-2 text-xs font-semibold">{b.clientName}</td>
+        <td className="px-3 py-2 text-xs">
+          {[...new Set(b.lines.map(l => l.partnerName))].join(", ") || "—"}
+        </td>
         <td className="px-3 py-2 text-xs">{b.buyingHouseName ?? "—"}</td>
         <td className="px-3 py-2 text-xs">{b.period}</td>
         <td className="px-3 py-2 text-xs">{b.cpoCode}</td>
@@ -162,7 +165,7 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
             </td>
             <td className="px-3 py-2" colSpan={2}>USD {fmt(c.netTotalUsd)} · Forex {b.forexSellingRate} · PKR {fmt(c.netTotalPkr)}</td>
             <td className="px-3 py-2">Gross {fmt(c.grossTotalPkr)} · Tax {fmt(c.salesTax)} · <b>Inv {fmt(c.totalInvoice)}</b></td>
-            <td colSpan={5}></td>
+            <td colSpan={6}></td>
           </tr>
         );
       })}
