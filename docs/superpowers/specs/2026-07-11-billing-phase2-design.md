@@ -21,7 +21,7 @@ Relevant existing pieces:
 ## Decisions (locked with user)
 
 1. **Navigation:** both **Billing** and **Payments** become **Client | Partner** tabbed areas (symmetric).
-2. **Payment status:** payments gain `status` (`pending` → `received` for client, `pending` → `paid` for partner). Paid totals, progress bars, and aging count **only** settled (received/paid) payments. New payments default `pending`; status changed via a dropdown (like billing `StatusSelect`).
+2. **Payment status:** payments gain `status` (`pending` → `received` for client, `pending` → `settled` for partner). Paid totals, progress bars, and aging count **only** settled (received/settled) payments. New payments default `pending`; status changed via a dropdown (like billing `StatusSelect`).
 3. **Payment terms + days:** `payment_terms` gains `days` (int). Net 30 = 30.
 4. **Aging (both sides):** shared rule — from a start date + term days vs today: **green** while elapsed ≤ ½ term, **yellow** once past half, **red** once overdue; **settled** shows neutral. Client billing aging start = `invoiceGeneratedAt` (client terms); partner bill aging start = `dateReceived` (partner terms).
 5. **Invoice totals:** collapse to **Total of Events (USD) → Forex → Net Amount (PKR)** *(the grossed‑up value)* **→ Sales Tax @ X% → Total Invoice Amount**. No "Net Total"/"Gross" rows.
@@ -29,7 +29,7 @@ Relevant existing pieces:
 7. **Invoice table:** group **partner once + agency once** (rowspan), one row per event.
 8. **Summary polish:** remove **Net Margin** from the Create Billing modal; show **partner name(s)** in the Summary collapsed row (all, if multiple) + keep the expand breakdown.
 9. **Partner bills:** a bill received from a partner. Fields: system **`code`** (`PBILL-{partnerPrefix}-MMYY-NNNN`) **+** the partner's own **`partnerInvoiceNumber`** (text); `partnerId`, `clientId` (context), optional `partnerPurchaseOrderId` (for amount prefill), **USD `amount`** (prefilled from the PO budget, editable), `attachmentUrl/Name`, `dateReceived`, `notes`. Aging from `dateReceived` per partner terms.
-10. **Partner payments:** a disbursement to a partner. Tagged to **one partner bill** (`partnerBillId`) and the **funding client payment** (`sourceClientPaymentId`, must be `received`). USD `amount`, `mode`, `status` (`pending`→`paid`), `attachmentUrl`, `paymentDate`, `notes`. A partner bill supports partial payment (progress = Σ paid partner payments / bill amount).
+10. **Partner payments:** a disbursement to a partner. Tagged to **one partner bill** (`partnerBillId`) and the **funding client payment** (`sourceClientPaymentId`, must be `received`). USD `amount`, `mode`, `status` (`pending`→`settled`), `attachmentUrl`, `paymentDate`, `notes`. A partner bill supports partial payment and shows a **progress bar** (paid/pending); progress = Σ **settled** partner payments / bill amount — only `settled` payments reduce pending or advance the bar (mirrors client payment status → progress).
 11. **Currency:** partner bills + partner payments are **USD only** (single amount field; no currency/forex fields). Client side stays PKR as in Phase 1.
 
 ## Data model changes
@@ -48,7 +48,7 @@ Relevant existing pieces:
 - `elapsed ≤ termDays/2` → green; `termDays/2 < elapsed ≤ termDays` → yellow; `elapsed > termDays` → red (`overdue`).
 - Pure + unit‑tested (green/yellow/red/overdue/settled/no‑terms cases).
 
-Consumers: Billing Summary (client billing, start `invoiceGeneratedAt`, client term days, settled = fully paid by received payments); Partner Billing (partner bill, start `dateReceived`, partner term days, settled = fully paid by paid partner payments). A billing with no generated invoice, or a bill with no term, shows neutral.
+Consumers: Billing Summary (client billing, start `invoiceGeneratedAt`, client term days, settled = fully paid by received payments); Partner Billing (partner bill, start `dateReceived`, partner term days, settled = fully paid by settled partner payments). A billing with no generated invoice, or a bill with no term, shows neutral.
 
 ## Phase 2A — Invoice & Summary polish + attachment fix (no schema)
 
@@ -72,10 +72,10 @@ Consumers: Billing Summary (client billing, start `invoiceGeneratedAt`, client t
 
 ## Phase 2C — Partner subsystem (Billing/Payments tabs)
 
-- **Schema + API:** `partner_bills`, `partner_payments` tables; CRUD routes; `PBILL-` code gen; OpenAPI + codegen. `mapPartnerBill` returns joined `partnerName`, `clientName`, `code`, `partnerInvoiceNumber`, `amount`, `amountPaid` (Σ paid partner payments), `dateReceived`, partner **term days**, and computed aging inputs. Helper endpoints: partner's PPOs for prefill; received client payments for the funding dropdown.
+- **Schema + API:** `partner_bills`, `partner_payments` tables; CRUD routes; `PBILL-` code gen; OpenAPI + codegen. `mapPartnerBill` returns joined `partnerName`, `clientName`, `code`, `partnerInvoiceNumber`, `amount`, `amountPaid` (Σ **settled** partner payments), `dateReceived`, partner **term days**, and computed aging inputs. Helper endpoints: partner's PPOs for prefill; received client payments for the funding dropdown.
 - **Navigation:** restructure **Billing** into a tabs shell (**Client** = existing Summary/Detail sub‑views; **Partner** = Partner Billing) and **Payments** into tabs (**Client** = existing receipts; **Partner** = partner disbursements). Sidebar simplifies to `Billing` + `Payments` (each tabbed) rather than the separate Summary/Detail items.
-- **Partner Billing page:** list (Sr | PBILL code | Partner | Client | Amount (USD) | Paid | Pending | Aging | Their Inv# | Date Received | Actions). Create dialog: Partner → Client → optional Partner PO (prefills USD amount from PO budget) → their invoice # → attachment → date received. Aging pill per row.
-- **Partner Payments (Payments → Partner tab):** list (Partner | Client | Partner Bill (PBILL) | Funding client payment | Amount | Mode | Status | Date | Attachment | Actions). Create dialog: select **partner bill** (shows pending) → select **funding client payment** (received only) → amount (≤ bill pending) → mode/date/attachment → status. `StatusSelect` toggles `pending`↔`paid`; only `paid` counts toward the bill's paid/progress and stops aging.
+- **Partner Billing page:** list (Sr | PBILL code | Partner | Client | Amount (USD) | Paid | Pending | **Progress** | Aging | Their Inv# | Date Received | Actions). The **Progress** column is a bar (paid/amount) identical in style to the client Summary. Create dialog: Partner → Client → optional Partner PO (prefills USD amount from PO budget) → their invoice # → attachment → date received. Aging pill per row.
+- **Partner Payments (Payments → Partner tab):** list (Partner | Client | Partner Bill (PBILL) | Funding client payment | Amount | Mode | Status | Date | Attachment | Actions). Create dialog: select **partner bill** (shows pending) → select **funding client payment** (received only) → amount (≤ bill pending) → mode/date/attachment → status. `StatusSelect` toggles `pending`↔`settled`; only `settled` counts toward the bill's paid/progress and stops aging.
 - **Partner aging** lives on the Partner Billing list (start = `dateReceived`, partner term days), same color logic as client billing.
 - Permissions: reuse/extend billing + payment permissions (e.g. `View Billings`/`Edit Billings` cover partner billing; `View Payments`/`Edit Payments` cover partner payments) — confirm during planning; add a permission only if partner data needs separate gating.
 
