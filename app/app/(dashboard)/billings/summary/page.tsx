@@ -127,11 +127,12 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
   b: BillingSummary; expanded: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   const { paid, pending, pct, payStatus } = paymentProgress(b);
+  const settled = b.netReceivable > 0 && b.amountPaid >= b.netReceivable - 0.01;
   const aging = computeAging({
     start: b.invoiceGeneratedAt ? new Date(b.invoiceGeneratedAt) : null,
     termDays: b.paymentTermDays ?? null,
     now: new Date(),
-    settled: b.netReceivable > 0 && b.amountPaid >= b.netReceivable - 0.01,
+    settled,
   });
 
   return (
@@ -160,7 +161,8 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
         </td>
         <td className="px-3 py-2">
           <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold", AGING_PILL[aging.color])}>
-            {aging.color === "neutral" ? (b.invoiceCode ? "Settled" : "—")
+            {settled ? "Settled"
+              : aging.color === "neutral" ? "—"
               : aging.overdue ? `Overdue ${Math.abs(aging.daysLeft ?? 0)}d`
               : `${aging.daysLeft}d left`}
           </span>
