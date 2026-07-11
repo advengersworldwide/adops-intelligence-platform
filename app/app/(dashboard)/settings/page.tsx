@@ -868,8 +868,9 @@ export default function SettingsPage() {
             title="Payment Terms" description="Names referenced by clients and partners."
             placeholder="e.g. Net 30, Net 60"
             items={paymentTerms ?? []}
-            onAdd={(name) => createPaymentTerm.mutate({ data: { name } })}
+            onAdd={(name, days) => createPaymentTerm.mutate({ data: { name, days: days && days.trim() !== "" ? parseInt(days, 10) : null } })}
             onDelete={(id) => deletePaymentTermM.mutate({ id })}
+            withDays
           />
         )}
       </div>
@@ -878,20 +879,22 @@ export default function SettingsPage() {
 }
 
 function CatalogTab({
-  title, description, items, onAdd, onDelete, placeholder,
+  title, description, items, onAdd, onDelete, placeholder, withDays,
 }: {
   title: string;
   description: string;
-  items: Array<{ id: number; name: string }>;
-  onAdd: (name: string) => void;
+  items: Array<{ id: number; name: string; days?: number | null }>;
+  onAdd: (name: string, days?: string) => void;
   onDelete: (id: number) => void;
   placeholder: string;
+  withDays?: boolean;
 }) {
   const [name, setName] = useState("");
+  const [days, setDays] = useState("");
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const t = name.trim();
-    if (t) { onAdd(t); setName(""); }
+    if (t) { onAdd(t, days); setName(""); setDays(""); }
   };
   return (
     <div className="space-y-6">
@@ -901,6 +904,16 @@ function CatalogTab({
       </div>
       <form onSubmit={submit} className="flex gap-2 max-w-md">
         <Input value={name} onChange={e => setName(e.target.value)} placeholder={placeholder} className="text-sm h-9" />
+        {withDays && (
+          <Input
+            type="number"
+            min={0}
+            value={days}
+            onChange={e => setDays(e.target.value)}
+            placeholder="Days"
+            className="text-sm h-9 w-24"
+          />
+        )}
         <Button type="submit" size="sm" className="gap-1.5 text-xs"><Plus className="h-3.5 w-3.5" /> Add</Button>
       </form>
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden max-w-md">
@@ -910,7 +923,9 @@ function CatalogTab({
               <tr><td className="px-5 py-8 text-center text-sm text-muted-foreground">None yet</td></tr>
             ) : items.map(it => (
               <tr key={it.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                <td className="px-5 py-3 text-sm font-medium text-foreground">{it.name}</td>
+                <td className="px-5 py-3 text-sm font-medium text-foreground">
+                  {withDays ? `${it.name} · Net ${it.days ?? "—"}` : it.name}
+                </td>
                 <td className="px-5 py-3 text-right">
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive" onClick={() => onDelete(it.id)}>
                     <Trash2 className="h-3.5 w-3.5 text-red-500" />
