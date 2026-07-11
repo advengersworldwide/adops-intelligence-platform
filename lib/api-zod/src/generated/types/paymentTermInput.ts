@@ -9,4 +9,6 @@
 export interface PaymentTermInput {
   /** @minLength 1 */
   name: string;
+  /** @nullable */
+  days?: number | null;
 }

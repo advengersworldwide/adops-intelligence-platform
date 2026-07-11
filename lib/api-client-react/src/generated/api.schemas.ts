@@ -23,12 +23,16 @@ export interface CostModelInput {
 export interface PaymentTerm {
   id: number;
   name: string;
+  /** @nullable */
+  days?: number | null;
   createdAt: string;
 }
 
 export interface PaymentTermInput {
   /** @minLength 1 */
   name: string;
+  /** @nullable */
+  days?: number | null;
 }
 
 export interface Client {
@@ -800,6 +804,7 @@ export interface PaymentAllocation {
 
 export interface PaymentInput {
   mode: string;
+  status?: string;
   /** @nullable */
   notes?: string | null;
   /** @nullable */
@@ -821,6 +826,7 @@ export type PaymentDetailAllocationsItem = {
 export interface PaymentDetail {
   id: number;
   mode: string;
+  status?: string;
   totalAmount: number;
   /** @nullable */
   notes?: string | null;
@@ -834,6 +840,18 @@ export interface PaymentDetail {
   createdBy?: string | null;
   createdAt: string;
   allocations: PaymentDetailAllocationsItem[];
+}
+
+export type PaymentStatusInputStatus = typeof PaymentStatusInputStatus[keyof typeof PaymentStatusInputStatus];
+
+
+export const PaymentStatusInputStatus = {
+  pending: 'pending',
+  received: 'received',
+} as const;
+
+export interface PaymentStatusInput {
+  status: PaymentStatusInputStatus;
 }
 
 export interface CostResource {
@@ -964,6 +982,8 @@ export interface BillingSummary {
   invoiceGeneratedAt?: string | null;
   /** @nullable */
   paymentTerms?: string | null;
+  /** @nullable */
+  paymentTermDays?: number | null;
   lines: BillingLine[];
 }
 

@@ -1153,6 +1153,24 @@ paths:
         "204":
           description: Deleted
 
+  /payments/{id}/status:
+    patch:
+      operationId: updatePaymentStatus
+      tags: [payments]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PaymentStatusInput" }
+      responses:
+        "200":
+          description: Updated payment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PaymentDetail" }
+
   /cost-resources:
     get:
       operationId: listCostResources
@@ -1559,6 +1577,7 @@ components:
       properties:
         id: { type: integer }
         name: { type: string }
+        days: { type: ["integer", "null"] }
         createdAt: { type: string }
 
     PaymentTermInput:
@@ -1566,6 +1585,7 @@ components:
       required: [name]
       properties:
         name: { type: string, minLength: 1 }
+        days: { type: ["integer", "null"] }
 
     # ── Client ──────────────────────────────────────────────────────────────────
     Client:
@@ -2490,6 +2510,8 @@ components:
       properties:
         mode:
           type: string
+        status:
+          type: string
         notes:
           type: ["string", "null"]
         chequeImageUrl:
@@ -2510,6 +2532,8 @@ components:
         id:
           type: integer
         mode:
+          type: string
+        status:
           type: string
         totalAmount:
           type: number
@@ -2536,6 +2560,12 @@ components:
               billingLabel:
                 type: string
               amountApplied: { type: number, minimum: 0 }
+
+    PaymentStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [pending, received] }
 
     CostResource:
       type: object
@@ -2685,6 +2715,7 @@ components:
         createdAt: { type: string }
         invoiceGeneratedAt: { type: ["string", "null"] }
         paymentTerms: { type: ["string", "null"] }
+        paymentTermDays: { type: ["integer", "null"] }
         lines:
           type: array
           items: { $ref: "#/components/schemas/BillingLine" }

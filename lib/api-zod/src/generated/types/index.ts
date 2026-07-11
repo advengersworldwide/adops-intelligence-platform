@@ -80,6 +80,8 @@ export * from './paymentAllocation';
 export * from './paymentDetail';
 export * from './paymentDetailAllocationsItem';
 export * from './paymentInput';
+export * from './paymentStatusInput';
+export * from './paymentStatusInputStatus';
 export * from './paymentTerm';
 export * from './paymentTermInput';
 export * from './profitTimePoint';

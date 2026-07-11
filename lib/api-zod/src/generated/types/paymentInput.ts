@@ -9,6 +9,7 @@ import type { PaymentAllocation } from './paymentAllocation';
 
 export interface PaymentInput {
   mode: string;
+  status?: string;
   /** @nullable */
   notes?: string | null;
   /** @nullable */

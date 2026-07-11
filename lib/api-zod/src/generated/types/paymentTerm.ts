@@ -9,5 +9,7 @@
 export interface PaymentTerm {
   id: number;
   name: string;
+  /** @nullable */
+  days?: number | null;
   createdAt: string;
 }

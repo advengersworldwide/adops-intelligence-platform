@@ -278,6 +278,7 @@ export const DeleteCostModelParams = zod.object({
 export const ListPaymentTermsResponseItem = zod.object({
   "id": zod.number(),
   "name": zod.string(),
+  "days": zod.number().nullish(),
   "createdAt": zod.string()
 })
 export const ListPaymentTermsResponse = zod.array(ListPaymentTermsResponseItem)
@@ -290,7 +291,8 @@ export const ListPaymentTermsResponse = zod.array(ListPaymentTermsResponseItem)
 
 
 export const CreatePaymentTermBody = zod.object({
-  "name": zod.string().min(1)
+  "name": zod.string().min(1),
+  "days": zod.number().nullish()
 })
 
 
@@ -1210,6 +1212,7 @@ export const listPaymentsResponseAllocationsItemAmountAppliedMin = 0;
 export const ListPaymentsResponseItem = zod.object({
   "id": zod.number(),
   "mode": zod.string(),
+  "status": zod.string().optional(),
   "totalAmount": zod.number(),
   "notes": zod.string().nullish(),
   "chequeImageUrl": zod.string().nullish(),
@@ -1232,6 +1235,7 @@ export const createPaymentBodyAllocationsItemAmountAppliedMin = 0;
 
 export const CreatePaymentBody = zod.object({
   "mode": zod.string(),
+  "status": zod.string().optional(),
   "notes": zod.string().nullish(),
   "chequeImageUrl": zod.string().nullish(),
   "receiptUrl": zod.string().nullish(),
@@ -1253,6 +1257,7 @@ export const updatePaymentBodyAllocationsItemAmountAppliedMin = 0;
 
 export const UpdatePaymentBody = zod.object({
   "mode": zod.string(),
+  "status": zod.string().optional(),
   "notes": zod.string().nullish(),
   "chequeImageUrl": zod.string().nullish(),
   "receiptUrl": zod.string().nullish(),
@@ -1270,6 +1275,7 @@ export const updatePaymentResponseAllocationsItemAmountAppliedMin = 0;
 export const UpdatePaymentResponse = zod.object({
   "id": zod.number(),
   "mode": zod.string(),
+  "status": zod.string().optional(),
   "totalAmount": zod.number(),
   "notes": zod.string().nullish(),
   "chequeImageUrl": zod.string().nullish(),
@@ -1287,6 +1293,37 @@ export const UpdatePaymentResponse = zod.object({
 
 export const DeletePaymentParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+export const UpdatePaymentStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePaymentStatusBody = zod.object({
+  "status": zod.enum(['pending', 'received'])
+})
+
+export const updatePaymentStatusResponseAllocationsItemAmountAppliedMin = 0;
+
+
+
+export const UpdatePaymentStatusResponse = zod.object({
+  "id": zod.number(),
+  "mode": zod.string(),
+  "status": zod.string().optional(),
+  "totalAmount": zod.number(),
+  "notes": zod.string().nullish(),
+  "chequeImageUrl": zod.string().nullish(),
+  "receiptUrl": zod.string().nullish(),
+  "paymentDate": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "allocations": zod.array(zod.object({
+  "billingId": zod.number(),
+  "billingLabel": zod.string(),
+  "amountApplied": zod.number().min(updatePaymentStatusResponseAllocationsItemAmountAppliedMin)
+}))
 })
 
 
@@ -1761,6 +1798,7 @@ export const ListBillingsResponseItem = zod.object({
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
+  "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
@@ -1832,6 +1870,7 @@ export const GetBillingResponse = zod.object({
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
+  "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
@@ -1901,6 +1940,7 @@ export const UpdateBillingResponse = zod.object({
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
+  "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
@@ -1957,6 +1997,7 @@ export const UpdateBillingStatusResponse = zod.object({
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
+  "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
@@ -2004,6 +2045,7 @@ export const GenerateBillingInvoiceResponse = zod.object({
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
+  "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
   "id": zod.number(),
   "partnerId": zod.number(),
