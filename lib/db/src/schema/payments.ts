@@ -3,6 +3,7 @@ import { pgTable, serial, text, numeric, date, timestamp } from "drizzle-orm/pg-
 export const paymentsTable = pgTable("payments", {
   id: serial("id").primaryKey(),
   mode: text("mode").notNull(),
+  status: text("status").notNull().default("pending"),
   paymentDate: date("payment_date"),
   totalAmount: numeric("total_amount", { precision: 14, scale: 2 }).notNull(),
   notes: text("notes"),
