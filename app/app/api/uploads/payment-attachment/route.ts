@@ -23,9 +23,15 @@ export async function POST(req: Request): Promise<Response> {
   try {
     const supabase = getSupabase();
     const buffer = Buffer.from(await file.arrayBuffer());
-    const { error } = await supabase.storage.from("payment-attachments").upload(path, buffer, { contentType: file.type });
+    const bucket = "payment-attachments";
+    let { error } = await supabase.storage.from(bucket).upload(path, buffer, { contentType: file.type });
+    // Self-heal: create the (public) bucket on first use if it doesn't exist yet, then retry.
+    if (error && /bucket not found/i.test(error.message)) {
+      await supabase.storage.createBucket(bucket, { public: true });
+      ({ error } = await supabase.storage.from(bucket).upload(path, buffer, { contentType: file.type }));
+    }
     if (error) throw error;
-    const { data: { publicUrl } } = supabase.storage.from("payment-attachments").getPublicUrl(path);
+    const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(path);
     return NextResponse.json({ url: publicUrl });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Upload failed" }, { status: 500 });
