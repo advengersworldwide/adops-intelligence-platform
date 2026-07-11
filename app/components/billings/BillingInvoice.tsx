@@ -3,6 +3,7 @@
 import { forwardRef } from "react";
 import type { BillingDetail } from "@workspace/api-client-react";
 import { computeBilling } from "@/lib/compute-billing";
+import { invoiceClauses } from "@/lib/invoice-clauses";
 
 const money = (n: number) =>
   n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -20,12 +21,11 @@ export const BillingInvoice = forwardRef<HTMLDivElement, { b: BillingDetail }>(
       });
       return {
         netTotalUsd: acc.netTotalUsd + c.netTotalUsd,
-        netTotalPkr: acc.netTotalPkr + c.netTotalPkr,
         grossTotalPkr: acc.grossTotalPkr + c.grossTotalPkr,
         salesTax: acc.salesTax + c.salesTax,
         totalInvoice: acc.totalInvoice + c.totalInvoice,
       };
-    }, { netTotalUsd: 0, netTotalPkr: 0, grossTotalPkr: 0, salesTax: 0, totalInvoice: 0 });
+    }, { netTotalUsd: 0, grossTotalPkr: 0, salesTax: 0, totalInvoice: 0 });
 
     return (
       <div
@@ -97,16 +97,22 @@ export const BillingInvoice = forwardRef<HTMLDivElement, { b: BillingDetail }>(
             </tr>
           </thead>
           <tbody>
-            {b.lines.flatMap((line) => line.items.map((it) => (
-              <tr key={`${line.id}-${it.id}`}>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{line.partnerName}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{b.buyingHouseName ?? "—"}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.eventName}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.billableRate}</td>
-                <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.eventCount.toLocaleString()}</td>
-                <td className="px-3 py-2 text-right" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{money(it.eventCount * it.billableRate)}</td>
-              </tr>
-            )))}
+            {b.lines.map((line) =>
+              line.items.map((it, idx) => (
+                <tr key={`${line.id}-${it.id}`}>
+                  {idx === 0 && (
+                    <>
+                      <td rowSpan={line.items.length} className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{line.partnerName}</td>
+                      <td rowSpan={line.items.length} className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{b.buyingHouseName ?? "—"}</td>
+                    </>
+                  )}
+                  <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.eventName}</td>
+                  <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.billableRate}</td>
+                  <td className="px-3 py-2" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{it.eventCount.toLocaleString()}</td>
+                  <td className="px-3 py-2 text-right" style={{ border: "1px solid #d1d5db", verticalAlign: "middle" }}>{money(it.eventCount * it.billableRate)}</td>
+                </tr>
+              )),
+            )}
           </tbody>
         </table>
 
@@ -114,8 +120,7 @@ export const BillingInvoice = forwardRef<HTMLDivElement, { b: BillingDetail }>(
         <div className="mt-4 ml-auto text-sm" style={{ width: "320px" }}>
           <TotalRow label="Total of Events (USD)" value={`$${money(totals.netTotalUsd)}`} />
           <TotalRow label="Forex Rate" value={String(b.forexSellingRate)} />
-          <TotalRow label="Net Total (PKR)" value={money(totals.netTotalPkr)} />
-          <TotalRow label="Gross Total (PKR)" value={money(totals.grossTotalPkr)} />
+          <TotalRow label="Net Amount (PKR)" value={money(totals.grossTotalPkr)} />
           <TotalRow label={`Sales Tax @ ${b.salesTaxPct}%`} value={money(totals.salesTax)} />
           <TotalRow label="Total Invoice Amount" value={money(totals.totalInvoice)} bold />
         </div>
@@ -128,11 +133,14 @@ export const BillingInvoice = forwardRef<HTMLDivElement, { b: BillingDetail }>(
           </div>
         )}
 
-        <p className="mt-6 text-xs" style={{ color: "#4b5563" }}>Payment Terms: {b.paymentTerms ?? "As agreed"}</p>
-
-        <p className="mt-6 text-xs" style={{ color: "#4b5563" }}>
-          This is a system generated document and does not require a physical signature.
-        </p>
+        {/* Clauses */}
+        <div className="mt-6 text-xs" style={{ color: "#4b5563" }}>
+          <ul style={{ listStyleType: "disc", paddingLeft: "18px", lineHeight: "1.7" }}>
+            {invoiceClauses(b.paymentTerms).map((c, i) => (
+              <li key={i}>{c}</li>
+            ))}
+          </ul>
+        </div>
 
         {/* Spacer — pushes footer to bottom of page */}
         <div style={{ flex: 1 }} />
