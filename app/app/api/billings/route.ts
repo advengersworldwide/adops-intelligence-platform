@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import {
   db, billingsTable, billingLinesTable, billingEventItemsTable,
   clientsTable, buyingHousesTable, clientPurchaseOrdersTable, partnersTable,
-  usersTable, taxSettingsTable, paymentTermsTable, paymentBillingsTable,
+  usersTable, taxSettingsTable, paymentTermsTable, paymentBillingsTable, paymentsTable,
 } from "@workspace/db";
 import { CreateBillingBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
@@ -25,10 +25,12 @@ export async function mapBilling(b: BillingRow) {
     buyingHouseName = bh?.name ?? null;
   }
   let paymentTerms: string | null = null;
+  let paymentTermDays: number | null = null;
   if (client?.paymentTermsId != null) {
-    const [pt] = await db.select({ name: paymentTermsTable.name })
+    const [pt] = await db.select({ name: paymentTermsTable.name, days: paymentTermsTable.days })
       .from(paymentTermsTable).where(eq(paymentTermsTable.id, client.paymentTermsId));
     paymentTerms = pt?.name ?? null;
+    paymentTermDays = pt?.days ?? null;
   }
   const [cpo] = await db.select({ code: clientPurchaseOrdersTable.code })
     .from(clientPurchaseOrdersTable).where(eq(clientPurchaseOrdersTable.id, b.clientPurchaseOrderId));
@@ -65,7 +67,9 @@ export async function mapBilling(b: BillingRow) {
   }
 
   const paidRows = await db.select({ amt: paymentBillingsTable.amountApplied })
-    .from(paymentBillingsTable).where(eq(paymentBillingsTable.billingId, b.id));
+    .from(paymentBillingsTable)
+    .innerJoin(paymentsTable, eq(paymentBillingsTable.paymentId, paymentsTable.id))
+    .where(and(eq(paymentBillingsTable.billingId, b.id), eq(paymentsTable.status, "received")));
   const amountPaid = paidRows.reduce((s, r) => s + Number(r.amt), 0);
 
   return {
@@ -79,7 +83,7 @@ export async function mapBilling(b: BillingRow) {
     totalInvoice, netReceivable, amountPaid, netMargin,
     notes: b.notes ?? null, createdByName, createdAt: b.createdAt.toISOString(),
     invoiceGeneratedAt: b.invoiceGeneratedAt ? b.invoiceGeneratedAt.toISOString() : null,
-    paymentTerms, lines,
+    paymentTerms, paymentTermDays, lines,
   };
 }
 
