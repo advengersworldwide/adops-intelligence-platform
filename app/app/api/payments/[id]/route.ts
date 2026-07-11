@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 async function mapPayment(p: typeof paymentsTable.$inferSelect) {
   const pbRows = await db.select().from(paymentBillingsTable).innerJoin(billingsTable, eq(paymentBillingsTable.billingId, billingsTable.id)).where(eq(paymentBillingsTable.paymentId, p.id));
   const allocations = pbRows.map(({ payment_billings: pb, billings: bl }) => ({ billingId: pb.billingId, billingLabel: bl.invoiceCode ?? `Billing #${bl.id}`, amountApplied: Number(pb.amountApplied) }));
-  return { id: p.id, mode: p.mode, totalAmount: Number(p.totalAmount), notes: p.notes ?? null, chequeImageUrl: p.chequeImageUrl ?? null, receiptUrl: p.receiptUrl ?? null, paymentDate: p.paymentDate ?? null, createdBy: p.createdBy ?? null, createdAt: p.createdAt.toISOString(), allocations };
+  return { id: p.id, mode: p.mode, totalAmount: Number(p.totalAmount), notes: p.notes ?? null, chequeImageUrl: p.chequeImageUrl ?? null, receiptUrl: p.receiptUrl ?? null, paymentDate: p.paymentDate ?? null, status: p.status, createdBy: p.createdBy ?? null, createdAt: p.createdAt.toISOString(), allocations };
 }
 
 export async function PATCH(
@@ -38,7 +38,7 @@ export async function PATCH(
   }
   try {
     const totalAmount = parsed.data.allocations.reduce((s, a) => s + a.amountApplied, 0);
-    const [payment] = await db.update(paymentsTable).set({ mode: parsed.data.mode, totalAmount: String(totalAmount), notes: parsed.data.notes ?? null, chequeImageUrl: parsed.data.chequeImageUrl ?? null, receiptUrl: parsed.data.receiptUrl ?? null, paymentDate: parsed.data.paymentDate ?? null }).where(eq(paymentsTable.id, p.data.id)).returning();
+    const [payment] = await db.update(paymentsTable).set({ mode: parsed.data.mode, totalAmount: String(totalAmount), notes: parsed.data.notes ?? null, chequeImageUrl: parsed.data.chequeImageUrl ?? null, receiptUrl: parsed.data.receiptUrl ?? null, paymentDate: parsed.data.paymentDate ?? null, status: parsed.data.status ?? "pending" }).where(eq(paymentsTable.id, p.data.id)).returning();
     if (!payment) return NextResponse.json({ error: "Payment not found" }, { status: 404 });
     await db.delete(paymentBillingsTable).where(eq(paymentBillingsTable.paymentId, payment.id));
     if (parsed.data.allocations.length > 0) await db.insert(paymentBillingsTable).values(parsed.data.allocations.map(a => ({ paymentId: payment.id, billingId: a.billingId, amountApplied: String(a.amountApplied) })));
