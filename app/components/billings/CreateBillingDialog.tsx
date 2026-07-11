@@ -116,8 +116,8 @@ export function CreateBillingDialog({ open, editBilling, onClose, onSuccess }: {
       remittanceTaxPct: tax.remittanceTaxPct, salesTaxPct: tax.salesTaxPct,
       withholdingTaxPct: tax.withholdingTaxPct, bulkDiscountPct, whtApplied,
     });
-    return { totalInvoice: acc.totalInvoice + c.totalInvoice, netMargin: acc.netMargin + c.netMargin };
-  }, { totalInvoice: 0, netMargin: 0 });
+    return { totalInvoice: acc.totalInvoice + c.totalInvoice };
+  }, { totalInvoice: 0 });
 
   const submit = () => {
     if (!clientId || !cpoId || !period) { toast({ title: "Client, month and CPO are required", variant: "destructive" }); return; }
@@ -214,9 +214,8 @@ export function CreateBillingDialog({ open, editBilling, onClose, onSuccess }: {
 
           <Textarea rows={2} placeholder="Notes..." value={notes} onChange={e => setNotes(e.target.value)} />
 
-          <div className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2 text-xs">
+          <div className="flex items-center rounded-lg bg-muted/30 px-3 py-2 text-xs">
             <span>Total Invoice: <b>PKR {fmt(preview.totalInvoice)}</b></span>
-            <span>Net Margin: <b>PKR {fmt(preview.netMargin)}</b></span>
           </div>
 
           <div className="flex justify-end gap-2">
