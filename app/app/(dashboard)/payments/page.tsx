@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import { PaymentStatusSelect } from "@/components/payments/PaymentStatusSelect";
 
 function fmtNum(n: number | null | undefined, d = 2) {
   if (n == null || isNaN(n)) return "—";
@@ -83,7 +84,7 @@ export default function PaymentsPage() {
           <table className="w-full min-w-max">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                {["#", "Mode", "Total (PKR)", "Billings", "Notes", "Date Received", "Created", "Attachments", "Actions"].map(h => (
+                {["#", "Mode", "Total (PKR)", "Billings", "Notes", "Date Received", "Status", "Created", "Attachments", "Actions"].map(h => (
                   <th key={h} className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -92,11 +93,11 @@ export default function PaymentsPage() {
               {isLoading ? (
                 [...Array(3)].map((_, i) => (
                   <tr key={i} className="border-b border-border">
-                    {[...Array(9)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
+                    {[...Array(10)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
                   </tr>
                 ))
               ) : !payments?.length ? (
-                <tr><td colSpan={9} className="px-5 py-10 text-center text-sm text-muted-foreground">No payments yet</td></tr>
+                <tr><td colSpan={10} className="px-5 py-10 text-center text-sm text-muted-foreground">No payments yet</td></tr>
               ) : payments.map((p, i) => (
                 <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20">
                   <td className="px-3 py-2 text-xs text-muted-foreground">{i + 1}</td>
@@ -111,6 +112,7 @@ export default function PaymentsPage() {
                   </td>
                   <td className="px-3 py-2 text-xs max-w-[160px] truncate">{p.notes ?? "—"}</td>
                   <td className="px-3 py-2 text-xs">{p.paymentDate ? new Date(p.paymentDate).toLocaleDateString() : "—"}</td>
+                  <td className="px-3 py-2"><PaymentStatusSelect paymentId={p.id} status={p.status ?? "pending"} /></td>
                   <td className="px-3 py-2 text-xs">{new Date(p.createdAt).toLocaleDateString()}</td>
                   <td className="px-3 py-2 text-xs">
                     {p.chequeImageUrl && <a href={p.chequeImageUrl} target="_blank" rel="noreferrer" className="text-primary underline mr-2 text-[10px]">Cheque</a>}
