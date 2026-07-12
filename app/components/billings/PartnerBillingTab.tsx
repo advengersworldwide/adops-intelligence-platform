@@ -7,11 +7,27 @@ import type { PartnerBill } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import { AgingPill } from "@/components/billings/AgingPill";
 import { CreatePartnerBillDialog } from "@/components/billings/CreatePartnerBillDialog";
 
 function fmt(n: number) { return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+type PayStatus = "paid" | "partial" | "unpaid";
+const PAY_STATUS_STYLES: Record<PayStatus, string> = {
+  paid: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+  partial: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
+  unpaid: "bg-muted text-muted-foreground",
+};
+const PAY_STATUS_LABELS: Record<PayStatus, string> = { paid: "Paid", partial: "Partial", unpaid: "Unpaid" };
+function billProgress(amount: number, amountPaid: number) {
+  const pending = Math.max(0, amount - amountPaid);
+  const pct = amount > 0 ? Math.min(100, (amountPaid / amount) * 100) : 0;
+  const payStatus: PayStatus = pending <= 0.01 && amount > 0 ? "paid" : amountPaid > 0 ? "partial" : "unpaid";
+  return { pending, pct, payStatus };
+}
 
 export function PartnerBillingTab() {
   const qc = useQueryClient();
@@ -34,17 +50,19 @@ export function PartnerBillingTab() {
         <table className="w-full min-w-max">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["#", "PBILL Code", "Partner", "Client", "Their Inv #", "Amount (USD)", "Date Received", "Aging", "Attachment", "Actions"].map(h => (
+              {["#", "PBILL Code", "Partner", "Client", "Their Inv #", "Amount (USD)", "Paid (USD)", "Pending (USD)", "Progress", "Date Received", "Aging", "Attachment", "Actions"].map(h => (
                 <th key={h} className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
-              [...Array(3)].map((_, i) => <tr key={i} className="border-b border-border">{[...Array(10)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>)
+              [...Array(3)].map((_, i) => <tr key={i} className="border-b border-border">{[...Array(13)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>)
             ) : !bills?.length ? (
-              <tr><td colSpan={10} className="px-5 py-10 text-center text-sm text-muted-foreground">No partner bills yet</td></tr>
-            ) : bills.map((b, i) => (
+              <tr><td colSpan={13} className="px-5 py-10 text-center text-sm text-muted-foreground">No partner bills yet</td></tr>
+            ) : bills.map((b, i) => {
+              const { pending, pct, payStatus } = billProgress(b.amount, b.amountPaid);
+              return (
               <tr key={b.id} className="border-b border-border last:border-0 hover:bg-muted/20 text-xs">
                 <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
                 <td className="px-3 py-2 font-semibold">{b.code}</td>
@@ -52,8 +70,18 @@ export function PartnerBillingTab() {
                 <td className="px-3 py-2">{b.clientName ?? "—"}</td>
                 <td className="px-3 py-2">{b.partnerInvoiceNumber ?? "—"}</td>
                 <td className="px-3 py-2 font-semibold">{fmt(b.amount)}</td>
+                <td className="px-3 py-2">{fmt(b.amountPaid)}</td>
+                <td className="px-3 py-2">{fmt(pending)}</td>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-2 min-w-[110px]">
+                    <Progress value={pct} className="h-1.5 flex-1" />
+                    <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap", PAY_STATUS_STYLES[payStatus])}>
+                      {PAY_STATUS_LABELS[payStatus]}
+                    </span>
+                  </div>
+                </td>
                 <td className="px-3 py-2">{b.dateReceived ? new Date(b.dateReceived).toLocaleDateString() : "—"}</td>
-                <td className="px-3 py-2"><AgingPill start={b.dateReceived ?? null} termDays={b.partnerTermDays ?? null} settled={false} /></td>
+                <td className="px-3 py-2"><AgingPill start={b.dateReceived ?? null} termDays={b.partnerTermDays ?? null} settled={b.amount > 0 && b.amountPaid >= b.amount - 0.01} /></td>
                 <td className="px-3 py-2">{b.attachmentUrl ? <a href={b.attachmentUrl} target="_blank" rel="noreferrer" className="text-primary underline text-[10px]">View</a> : "—"}</td>
                 <td className="px-3 py-2">
                   <div className="flex gap-1">
@@ -62,7 +90,8 @@ export function PartnerBillingTab() {
                   </div>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
