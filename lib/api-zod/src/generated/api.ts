@@ -2074,6 +2074,7 @@ export const ListPartnerBillsResponseItem = zod.object({
   "partnerPurchaseOrderId": zod.number().nullish(),
   "ppoCode": zod.string().nullish(),
   "amount": zod.number(),
+  "amountPaid": zod.number(),
   "attachmentUrl": zod.string().nullish(),
   "attachmentName": zod.string().nullish(),
   "dateReceived": zod.string().nullish(),
@@ -2125,6 +2126,7 @@ export const UpdatePartnerBillResponse = zod.object({
   "partnerPurchaseOrderId": zod.number().nullish(),
   "ppoCode": zod.string().nullish(),
   "amount": zod.number(),
+  "amountPaid": zod.number(),
   "attachmentUrl": zod.string().nullish(),
   "attachmentName": zod.string().nullish(),
   "dateReceived": zod.string().nullish(),
@@ -2137,6 +2139,110 @@ export const UpdatePartnerBillResponse = zod.object({
 
 export const DeletePartnerBillParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+export const ListPartnerPaymentsResponseItem = zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "partnerBillId": zod.number(),
+  "partnerBillCode": zod.string(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "sourceClientPaymentId": zod.number().nullish(),
+  "sourceClientPaymentLabel": zod.string().nullish(),
+  "amount": zod.number(),
+  "mode": zod.string().nullish(),
+  "status": zod.string(),
+  "paymentDate": zod.string().nullish(),
+  "attachmentUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListPartnerPaymentsResponse = zod.array(ListPartnerPaymentsResponseItem)
+
+
+export const CreatePartnerPaymentBody = zod.object({
+  "partnerBillId": zod.number(),
+  "sourceClientPaymentId": zod.number().nullish(),
+  "amount": zod.number(),
+  "mode": zod.string(),
+  "status": zod.string().optional(),
+  "paymentDate": zod.string().nullish(),
+  "attachmentUrl": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})
+
+
+export const UpdatePartnerPaymentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePartnerPaymentBody = zod.object({
+  "partnerBillId": zod.number(),
+  "sourceClientPaymentId": zod.number().nullish(),
+  "amount": zod.number(),
+  "mode": zod.string(),
+  "status": zod.string().optional(),
+  "paymentDate": zod.string().nullish(),
+  "attachmentUrl": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})
+
+export const UpdatePartnerPaymentResponse = zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "partnerBillId": zod.number(),
+  "partnerBillCode": zod.string(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "sourceClientPaymentId": zod.number().nullish(),
+  "sourceClientPaymentLabel": zod.string().nullish(),
+  "amount": zod.number(),
+  "mode": zod.string().nullish(),
+  "status": zod.string(),
+  "paymentDate": zod.string().nullish(),
+  "attachmentUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const DeletePartnerPaymentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+export const UpdatePartnerPaymentStatusParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePartnerPaymentStatusBody = zod.object({
+  "status": zod.enum(['pending', 'settled'])
+})
+
+export const UpdatePartnerPaymentStatusResponse = zod.object({
+  "id": zod.number(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "partnerBillId": zod.number(),
+  "partnerBillCode": zod.string(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "sourceClientPaymentId": zod.number().nullish(),
+  "sourceClientPaymentLabel": zod.string().nullish(),
+  "amount": zod.number(),
+  "mode": zod.string().nullish(),
+  "status": zod.string(),
+  "paymentDate": zod.string().nullish(),
+  "attachmentUrl": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
 })
 
 

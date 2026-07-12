@@ -6,31 +6,28 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface PartnerBill {
+export interface PartnerPayment {
   id: number;
-  code: string;
-  /** @nullable */
-  partnerInvoiceNumber?: string | null;
   partnerId: number;
   partnerName: string;
+  partnerBillId: number;
+  partnerBillCode: string;
   /** @nullable */
   clientId?: number | null;
   /** @nullable */
   clientName?: string | null;
   /** @nullable */
-  partnerPurchaseOrderId?: number | null;
+  sourceClientPaymentId?: number | null;
   /** @nullable */
-  ppoCode?: string | null;
+  sourceClientPaymentLabel?: string | null;
   amount: number;
-  amountPaid: number;
+  /** @nullable */
+  mode?: string | null;
+  status: string;
+  /** @nullable */
+  paymentDate?: string | null;
   /** @nullable */
   attachmentUrl?: string | null;
-  /** @nullable */
-  attachmentName?: string | null;
-  /** @nullable */
-  dateReceived?: string | null;
-  /** @nullable */
-  partnerTermDays?: number | null;
   /** @nullable */
   notes?: string | null;
   /** @nullable */

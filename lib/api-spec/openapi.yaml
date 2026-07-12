@@ -44,6 +44,7 @@ tags:
     description: PO/event-based billing, summary and detail
   - name: partner-bills
     description: Bills received from partners
+  - { name: partner-payments, description: Disbursements to partners }
 
 paths:
   /healthz:
@@ -1601,6 +1602,69 @@ paths:
       responses:
         "204": { description: Deleted }
 
+  /partner-payments:
+    get:
+      operationId: listPartnerPayments
+      tags: [partner-payments]
+      responses:
+        "200":
+          description: List of partner payments
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/PartnerPayment" } }
+    post:
+      operationId: createPartnerPayment
+      tags: [partner-payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerPaymentInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPayment" }
+  /partner-payments/{id}:
+    patch:
+      operationId: updatePartnerPayment
+      tags: [partner-payments]
+      parameters: [ { name: id, in: path, required: true, schema: { type: integer } } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerPaymentInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPayment" }
+    delete:
+      operationId: deletePartnerPayment
+      tags: [partner-payments]
+      parameters: [ { name: id, in: path, required: true, schema: { type: integer } } ]
+      responses:
+        "204": { description: Deleted }
+  /partner-payments/{id}/status:
+    patch:
+      operationId: updatePartnerPaymentStatus
+      tags: [partner-payments]
+      parameters: [ { name: id, in: path, required: true, schema: { type: integer } } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerPaymentStatusInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerPayment" }
+
 components:
   schemas:
     HealthStatus:
@@ -2793,7 +2857,7 @@ components:
         notes: { type: ["string", "null"] }
     PartnerBill:
       type: object
-      required: [id, code, partnerId, partnerName, amount, createdAt]
+      required: [id, code, partnerId, partnerName, amount, amountPaid, createdAt]
       properties:
         id: { type: integer }
         code: { type: string }
@@ -2805,6 +2869,7 @@ components:
         partnerPurchaseOrderId: { type: ["integer", "null"] }
         ppoCode: { type: ["string", "null"] }
         amount: { type: number }
+        amountPaid: { type: number }
         attachmentUrl: { type: ["string", "null"] }
         attachmentName: { type: ["string", "null"] }
         dateReceived: { type: ["string", "null"] }
@@ -2812,3 +2877,41 @@ components:
         notes: { type: ["string", "null"] }
         createdByName: { type: ["string", "null"] }
         createdAt: { type: string }
+    PartnerPaymentInput:
+      type: object
+      required: [partnerBillId, amount, mode]
+      properties:
+        partnerBillId: { type: integer }
+        sourceClientPaymentId: { type: ["integer", "null"] }
+        amount: { type: number }
+        mode: { type: string }
+        status: { type: string }
+        paymentDate: { type: ["string", "null"] }
+        attachmentUrl: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+    PartnerPayment:
+      type: object
+      required: [id, partnerId, partnerName, partnerBillId, partnerBillCode, amount, status, createdAt]
+      properties:
+        id: { type: integer }
+        partnerId: { type: integer }
+        partnerName: { type: string }
+        partnerBillId: { type: integer }
+        partnerBillCode: { type: string }
+        clientId: { type: ["integer", "null"] }
+        clientName: { type: ["string", "null"] }
+        sourceClientPaymentId: { type: ["integer", "null"] }
+        sourceClientPaymentLabel: { type: ["string", "null"] }
+        amount: { type: number }
+        mode: { type: ["string", "null"] }
+        status: { type: string }
+        paymentDate: { type: ["string", "null"] }
+        attachmentUrl: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+        createdByName: { type: ["string", "null"] }
+        createdAt: { type: string }
+    PartnerPaymentStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [pending, settled] }

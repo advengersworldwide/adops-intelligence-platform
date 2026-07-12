@@ -70,6 +70,9 @@ import type {
   PartnerClient,
   PartnerClientEvent,
   PartnerInput,
+  PartnerPayment,
+  PartnerPaymentInput,
+  PartnerPaymentStatusInput,
   PartnerPayoutInput,
   PartnerPurchaseOrder,
   PartnerPurchaseOrderInput,
@@ -6308,5 +6311,337 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getDeletePartnerBillMutationOptions(options));
+    }
+
+export const getListPartnerPaymentsUrl = () => {
+
+
+
+
+  return `/api/partner-payments`
+}
+
+export const listPartnerPayments = async ( options?: RequestInit): Promise<PartnerPayment[]> => {
+
+  return customFetch<PartnerPayment[]>(getListPartnerPaymentsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPartnerPaymentsQueryKey = () => {
+    return [
+    `/api/partner-payments`
+    ] as const;
+    }
+
+
+export const getListPartnerPaymentsQueryOptions = <TData = Awaited<ReturnType<typeof listPartnerPayments>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartnerPayments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPartnerPaymentsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPartnerPayments>>> = ({ signal }) => listPartnerPayments({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPartnerPayments>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPartnerPaymentsQueryResult = NonNullable<Awaited<ReturnType<typeof listPartnerPayments>>>
+export type ListPartnerPaymentsQueryError = ErrorType<unknown>
+
+
+
+export function useListPartnerPayments<TData = Awaited<ReturnType<typeof listPartnerPayments>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartnerPayments>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPartnerPaymentsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreatePartnerPaymentUrl = () => {
+
+
+
+
+  return `/api/partner-payments`
+}
+
+export const createPartnerPayment = async (partnerPaymentInput: PartnerPaymentInput, options?: RequestInit): Promise<PartnerPayment> => {
+
+  return customFetch<PartnerPayment>(getCreatePartnerPaymentUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      partnerPaymentInput,)
+  }
+);}
+
+
+
+
+export const getCreatePartnerPaymentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPartnerPayment>>, TError,{data: BodyType<PartnerPaymentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPartnerPayment>>, TError,{data: BodyType<PartnerPaymentInput>}, TContext> => {
+
+const mutationKey = ['createPartnerPayment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPartnerPayment>>, {data: BodyType<PartnerPaymentInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPartnerPayment(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePartnerPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof createPartnerPayment>>>
+    export type CreatePartnerPaymentMutationBody = BodyType<PartnerPaymentInput>
+    export type CreatePartnerPaymentMutationError = ErrorType<unknown>
+
+    export const useCreatePartnerPayment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPartnerPayment>>, TError,{data: BodyType<PartnerPaymentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPartnerPayment>>,
+        TError,
+        {data: BodyType<PartnerPaymentInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePartnerPaymentMutationOptions(options));
+    }
+
+export const getUpdatePartnerPaymentUrl = (id: number,) => {
+
+
+
+
+  return `/api/partner-payments/${id}`
+}
+
+export const updatePartnerPayment = async (id: number,
+    partnerPaymentInput: PartnerPaymentInput, options?: RequestInit): Promise<PartnerPayment> => {
+
+  return customFetch<PartnerPayment>(getUpdatePartnerPaymentUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      partnerPaymentInput,)
+  }
+);}
+
+
+
+
+export const getUpdatePartnerPaymentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartnerPayment>>, TError,{id: number;data: BodyType<PartnerPaymentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePartnerPayment>>, TError,{id: number;data: BodyType<PartnerPaymentInput>}, TContext> => {
+
+const mutationKey = ['updatePartnerPayment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePartnerPayment>>, {id: number;data: BodyType<PartnerPaymentInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePartnerPayment(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePartnerPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof updatePartnerPayment>>>
+    export type UpdatePartnerPaymentMutationBody = BodyType<PartnerPaymentInput>
+    export type UpdatePartnerPaymentMutationError = ErrorType<unknown>
+
+    export const useUpdatePartnerPayment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartnerPayment>>, TError,{id: number;data: BodyType<PartnerPaymentInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePartnerPayment>>,
+        TError,
+        {id: number;data: BodyType<PartnerPaymentInput>},
+        TContext
+      > => {
+      return useMutation(getUpdatePartnerPaymentMutationOptions(options));
+    }
+
+export const getDeletePartnerPaymentUrl = (id: number,) => {
+
+
+
+
+  return `/api/partner-payments/${id}`
+}
+
+export const deletePartnerPayment = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeletePartnerPaymentUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePartnerPaymentMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePartnerPayment>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePartnerPayment>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePartnerPayment'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePartnerPayment>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePartnerPayment(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePartnerPaymentMutationResult = NonNullable<Awaited<ReturnType<typeof deletePartnerPayment>>>
+
+    export type DeletePartnerPaymentMutationError = ErrorType<unknown>
+
+    export const useDeletePartnerPayment = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePartnerPayment>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePartnerPayment>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePartnerPaymentMutationOptions(options));
+    }
+
+export const getUpdatePartnerPaymentStatusUrl = (id: number,) => {
+
+
+
+
+  return `/api/partner-payments/${id}/status`
+}
+
+export const updatePartnerPaymentStatus = async (id: number,
+    partnerPaymentStatusInput: PartnerPaymentStatusInput, options?: RequestInit): Promise<PartnerPayment> => {
+
+  return customFetch<PartnerPayment>(getUpdatePartnerPaymentStatusUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      partnerPaymentStatusInput,)
+  }
+);}
+
+
+
+
+export const getUpdatePartnerPaymentStatusMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartnerPaymentStatus>>, TError,{id: number;data: BodyType<PartnerPaymentStatusInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePartnerPaymentStatus>>, TError,{id: number;data: BodyType<PartnerPaymentStatusInput>}, TContext> => {
+
+const mutationKey = ['updatePartnerPaymentStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePartnerPaymentStatus>>, {id: number;data: BodyType<PartnerPaymentStatusInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePartnerPaymentStatus(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePartnerPaymentStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updatePartnerPaymentStatus>>>
+    export type UpdatePartnerPaymentStatusMutationBody = BodyType<PartnerPaymentStatusInput>
+    export type UpdatePartnerPaymentStatusMutationError = ErrorType<unknown>
+
+    export const useUpdatePartnerPaymentStatus = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartnerPaymentStatus>>, TError,{id: number;data: BodyType<PartnerPaymentStatusInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePartnerPaymentStatus>>,
+        TError,
+        {id: number;data: BodyType<PartnerPaymentStatusInput>},
+        TContext
+      > => {
+      return useMutation(getUpdatePartnerPaymentStatusMutationOptions(options));
     }
 

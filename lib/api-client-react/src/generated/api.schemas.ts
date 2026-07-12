@@ -1024,6 +1024,7 @@ export interface PartnerBill {
   /** @nullable */
   ppoCode?: string | null;
   amount: number;
+  amountPaid: number;
   /** @nullable */
   attachmentUrl?: string | null;
   /** @nullable */
@@ -1037,6 +1038,62 @@ export interface PartnerBill {
   /** @nullable */
   createdByName?: string | null;
   createdAt: string;
+}
+
+export interface PartnerPaymentInput {
+  partnerBillId: number;
+  /** @nullable */
+  sourceClientPaymentId?: number | null;
+  amount: number;
+  mode: string;
+  status?: string;
+  /** @nullable */
+  paymentDate?: string | null;
+  /** @nullable */
+  attachmentUrl?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface PartnerPayment {
+  id: number;
+  partnerId: number;
+  partnerName: string;
+  partnerBillId: number;
+  partnerBillCode: string;
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  clientName?: string | null;
+  /** @nullable */
+  sourceClientPaymentId?: number | null;
+  /** @nullable */
+  sourceClientPaymentLabel?: string | null;
+  amount: number;
+  /** @nullable */
+  mode?: string | null;
+  status: string;
+  /** @nullable */
+  paymentDate?: string | null;
+  /** @nullable */
+  attachmentUrl?: string | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdByName?: string | null;
+  createdAt: string;
+}
+
+export type PartnerPaymentStatusInputStatus = typeof PartnerPaymentStatusInputStatus[keyof typeof PartnerPaymentStatusInputStatus];
+
+
+export const PartnerPaymentStatusInputStatus = {
+  pending: 'pending',
+  settled: 'settled',
+} as const;
+
+export interface PartnerPaymentStatusInput {
+  status: PartnerPaymentStatusInputStatus;
 }
 
 export type ListBillingRecordsParams = {
