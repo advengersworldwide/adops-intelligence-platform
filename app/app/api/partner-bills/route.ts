@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { and, count, eq, gte, lt } from "drizzle-orm";
 import {
   db, partnerBillsTable, partnersTable, clientsTable, partnerPurchaseOrdersTable,
-  paymentTermsTable, usersTable,
+  paymentTermsTable, usersTable, partnerPaymentsTable,
 } from "@workspace/db";
 import { CreatePartnerBillBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
@@ -31,12 +31,15 @@ export async function mapPartnerBill(r: Row) {
     const [u] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, r.createdById));
     createdByName = u?.name ?? null;
   }
+  const paidRows = await db.select({ amt: partnerPaymentsTable.amount }).from(partnerPaymentsTable)
+    .where(and(eq(partnerPaymentsTable.partnerBillId, r.id), eq(partnerPaymentsTable.status, "settled")));
+  const amountPaid = paidRows.reduce((s, x) => s + Number(x.amt), 0);
   return {
     id: r.id, code: r.code, partnerInvoiceNumber: r.partnerInvoiceNumber ?? null,
     partnerId: r.partnerId, partnerName: partner?.name ?? "—",
     clientId: r.clientId ?? null, clientName: client?.name ?? null,
     partnerPurchaseOrderId: r.partnerPurchaseOrderId ?? null, ppoCode: ppo?.code ?? null,
-    amount: Number(r.amount), attachmentUrl: r.attachmentUrl ?? null, attachmentName: r.attachmentName ?? null,
+    amount: Number(r.amount), amountPaid, attachmentUrl: r.attachmentUrl ?? null, attachmentName: r.attachmentName ?? null,
     dateReceived: r.dateReceived ?? null, partnerTermDays, notes: r.notes ?? null,
     createdByName, createdAt: r.createdAt.toISOString(),
   };
