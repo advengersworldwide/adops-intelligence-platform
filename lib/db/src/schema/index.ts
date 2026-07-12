@@ -23,3 +23,4 @@ export * from "./billings";
 export * from "./billing-lines";
 export * from "./billing-event-items";
 export * from "./payment-billings";
+export * from "./partner-bills";
