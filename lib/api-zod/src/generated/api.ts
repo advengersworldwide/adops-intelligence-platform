@@ -2063,3 +2063,80 @@ export const GenerateBillingInvoiceResponse = zod.object({
 })
 
 
+export const ListPartnerBillsResponseItem = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "partnerInvoiceNumber": zod.string().nullish(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "ppoCode": zod.string().nullish(),
+  "amount": zod.number(),
+  "attachmentUrl": zod.string().nullish(),
+  "attachmentName": zod.string().nullish(),
+  "dateReceived": zod.string().nullish(),
+  "partnerTermDays": zod.number().nullish(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListPartnerBillsResponse = zod.array(ListPartnerBillsResponseItem)
+
+
+export const CreatePartnerBillBody = zod.object({
+  "partnerId": zod.number(),
+  "clientId": zod.number().nullish(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "partnerInvoiceNumber": zod.string().nullish(),
+  "amount": zod.number(),
+  "attachmentUrl": zod.string().nullish(),
+  "attachmentName": zod.string().nullish(),
+  "dateReceived": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})
+
+
+export const UpdatePartnerBillParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdatePartnerBillBody = zod.object({
+  "partnerId": zod.number(),
+  "clientId": zod.number().nullish(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "partnerInvoiceNumber": zod.string().nullish(),
+  "amount": zod.number(),
+  "attachmentUrl": zod.string().nullish(),
+  "attachmentName": zod.string().nullish(),
+  "dateReceived": zod.string().nullish(),
+  "notes": zod.string().nullish()
+})
+
+export const UpdatePartnerBillResponse = zod.object({
+  "id": zod.number(),
+  "code": zod.string(),
+  "partnerInvoiceNumber": zod.string().nullish(),
+  "partnerId": zod.number(),
+  "partnerName": zod.string(),
+  "clientId": zod.number().nullish(),
+  "clientName": zod.string().nullish(),
+  "partnerPurchaseOrderId": zod.number().nullish(),
+  "ppoCode": zod.string().nullish(),
+  "amount": zod.number(),
+  "attachmentUrl": zod.string().nullish(),
+  "attachmentName": zod.string().nullish(),
+  "dateReceived": zod.string().nullish(),
+  "partnerTermDays": zod.number().nullish(),
+  "notes": zod.string().nullish(),
+  "createdByName": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+
+
+export const DeletePartnerBillParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+

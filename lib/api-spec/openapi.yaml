@@ -42,6 +42,8 @@ tags:
     description: Global tax configuration
   - name: billings
     description: PO/event-based billing, summary and detail
+  - name: partner-bills
+    description: Bills received from partners
 
 paths:
   /healthz:
@@ -1546,6 +1548,59 @@ paths:
               schema: { $ref: "#/components/schemas/BillingDetail" }
         "409": { description: Billing is not approved }
 
+  # ── Partner Bills ──────────────────────────────────────────────────────────────
+  /partner-bills:
+    get:
+      operationId: listPartnerBills
+      tags: [partner-bills]
+      responses:
+        "200":
+          description: List of partner bills
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/PartnerBill" }
+    post:
+      operationId: createPartnerBill
+      tags: [partner-bills]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerBillInput" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerBill" }
+
+  /partner-bills/{id}:
+    patch:
+      operationId: updatePartnerBill
+      tags: [partner-bills]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PartnerBillInput" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PartnerBill" }
+    delete:
+      operationId: deletePartnerBill
+      tags: [partner-bills]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "204": { description: Deleted }
+
 components:
   schemas:
     HealthStatus:
@@ -2722,3 +2777,38 @@ components:
     BillingDetail:
       allOf:
         - $ref: "#/components/schemas/BillingSummary"
+
+    PartnerBillInput:
+      type: object
+      required: [partnerId, amount]
+      properties:
+        partnerId: { type: integer }
+        clientId: { type: ["integer", "null"] }
+        partnerPurchaseOrderId: { type: ["integer", "null"] }
+        partnerInvoiceNumber: { type: ["string", "null"] }
+        amount: { type: number }
+        attachmentUrl: { type: ["string", "null"] }
+        attachmentName: { type: ["string", "null"] }
+        dateReceived: { type: ["string", "null"] }
+        notes: { type: ["string", "null"] }
+    PartnerBill:
+      type: object
+      required: [id, code, partnerId, partnerName, amount, createdAt]
+      properties:
+        id: { type: integer }
+        code: { type: string }
+        partnerInvoiceNumber: { type: ["string", "null"] }
+        partnerId: { type: integer }
+        partnerName: { type: string }
+        clientId: { type: ["integer", "null"] }
+        clientName: { type: ["string", "null"] }
+        partnerPurchaseOrderId: { type: ["integer", "null"] }
+        ppoCode: { type: ["string", "null"] }
+        amount: { type: number }
+        attachmentUrl: { type: ["string", "null"] }
+        attachmentName: { type: ["string", "null"] }
+        dateReceived: { type: ["string", "null"] }
+        partnerTermDays: { type: ["integer", "null"] }
+        notes: { type: ["string", "null"] }
+        createdByName: { type: ["string", "null"] }
+        createdAt: { type: string }

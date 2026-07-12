@@ -989,6 +989,56 @@ export interface BillingSummary {
 
 export type BillingDetail = BillingSummary;
 
+export interface PartnerBillInput {
+  partnerId: number;
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  partnerPurchaseOrderId?: number | null;
+  /** @nullable */
+  partnerInvoiceNumber?: string | null;
+  amount: number;
+  /** @nullable */
+  attachmentUrl?: string | null;
+  /** @nullable */
+  attachmentName?: string | null;
+  /** @nullable */
+  dateReceived?: string | null;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface PartnerBill {
+  id: number;
+  code: string;
+  /** @nullable */
+  partnerInvoiceNumber?: string | null;
+  partnerId: number;
+  partnerName: string;
+  /** @nullable */
+  clientId?: number | null;
+  /** @nullable */
+  clientName?: string | null;
+  /** @nullable */
+  partnerPurchaseOrderId?: number | null;
+  /** @nullable */
+  ppoCode?: string | null;
+  amount: number;
+  /** @nullable */
+  attachmentUrl?: string | null;
+  /** @nullable */
+  attachmentName?: string | null;
+  /** @nullable */
+  dateReceived?: string | null;
+  /** @nullable */
+  partnerTermDays?: number | null;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  createdByName?: string | null;
+  createdAt: string;
+}
+
 export type ListBillingRecordsParams = {
 /**
  * @nullable

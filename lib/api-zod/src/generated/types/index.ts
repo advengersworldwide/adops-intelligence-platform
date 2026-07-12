@@ -66,6 +66,8 @@ export * from './listPartnerPurchaseOrdersParams';
 export * from './listTransactionsParams';
 export * from './partner';
 export * from './partnerAnalytics';
+export * from './partnerBill';
+export * from './partnerBillInput';
 export * from './partnerClient';
 export * from './partnerClientEvent';
 export * from './partnerInput';

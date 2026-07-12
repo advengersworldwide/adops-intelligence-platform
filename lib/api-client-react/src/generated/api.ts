@@ -65,6 +65,8 @@ import type {
   ListTransactionsParams,
   Partner,
   PartnerAnalytics,
+  PartnerBill,
+  PartnerBillInput,
   PartnerClient,
   PartnerClientEvent,
   PartnerInput,
@@ -6040,5 +6042,271 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getGenerateBillingInvoiceMutationOptions(options));
+    }
+
+export const getListPartnerBillsUrl = () => {
+
+
+
+
+  return `/api/partner-bills`
+}
+
+export const listPartnerBills = async ( options?: RequestInit): Promise<PartnerBill[]> => {
+
+  return customFetch<PartnerBill[]>(getListPartnerBillsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListPartnerBillsQueryKey = () => {
+    return [
+    `/api/partner-bills`
+    ] as const;
+    }
+
+
+export const getListPartnerBillsQueryOptions = <TData = Awaited<ReturnType<typeof listPartnerBills>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartnerBills>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListPartnerBillsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listPartnerBills>>> = ({ signal }) => listPartnerBills({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listPartnerBills>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListPartnerBillsQueryResult = NonNullable<Awaited<ReturnType<typeof listPartnerBills>>>
+export type ListPartnerBillsQueryError = ErrorType<unknown>
+
+
+
+export function useListPartnerBills<TData = Awaited<ReturnType<typeof listPartnerBills>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listPartnerBills>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListPartnerBillsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreatePartnerBillUrl = () => {
+
+
+
+
+  return `/api/partner-bills`
+}
+
+export const createPartnerBill = async (partnerBillInput: PartnerBillInput, options?: RequestInit): Promise<PartnerBill> => {
+
+  return customFetch<PartnerBill>(getCreatePartnerBillUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      partnerBillInput,)
+  }
+);}
+
+
+
+
+export const getCreatePartnerBillMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPartnerBill>>, TError,{data: BodyType<PartnerBillInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPartnerBill>>, TError,{data: BodyType<PartnerBillInput>}, TContext> => {
+
+const mutationKey = ['createPartnerBill'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPartnerBill>>, {data: BodyType<PartnerBillInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPartnerBill(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePartnerBillMutationResult = NonNullable<Awaited<ReturnType<typeof createPartnerBill>>>
+    export type CreatePartnerBillMutationBody = BodyType<PartnerBillInput>
+    export type CreatePartnerBillMutationError = ErrorType<unknown>
+
+    export const useCreatePartnerBill = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPartnerBill>>, TError,{data: BodyType<PartnerBillInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPartnerBill>>,
+        TError,
+        {data: BodyType<PartnerBillInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePartnerBillMutationOptions(options));
+    }
+
+export const getUpdatePartnerBillUrl = (id: number,) => {
+
+
+
+
+  return `/api/partner-bills/${id}`
+}
+
+export const updatePartnerBill = async (id: number,
+    partnerBillInput: PartnerBillInput, options?: RequestInit): Promise<PartnerBill> => {
+
+  return customFetch<PartnerBill>(getUpdatePartnerBillUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      partnerBillInput,)
+  }
+);}
+
+
+
+
+export const getUpdatePartnerBillMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartnerBill>>, TError,{id: number;data: BodyType<PartnerBillInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updatePartnerBill>>, TError,{id: number;data: BodyType<PartnerBillInput>}, TContext> => {
+
+const mutationKey = ['updatePartnerBill'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updatePartnerBill>>, {id: number;data: BodyType<PartnerBillInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updatePartnerBill(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdatePartnerBillMutationResult = NonNullable<Awaited<ReturnType<typeof updatePartnerBill>>>
+    export type UpdatePartnerBillMutationBody = BodyType<PartnerBillInput>
+    export type UpdatePartnerBillMutationError = ErrorType<unknown>
+
+    export const useUpdatePartnerBill = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updatePartnerBill>>, TError,{id: number;data: BodyType<PartnerBillInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updatePartnerBill>>,
+        TError,
+        {id: number;data: BodyType<PartnerBillInput>},
+        TContext
+      > => {
+      return useMutation(getUpdatePartnerBillMutationOptions(options));
+    }
+
+export const getDeletePartnerBillUrl = (id: number,) => {
+
+
+
+
+  return `/api/partner-bills/${id}`
+}
+
+export const deletePartnerBill = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeletePartnerBillUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeletePartnerBillMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePartnerBill>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePartnerBill>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deletePartnerBill'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePartnerBill>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deletePartnerBill(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePartnerBillMutationResult = NonNullable<Awaited<ReturnType<typeof deletePartnerBill>>>
+
+    export type DeletePartnerBillMutationError = ErrorType<unknown>
+
+    export const useDeletePartnerBill = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePartnerBill>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePartnerBill>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeletePartnerBillMutationOptions(options));
     }
 
