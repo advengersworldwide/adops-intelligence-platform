@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, Monitor, Building2,
   Upload, BarChart3, Settings, ChevronLeft, ChevronRight,
   Zap, LogOut, ChevronDown, ChevronUp,
-  FileText, ScrollText, CreditCard, DollarSign, Wallet,
+  FileText, CreditCard, DollarSign, Wallet,
   ClipboardList,
 } from "lucide-react";
 import { useState } from "react";
@@ -28,8 +28,7 @@ const topNavItems = [
 ];
 
 const financialsItems = [
-  { href: "/billings/summary", label: "Billing Summary", icon: FileText, permission: "View Billings" },
-  { href: "/billings/detail", label: "Billing Detail", icon: ScrollText, permission: "View Billing Detail" },
+  { href: "/billings", label: "Billing", icon: FileText, permission: "View Billings" },
   { href: "/payments", label: "Payments", icon: CreditCard, permission: "View Payments" },
   { href: "/cost", label: "Cost", icon: DollarSign, permission: "View Cost" },
 ];
