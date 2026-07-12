@@ -12,11 +12,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { computeBilling } from "@/lib/compute-billing";
-import { computeAging } from "@/lib/aging";
 import { cn } from "@/lib/utils";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { CreateBillingDialog } from "@/components/billings/CreateBillingDialog";
 import { StatusSelect } from "@/components/billings/StatusSelect";
+import { AgingPill } from "@/components/billings/AgingPill";
 
 function fmt(n: number) { return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
@@ -116,24 +116,11 @@ export default function BillingSummaryPage() {
   );
 }
 
-const AGING_PILL: Record<string, string> = {
-  green: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
-  yellow: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-  red: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
-  neutral: "bg-muted text-muted-foreground",
-};
-
 function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
   b: BillingSummary; expanded: boolean; onToggle: () => void; onEdit: () => void; onDelete: () => void;
 }) {
   const { paid, pending, pct, payStatus } = paymentProgress(b);
   const settled = b.netReceivable > 0 && b.amountPaid >= b.netReceivable - 0.01;
-  const aging = computeAging({
-    start: b.invoiceGeneratedAt ? new Date(b.invoiceGeneratedAt) : null,
-    termDays: b.paymentTermDays ?? null,
-    now: new Date(),
-    settled,
-  });
 
   return (
     <>
@@ -160,12 +147,7 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
           </div>
         </td>
         <td className="px-3 py-2">
-          <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold", AGING_PILL[aging.color])}>
-            {settled ? "Settled"
-              : aging.color === "neutral" ? "—"
-              : aging.overdue ? `Overdue ${Math.abs(aging.daysLeft ?? 0)}d`
-              : `${aging.daysLeft}d left`}
-          </span>
+          <AgingPill start={b.invoiceGeneratedAt ?? null} termDays={b.paymentTermDays ?? null} settled={settled} />
         </td>
         <td className="px-3 py-2"><StatusSelect billingId={b.id} status={b.status} /></td>
         <td className="px-3 py-2">
