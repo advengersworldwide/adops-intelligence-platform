@@ -10,6 +10,7 @@ export interface PartnerPaymentInput {
   partnerBillId: number;
   /** @nullable */
   sourceClientPaymentId?: number | null;
+  /** @minimum 0 */
   amount: number;
   mode: string;
   status?: string;

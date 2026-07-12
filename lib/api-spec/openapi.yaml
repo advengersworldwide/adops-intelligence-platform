@@ -2883,7 +2883,7 @@ components:
       properties:
         partnerBillId: { type: integer }
         sourceClientPaymentId: { type: ["integer", "null"] }
-        amount: { type: number }
+        amount: { type: number, minimum: 0 }
         mode: { type: string }
         status: { type: string }
         paymentDate: { type: ["string", "null"] }

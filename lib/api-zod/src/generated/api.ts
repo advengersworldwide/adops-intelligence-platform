@@ -2164,10 +2164,14 @@ export const ListPartnerPaymentsResponseItem = zod.object({
 export const ListPartnerPaymentsResponse = zod.array(ListPartnerPaymentsResponseItem)
 
 
+export const createPartnerPaymentBodyAmountMin = 0;
+
+
+
 export const CreatePartnerPaymentBody = zod.object({
   "partnerBillId": zod.number(),
   "sourceClientPaymentId": zod.number().nullish(),
-  "amount": zod.number(),
+  "amount": zod.number().min(createPartnerPaymentBodyAmountMin),
   "mode": zod.string(),
   "status": zod.string().optional(),
   "paymentDate": zod.string().nullish(),
@@ -2180,10 +2184,14 @@ export const UpdatePartnerPaymentParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const updatePartnerPaymentBodyAmountMin = 0;
+
+
+
 export const UpdatePartnerPaymentBody = zod.object({
   "partnerBillId": zod.number(),
   "sourceClientPaymentId": zod.number().nullish(),
-  "amount": zod.number(),
+  "amount": zod.number().min(updatePartnerPaymentBodyAmountMin),
   "mode": zod.string(),
   "status": zod.string().optional(),
   "paymentDate": zod.string().nullish(),
