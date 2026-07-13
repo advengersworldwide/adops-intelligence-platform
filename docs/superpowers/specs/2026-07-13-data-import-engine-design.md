@@ -62,6 +62,9 @@ A **shared Import Engine**, then one importer per data type, built in **dependen
 4. **Dedup by `(clientId, receiveDate, startDate, endDate)`** for client POs — a matching existing PO → skip and report. Rows with no dates at all skip dedup (treated as create).
 5. **CSV/TSV only** for Phase 1 (`papaparse` is already a dependency).
 6. **Spec-first API.** New endpoints go into the OpenAPI spec; the zod schemas + react-query hooks are regenerated via orval (matching the rest of the codebase).
+7. **Legacy upload removed.** The dead `/api/upload` route and its `useUploadData` hook are deleted (see §12).
+8. **Engine is colocated** under `app/lib/import/` (not a separate workspace package) — one Next.js app, matches the existing `app/lib/` pattern.
+9. **Route stays `/upload`** — the page contents are replaced; no new nav entry.
 
 ---
 
@@ -242,9 +245,9 @@ Reused building blocks: drop zone + `papaparse` (from legacy page), `useToast`, 
 
 ---
 
-## 12. Out of scope / to confirm at review
+## 12. Out of scope / deferred
 
-- **Legacy `/upload` replacement.** The current `/upload` page and `/api/upload` route (campaigns/transactions model) become dead once this ships. Proposal: replace the page contents and **remove** the old `/api/upload` route + its `useUploadData` usage. → *Confirm deletion at review.*
+- **Legacy `/upload` replacement (confirmed).** The `/upload` page contents are replaced by the new importer, and the dead `/api/upload` route + its `useUploadData` hook (campaigns/transactions model) are **deleted**. The route path `/upload` is kept.
 - **`.xlsx` support** — deferred; CSV/TSV only in Phase 1.
 - **Attachment upload during import** — deferred (metadata-now approach).
 - **"Update existing" re-import mode** — deferred; Phase 1 skips duplicates only.
@@ -252,8 +255,8 @@ Reused building blocks: drop zone + `papaparse` (from legacy page), `useToast`, 
 
 ---
 
-## 13. Open questions for the reviewer
+## 13. Resolved reviewer decisions
 
-1. §12 — OK to delete the legacy `/api/upload` route and `useUploadData` hook, or keep them around?
-2. §5 — engine under `app/lib/import/` (colocated) vs. a new `@workspace/import` package. Colocated is simpler for Phase 1; a package is cleaner if we expect heavy reuse. Defaulting to colocated.
-3. §9 — reuse the `/upload` route/path, or introduce a new `/import` route in the dashboard nav?
+1. **Delete** the legacy `/api/upload` route + `useUploadData` hook. ✅
+2. Engine location: **colocated `app/lib/import/`** (a workspace package only pays off for cross-app reuse; there's one app here). ✅
+3. **Keep the `/upload` route/path** — replace its contents, no new `/import` nav entry. ✅
