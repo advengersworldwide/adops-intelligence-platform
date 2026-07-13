@@ -11,4 +11,10 @@ export interface ClientPurchaseOrderInput {
   clientId: number;
   /** @minItems 1 */
   attachments: ClientPurchaseOrderAttachmentInput[];
+  /** @nullable */
+  receiveDate?: string | null;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
 }

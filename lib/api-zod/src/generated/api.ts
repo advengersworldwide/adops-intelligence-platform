@@ -1405,6 +1405,9 @@ export const ListClientPurchaseOrdersResponseItem = zod.object({
   "url": zod.string(),
   "name": zod.string().nullish()
 })),
+  "receiveDate": zod.string().nullish(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -1424,7 +1427,10 @@ export const CreateClientPurchaseOrderBody = zod.object({
   "attachments": zod.array(zod.object({
   "url": zod.string().min(1),
   "name": zod.string().nullish()
-})).min(1)
+})).min(1),
+  "receiveDate": zod.string().nullish(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish()
 })
 
 
@@ -1447,6 +1453,9 @@ export const GetClientPurchaseOrderResponse = zod.object({
   "url": zod.string(),
   "name": zod.string().nullish()
 })),
+  "receiveDate": zod.string().nullish(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -1469,7 +1478,10 @@ export const UpdateClientPurchaseOrderBody = zod.object({
   "attachments": zod.array(zod.object({
   "url": zod.string().min(1),
   "name": zod.string().nullish()
-})).min(1).optional()
+})).min(1).optional(),
+  "receiveDate": zod.string().nullish(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish()
 })
 
 export const UpdateClientPurchaseOrderResponse = zod.object({
@@ -1484,6 +1496,9 @@ export const UpdateClientPurchaseOrderResponse = zod.object({
   "url": zod.string(),
   "name": zod.string().nullish()
 })),
+  "receiveDate": zod.string().nullish(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -1521,6 +1536,9 @@ export const ListClientPurchaseOrdersByClientResponseItem = zod.object({
   "url": zod.string(),
   "name": zod.string().nullish()
 })),
+  "receiveDate": zod.string().nullish(),
+  "startDate": zod.string().nullish(),
+  "endDate": zod.string().nullish(),
   "createdById": zod.number().nullish(),
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string()

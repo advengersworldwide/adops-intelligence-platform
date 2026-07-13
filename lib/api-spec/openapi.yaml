@@ -2108,6 +2108,9 @@ components:
         attachments:
           type: array
           items: { $ref: "#/components/schemas/ClientPurchaseOrderAttachment" }
+        receiveDate: { type: ["string", "null"] }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
         createdById: { type: ["integer", "null"] }
         createdByName: { type: ["string", "null"] }
         createdAt: { type: string }
@@ -2121,6 +2124,9 @@ components:
           type: array
           minItems: 1
           items: { $ref: "#/components/schemas/ClientPurchaseOrderAttachmentInput" }
+        receiveDate: { type: ["string", "null"] }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
 
     ClientPurchaseOrderUpdate:
       type: object
@@ -2130,6 +2136,9 @@ components:
           type: array
           minItems: 1
           items: { $ref: "#/components/schemas/ClientPurchaseOrderAttachmentInput" }
+        receiveDate: { type: ["string", "null"] }
+        startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
 
     PartnerPurchaseOrderItem:
       type: object

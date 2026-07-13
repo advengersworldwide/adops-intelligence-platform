@@ -437,6 +437,12 @@ export interface ClientPurchaseOrder {
   attachmentName?: string | null;
   attachments: ClientPurchaseOrderAttachment[];
   /** @nullable */
+  receiveDate?: string | null;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
+  /** @nullable */
   createdById?: number | null;
   /** @nullable */
   createdByName?: string | null;
@@ -447,12 +453,24 @@ export interface ClientPurchaseOrderInput {
   clientId: number;
   /** @minItems 1 */
   attachments: ClientPurchaseOrderAttachmentInput[];
+  /** @nullable */
+  receiveDate?: string | null;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
 }
 
 export interface ClientPurchaseOrderUpdate {
   clientId?: number;
   /** @minItems 1 */
   attachments?: ClientPurchaseOrderAttachmentInput[];
+  /** @nullable */
+  receiveDate?: string | null;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  endDate?: string | null;
 }
 
 export interface PartnerPurchaseOrderItem {
