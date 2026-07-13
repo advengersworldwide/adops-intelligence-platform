@@ -25,10 +25,16 @@ export function ClientPODetailDialog({ po, startInEdit, onClose }: {
   const [clientId, setClientId] = useState("");
   const [kept, setKept] = useState<ClientPurchaseOrderAttachment[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [receiveDate, setReceiveDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (po) { setEditing(startInEdit); setClientId(String(po.clientId)); setKept(po.attachments ?? []); setNewFiles([]); }
+    if (po) {
+      setEditing(startInEdit); setClientId(String(po.clientId)); setKept(po.attachments ?? []); setNewFiles([]);
+      setReceiveDate(po.receiveDate ?? ""); setStartDate(po.startDate ?? ""); setEndDate(po.endDate ?? "");
+    }
   }, [po, startInEdit]);
 
   const update = useUpdateClientPurchaseOrder();
@@ -43,7 +49,10 @@ export function ClientPODetailDialog({ po, startInEdit, onClose }: {
     try {
       const uploaded = newFiles.length ? await uploadPoAttachments(newFiles) : [];
       const attachments = [...kept, ...uploaded];
-      await update.mutateAsync({ id: po.id, data: { clientId: Number(clientId), attachments } });
+      await update.mutateAsync({ id: po.id, data: {
+        clientId: Number(clientId), attachments,
+        receiveDate: receiveDate || null, startDate: startDate || null, endDate: endDate || null,
+      } });
       qc.invalidateQueries({ queryKey: getListClientPurchaseOrdersQueryKey() });
       toast({ title: "Purchase order updated" });
       onClose();
@@ -70,6 +79,25 @@ export function ClientPODetailDialog({ po, startInEdit, onClose }: {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div><span className="text-muted-foreground">Buying House</span><p>{po.buyingHouseName ?? "—"}</p></div>
               <div><span className="text-muted-foreground">Created By</span><p>{po.createdByName ?? "—"}</p></div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Dates</Label>
+              {editing ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <label className="space-y-1 text-xs"><span className="text-muted-foreground">Receive</span>
+                    <Input type="date" value={receiveDate} onChange={e => setReceiveDate(e.target.value)} /></label>
+                  <label className="space-y-1 text-xs"><span className="text-muted-foreground">Start</span>
+                    <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /></label>
+                  <label className="space-y-1 text-xs"><span className="text-muted-foreground">End</span>
+                    <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} /></label>
+                </div>
+              ) : (
+                <div className="grid grid-cols-3 gap-3 text-sm">
+                  <div><span className="text-muted-foreground">Receive</span><p>{po.receiveDate ? new Date(po.receiveDate).toLocaleDateString() : "—"}</p></div>
+                  <div><span className="text-muted-foreground">Start</span><p>{po.startDate ? new Date(po.startDate).toLocaleDateString() : "—"}</p></div>
+                  <div><span className="text-muted-foreground">End</span><p>{po.endDate ? new Date(po.endDate).toLocaleDateString() : "—"}</p></div>
+                </div>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Attachments</Label>

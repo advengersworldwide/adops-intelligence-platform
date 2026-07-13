@@ -20,9 +20,14 @@ export function CreateClientPODialog({ open, onClose }: { open: boolean; onClose
   const { data: clients } = useListClients();
   const [clientId, setClientId] = useState<string>("");
   const [files, setFiles] = useState<File[]>([]);
+  const [receiveDate, setReceiveDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => { if (open) { setClientId(""); setFiles([]); } }, [open]);
+  useEffect(() => {
+    if (open) { setClientId(""); setFiles([]); setReceiveDate(""); setStartDate(""); setEndDate(""); }
+  }, [open]);
 
   const create = useCreateClientPurchaseOrder();
 
@@ -42,7 +47,10 @@ export function CreateClientPODialog({ open, onClose }: { open: boolean; onClose
     setSubmitting(true);
     try {
       const attachments = await uploadPoAttachments(files);
-      await create.mutateAsync({ data: { clientId: Number(clientId), attachments } });
+      await create.mutateAsync({ data: {
+        clientId: Number(clientId), attachments,
+        receiveDate: receiveDate || null, startDate: startDate || null, endDate: endDate || null,
+      } });
       qc.invalidateQueries({ queryKey: getListClientPurchaseOrdersQueryKey() });
       toast({ title: "Purchase order created" });
       onClose();
@@ -64,6 +72,20 @@ export function CreateClientPODialog({ open, onClose }: { open: boolean; onClose
                 {clients?.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Receive Date</Label>
+            <Input type="date" value={receiveDate} onChange={e => setReceiveDate(e.target.value)} data-testid="cpo-receive-date" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label>Start Date</Label>
+              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} data-testid="cpo-start-date" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>End Date</Label>
+              <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} data-testid="cpo-end-date" />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label>Attachments (email / screenshot / PDF) <span className="text-destructive">*</span></Label>

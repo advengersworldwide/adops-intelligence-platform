@@ -31,7 +31,7 @@ export function ClientPOTab() {
     },
   });
 
-  const headers = ["Sr.", "CPO ID", "Client", "Buying House", "Created", "Created By", canEdit ? "Actions" : null]
+  const headers = ["Sr.", "CPO ID", "Client", "Buying House", "Received", "Duration", "Created", "Created By", canEdit ? "Actions" : null]
     .filter((h): h is string => h !== null);
 
   return (
@@ -45,8 +45,8 @@ export function ClientPOTab() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-        <table className="w-full">
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-x-auto">
+        <table className="w-full min-w-max">
           <thead>
             <tr className="border-b border-border bg-muted/30">
               {headers.map(h => <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>)}
@@ -68,6 +68,10 @@ export function ClientPOTab() {
                   <td className="px-5 py-3 text-sm font-medium">{r.code}</td>
                   <td className="px-5 py-3 text-sm">{r.clientName}</td>
                   <td className="px-5 py-3 text-sm text-muted-foreground">{r.buyingHouseName ?? "—"}</td>
+                  <td className="px-5 py-3 text-sm text-muted-foreground whitespace-nowrap">{r.receiveDate ? fmtDate(r.receiveDate) : "—"}</td>
+                  <td className="px-5 py-3 text-sm text-muted-foreground whitespace-nowrap">
+                    {r.startDate || r.endDate ? `${r.startDate ? fmtDate(r.startDate) : "—"} – ${r.endDate ? fmtDate(r.endDate) : "—"}` : "—"}
+                  </td>
                   <td className="px-5 py-3 text-sm text-muted-foreground">{fmtDate(r.createdAt)}</td>
                   <td className="px-5 py-3 text-sm text-muted-foreground">{r.createdByName ?? "—"}</td>
                   {canEdit && (
