@@ -1,4 +1,4 @@
-import { pgTable, serial, integer, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, integer, text, timestamp, jsonb, date } from "drizzle-orm/pg-core";
 import { clientsTable } from "./clients";
 import { usersTable } from "./auth";
 
@@ -13,6 +13,9 @@ export const clientPurchaseOrdersTable = pgTable("client_purchase_orders", {
   attachmentUrl: text("attachment_url").notNull(),
   attachmentName: text("attachment_name"),
   attachments: jsonb("attachments").$type<PoAttachment[]>().notNull().default([]),
+  receiveDate: date("receive_date"),   // date the PO was received
+  startDate: date("start_date"),       // campaign start (duration range)
+  endDate: date("end_date"),           // campaign end (duration range)
   createdById: integer("created_by_id").references(() => usersTable.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
