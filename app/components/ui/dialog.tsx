@@ -27,6 +27,24 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
+// When a Radix Select/Popover/Dropdown is open inside a Dialog, its content is
+// portaled outside the DialogContent. Dismissing that dropdown — whether by
+// clicking one of its items OR by clicking empty space inside the dialog — is
+// therefore seen by the Dialog as an "outside" interaction and would close the
+// whole dialog. Ignore the dialog's dismissal when the interaction targets a
+// popper, OR when any popper is currently open (the dropdown is still mounted at
+// the moment of the event, so this click was meant to close it, not the dialog).
+// A genuine backdrop click with no dropdown open still closes the dialog.
+function shouldIgnoreDialogDismiss(target: EventTarget | null): boolean {
+  if (
+    target instanceof Element &&
+    target.closest("[data-radix-popper-content-wrapper],[data-radix-select-viewport],[role='listbox']")
+  ) {
+    return true
+  }
+  return typeof document !== "undefined" && document.querySelector("[data-radix-popper-content-wrapper]") !== null
+}
+
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
@@ -40,15 +58,12 @@ const DialogContent = React.forwardRef<
         className
       )}
       {...props}
+      onPointerDownOutside={(e) => {
+        if (shouldIgnoreDialogDismiss(e.detail.originalEvent.target)) e.preventDefault();
+        props.onPointerDownOutside?.(e);
+      }}
       onInteractOutside={(e) => {
-        // Radix Select/Popover/Dropdown render their content in a portal outside
-        // this DialogContent's DOM subtree, so dismissing an open dropdown reads as
-        // an "outside" interaction and would close the whole dialog. Ignore those;
-        // real backdrop clicks (target not inside a popper portal) still close it.
-        const target = e.detail.originalEvent.target as HTMLElement | null;
-        if (target?.closest("[data-radix-popper-content-wrapper],[data-radix-select-viewport],[role='listbox']")) {
-          e.preventDefault();
-        }
+        if (shouldIgnoreDialogDismiss(e.detail.originalEvent.target)) e.preventDefault();
         props.onInteractOutside?.(e);
       }}
     >
