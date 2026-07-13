@@ -40,6 +40,17 @@ const DialogContent = React.forwardRef<
         className
       )}
       {...props}
+      onInteractOutside={(e) => {
+        // Radix Select/Popover/Dropdown render their content in a portal outside
+        // this DialogContent's DOM subtree, so dismissing an open dropdown reads as
+        // an "outside" interaction and would close the whole dialog. Ignore those;
+        // real backdrop clicks (target not inside a popper portal) still close it.
+        const target = e.detail.originalEvent.target as HTMLElement | null;
+        if (target?.closest("[data-radix-popper-content-wrapper],[data-radix-select-viewport],[role='listbox']")) {
+          e.preventDefault();
+        }
+        props.onInteractOutside?.(e);
+      }}
     >
       {children}
       <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
