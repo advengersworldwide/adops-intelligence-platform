@@ -35,6 +35,7 @@ export async function mapCpoRow(r: Row) {
   return {
     id: r.id, code: r.code, clientId: r.clientId, clientName: client?.name ?? "—",
     buyingHouseName, attachmentUrl: r.attachmentUrl, attachmentName: r.attachmentName, attachments,
+    receiveDate: r.receiveDate ?? null, startDate: r.startDate ?? null, endDate: r.endDate ?? null,
     createdById: r.createdById ?? null, createdByName, createdAt: r.createdAt.toISOString(),
   };
 }
@@ -74,6 +75,9 @@ export async function POST(req: Request): Promise<Response> {
     attachmentUrl: first.url,
     attachmentName: first.name,
     attachments,
+    receiveDate: parsed.data.receiveDate ?? null,
+    startDate: parsed.data.startDate ?? null,
+    endDate: parsed.data.endDate ?? null,
     createdById: user?.sub ?? null,
   }).returning();
   return NextResponse.json(await mapCpoRow(row), { status: 201 });

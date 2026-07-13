@@ -22,6 +22,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const attachments = parsed.data.attachments?.map((a) => ({ url: a.url, name: a.name ?? null }));
   const [row] = await db.update(clientPurchaseOrdersTable).set({
     ...(parsed.data.clientId !== undefined ? { clientId: parsed.data.clientId } : {}),
+    ...(parsed.data.receiveDate !== undefined ? { receiveDate: parsed.data.receiveDate ?? null } : {}),
+    ...(parsed.data.startDate !== undefined ? { startDate: parsed.data.startDate ?? null } : {}),
+    ...(parsed.data.endDate !== undefined ? { endDate: parsed.data.endDate ?? null } : {}),
     ...(attachments && attachments.length > 0
       ? { attachments, attachmentUrl: attachments[0].url, attachmentName: attachments[0].name }
       : {}),
