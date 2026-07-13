@@ -27,24 +27,6 @@ const DialogOverlay = React.forwardRef<
 ))
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName
 
-// When a Radix Select/Popover/Dropdown is open inside a Dialog, its content is
-// portaled outside the DialogContent. Dismissing that dropdown — whether by
-// clicking one of its items OR by clicking empty space inside the dialog — is
-// therefore seen by the Dialog as an "outside" interaction and would close the
-// whole dialog. Ignore the dialog's dismissal when the interaction targets a
-// popper, OR when any popper is currently open (the dropdown is still mounted at
-// the moment of the event, so this click was meant to close it, not the dialog).
-// A genuine backdrop click with no dropdown open still closes the dialog.
-function shouldIgnoreDialogDismiss(target: EventTarget | null): boolean {
-  if (
-    target instanceof Element &&
-    target.closest("[data-radix-popper-content-wrapper],[data-radix-select-viewport],[role='listbox']")
-  ) {
-    return true
-  }
-  return typeof document !== "undefined" && document.querySelector("[data-radix-popper-content-wrapper]") !== null
-}
-
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
@@ -58,13 +40,24 @@ const DialogContent = React.forwardRef<
         className
       )}
       {...props}
+      // The dependency tree contains duplicate copies of the Radix dialog/select
+      // packages, so their dismissable-layer stacks are separate: dismissing an
+      // open Select inside a Dialog is ALSO seen by the Dialog as an outside
+      // interaction and closes it. Target/DOM-based guards proved unreliable, so
+      // dialogs never close on outside clicks — only the X button, Cancel/Close,
+      // or Escape close them (which also protects half-filled forms).
       onPointerDownOutside={(e) => {
-        if (shouldIgnoreDialogDismiss(e.detail.originalEvent.target)) e.preventDefault();
+        e.preventDefault();
         props.onPointerDownOutside?.(e);
       }}
       onInteractOutside={(e) => {
-        if (shouldIgnoreDialogDismiss(e.detail.originalEvent.target)) e.preventDefault();
+        e.preventDefault();
         props.onInteractOutside?.(e);
+      }}
+      onEscapeKeyDown={(e) => {
+        // If a dropdown is open, Escape should close it, not the dialog.
+        if (document.querySelector("[data-radix-popper-content-wrapper]")) e.preventDefault();
+        props.onEscapeKeyDown?.(e);
       }}
     >
       {children}
