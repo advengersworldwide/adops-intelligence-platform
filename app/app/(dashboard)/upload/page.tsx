@@ -153,7 +153,7 @@ export default function ImportPage() {
         >
           <input
             type="file" accept=".csv,.tsv,.txt"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = ""; }}
             className="absolute inset-0 opacity-0 cursor-pointer" data-testid="file-input"
           />
           <div className="flex flex-col items-center gap-3">
