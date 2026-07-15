@@ -34,7 +34,7 @@
 - `app/lib/import/descriptors/client-purchase-orders.columns.ts` — add `note`s + `sampleRows` (so Phase 1 gets the sample UI too).
 - `app/app/(dashboard)/upload/page.tsx` — multi-type picker, "Expected columns" card, richer "Download sample CSV".
 
-**Unchanged (verify still green):** `client-purchase-orders.ts`, `cpo-helpers.ts` and their tests — the Phase 1 flat importer must keep working without edits.
+**Near-unchanged (verify still green):** `cpo-helpers.ts` and all Phase-1 tests keep working without edits; `client-purchase-orders.ts` needs only a 2-token type-annotation change (`ImportDescriptor` → `FlatImportDescriptor`, see Task 1 Step 5) — no behavior change.
 
 ---
 
@@ -257,7 +257,11 @@ export async function runImport<TCtx, TPayload>(
 Run: `pnpm --filter @workspace/web test run-import`
 Expected: PASS (existing flat tests + 3 new grouped tests).
 Run: `pnpm --filter @workspace/web typecheck`
-Expected: PASS. In particular, `client-purchase-orders.ts` (annotated `ImportDescriptor<CpoContext, CpoPayload>`) still compiles — a `resolveRow` object is assignable to the `Flat | Grouped` union via the `Flat` member. If typecheck complains there, do NOT edit the descriptor; re-check that `FlatImportDescriptor` matches its shape exactly.
+Expected: PASS — after one required Phase-1 accommodation. Because `clientPurchaseOrdersDescriptor` is *exported with a type annotation*, once `ImportDescriptor` is a union its Phase-1 test's `d.resolveRow(...)` no longer typechecks (you can't access `resolveRow` on the union without narrowing). Fix by typing the descriptor as its concrete `Flat` variant (the registry still holds the union — a `FlatImportDescriptor` is assignable to it). In `app/lib/import/descriptors/client-purchase-orders.ts`:
+- change the import to `import type { FlatImportDescriptor, RowResult } from "../types";` (was `ImportDescriptor`)
+- change the annotation to `export const clientPurchaseOrdersDescriptor: FlatImportDescriptor<CpoContext, CpoPayload> = {` (was `ImportDescriptor<...>`)
+
+Then `pnpm --filter @workspace/web typecheck` must be fully green, and `client-purchase-orders.ts`/`cpo-helpers.ts` behavior is otherwise unchanged.
 
 - [ ] **Step 6: Commit**
 
