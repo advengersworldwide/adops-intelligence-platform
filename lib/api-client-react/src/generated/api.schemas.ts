@@ -656,6 +656,38 @@ export interface TransactionInput {
   cost: number;
 }
 
+export type ImportRequestMapping = {[key: string]: number};
+
+export interface ImportRequest {
+  mapping: ImportRequestMapping;
+  rows: string[][];
+  dryRun: boolean;
+}
+
+export type ImportRowResultStatus = typeof ImportRowResultStatus[keyof typeof ImportRowResultStatus];
+
+
+export const ImportRowResultStatus = {
+  valid: 'valid',
+  skip: 'skip',
+  error: 'error',
+} as const;
+
+export interface ImportRowResult {
+  rowNumber: number;
+  status: ImportRowResultStatus;
+  messages: string[];
+}
+
+export interface ImportResult {
+  total: number;
+  valid: number;
+  skipped: number;
+  errored: number;
+  fileErrors: string[];
+  rows: ImportRowResult[];
+}
+
 export interface UploadRow {
   date: string;
   campaignName: string;

@@ -726,6 +726,33 @@ export const UploadDataResponse = zod.object({
 
 
 /**
+ * @summary Validate (dry-run) or commit a bulk data import for the given type
+ */
+export const RunImportParams = zod.object({
+  "type": zod.coerce.string()
+})
+
+export const RunImportBody = zod.object({
+  "mapping": zod.record(zod.string(), zod.number()),
+  "rows": zod.array(zod.array(zod.string())),
+  "dryRun": zod.boolean()
+})
+
+export const RunImportResponse = zod.object({
+  "total": zod.number(),
+  "valid": zod.number(),
+  "skipped": zod.number(),
+  "errored": zod.number(),
+  "fileErrors": zod.array(zod.string()),
+  "rows": zod.array(zod.object({
+  "rowNumber": zod.number(),
+  "status": zod.enum(['valid', 'skip', 'error']),
+  "messages": zod.array(zod.string())
+}))
+})
+
+
+/**
  * @summary Get top-level dashboard KPIs
  */
 export const GetDashboardSummaryQueryParams = zod.object({

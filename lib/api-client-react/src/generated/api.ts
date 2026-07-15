@@ -54,6 +54,8 @@ import type {
   GetDashboardSummaryParams,
   GetProfitOverTimeParams,
   HealthStatus,
+  ImportRequest,
+  ImportResult,
   LinkPartnerClientInput,
   ListAllBillingRecordsParams,
   ListBillingRecordsParams,
@@ -2547,6 +2549,78 @@ export const useUploadData = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUploadDataMutationOptions(options));
+    }
+
+export const getRunImportUrl = (type: string,) => {
+
+
+
+
+  return `/api/import/${type}`
+}
+
+/**
+ * @summary Validate (dry-run) or commit a bulk data import for the given type
+ */
+export const runImport = async (type: string,
+    importRequest: ImportRequest, options?: RequestInit): Promise<ImportResult> => {
+
+  return customFetch<ImportResult>(getRunImportUrl(type),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      importRequest,)
+  }
+);}
+
+
+
+
+export const getRunImportMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runImport>>, TError,{type: string;data: BodyType<ImportRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof runImport>>, TError,{type: string;data: BodyType<ImportRequest>}, TContext> => {
+
+const mutationKey = ['runImport'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof runImport>>, {type: string;data: BodyType<ImportRequest>}> = (props) => {
+          const {type,data} = props ?? {};
+
+          return  runImport(type,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RunImportMutationResult = NonNullable<Awaited<ReturnType<typeof runImport>>>
+    export type RunImportMutationBody = BodyType<ImportRequest>
+    export type RunImportMutationError = ErrorType<void>
+
+    /**
+ * @summary Validate (dry-run) or commit a bulk data import for the given type
+ */
+export const useRunImport = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof runImport>>, TError,{type: string;data: BodyType<ImportRequest>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof runImport>>,
+        TError,
+        {type: string;data: BodyType<ImportRequest>},
+        TContext
+      > => {
+      return useMutation(getRunImportMutationOptions(options));
     }
 
 export const getGetDashboardSummaryUrl = (params?: GetDashboardSummaryParams,) => {

@@ -22,6 +22,8 @@ tags:
     description: Analytics and dashboard summaries
   - name: uploads
     description: Data upload operations
+  - name: import
+    description: Bulk data import
   - name: buying-houses
     description: Buying house management and analytics
   - name: billing
@@ -709,6 +711,34 @@ paths:
                 $ref: "#/components/schemas/UploadDataResult"
         "400":
           description: Validation error
+
+  # ── Data Import ───────────────────────────────────────────────────────────────
+  /import/{type}:
+    post:
+      operationId: runImport
+      tags: [import]
+      summary: Validate (dry-run) or commit a bulk data import for the given type
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportRequest"
+      responses:
+        "200":
+          description: Import result (dry-run preview or committed summary)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "400":
+          description: Unknown import type or invalid request
 
   # ── Analytics & Dashboard ─────────────────────────────────────────────────────
   /analytics/dashboard:
@@ -2387,6 +2417,57 @@ components:
           type: number
         cost:
           type: number
+
+    # ── Import ────────────────────────────────────────────────────────────────────
+    ImportRequest:
+      type: object
+      required: [mapping, rows, dryRun]
+      properties:
+        mapping:
+          type: object
+          additionalProperties:
+            type: integer
+        rows:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+        dryRun:
+          type: boolean
+    ImportRowResult:
+      type: object
+      required: [rowNumber, status, messages]
+      properties:
+        rowNumber:
+          type: integer
+        status:
+          type: string
+          enum: [valid, skip, error]
+        messages:
+          type: array
+          items:
+            type: string
+    ImportResult:
+      type: object
+      required: [total, valid, skipped, errored, fileErrors, rows]
+      properties:
+        total:
+          type: integer
+        valid:
+          type: integer
+        skipped:
+          type: integer
+        errored:
+          type: integer
+        fileErrors:
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/ImportRowResult"
 
     # ── Upload ────────────────────────────────────────────────────────────────────
     UploadRow:
