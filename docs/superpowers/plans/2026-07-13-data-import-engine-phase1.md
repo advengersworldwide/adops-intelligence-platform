@@ -444,7 +444,12 @@ This task adds the descriptor's declarative parts and pure per-row resolution. `
 
 ```typescript
 // app/lib/import/descriptors/client-purchase-orders.test.ts
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// The descriptor (after Task 6) transitively imports @workspace/db, which throws at
+// module-load without DATABASE_URL. Mock it so the pure resolveRow tests can load/run.
+// resolveRow never touches the db, so empty stubs are sufficient.
+vi.mock("@workspace/db", () => ({ db: {}, clientsTable: {}, clientPurchaseOrdersTable: {} }));
 import { clientPurchaseOrdersDescriptor as d, type CpoContext } from "./client-purchase-orders";
 
 function ctx(overrides: Partial<CpoContext> = {}): CpoContext {
@@ -710,7 +715,7 @@ Then replace the `loadContext` and `commit` stub bodies in `clientPurchaseOrders
         const group = `${p.prefix}|${mmyyKey(date)}`;
         const next = (counters.get(group) ?? 0) + 1;
         counters.set(group, next);
-        const code = formatPoCode(p.prefix, date, next);
+        const code = "CPO-" + formatPoCode(p.prefix, date, next);
         await tx.insert(clientPurchaseOrdersTable).values({
           code,
           clientId: p.clientId,
