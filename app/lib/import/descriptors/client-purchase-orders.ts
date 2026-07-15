@@ -1,5 +1,5 @@
 // app/lib/import/descriptors/client-purchase-orders.ts
-import type { ImportDescriptor, RowResult } from "../types";
+import type { FlatImportDescriptor, RowResult } from "../types";
 import { normalizeName, parseDateCell, dedupKey } from "./cpo-helpers";
 import { clientPurchaseOrdersColumns } from "./client-purchase-orders.columns";
 import { db, clientsTable, clientPurchaseOrdersTable } from "@workspace/db";
@@ -71,7 +71,7 @@ function resolveRow(
   };
 }
 
-export const clientPurchaseOrdersDescriptor: ImportDescriptor<CpoContext, CpoPayload> = {
+export const clientPurchaseOrdersDescriptor: FlatImportDescriptor<CpoContext, CpoPayload> = {
   type: "client-purchase-orders",
   label: "Client Purchase Orders",
   columns: clientPurchaseOrdersColumns,
