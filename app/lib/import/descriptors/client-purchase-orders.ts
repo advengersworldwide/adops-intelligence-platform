@@ -115,7 +115,7 @@ export const clientPurchaseOrdersDescriptor: ImportDescriptor<CpoContext, CpoPay
         const group = `${p.prefix}|${mmyyKey(date)}`;
         const next = (counters.get(group) ?? 0) + 1;
         counters.set(group, next);
-        const code = formatPoCode(p.prefix, date, next);
+        const code = "CPO-" + formatPoCode(p.prefix, date, next);
         await tx.insert(clientPurchaseOrdersTable).values({
           code,
           clientId: p.clientId,

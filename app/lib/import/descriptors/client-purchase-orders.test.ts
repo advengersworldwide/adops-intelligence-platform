@@ -1,6 +1,8 @@
 // app/lib/import/descriptors/client-purchase-orders.test.ts
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { clientPurchaseOrdersDescriptor as d, type CpoContext } from "./client-purchase-orders";
+
+vi.mock("@workspace/db", () => ({ db: {}, clientsTable: {}, clientPurchaseOrdersTable: {} }));
 
 function ctx(overrides: Partial<CpoContext> = {}): CpoContext {
   return {
