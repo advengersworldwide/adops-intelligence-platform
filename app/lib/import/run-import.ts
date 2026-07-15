@@ -29,17 +29,40 @@ export async function runImport<TCtx, TPayload>(
     return { ...empty, fileErrors: [`Missing required column(s): ${missing.join(", ")}`] };
   }
 
+  const cellsOf = (row: string[]): Record<string, string> => {
+    const cells: Record<string, string> = {};
+    for (const col of descriptor.columns) {
+      const idx = mapping[col.key];
+      cells[col.key] = idx == null ? "" : (row[idx] ?? "").trim();
+    }
+    return cells;
+  };
+
   const ctx = await descriptor.loadContext();
   const seen = new Set<string>();
   const results: RowResult<TPayload>[] = [];
 
-  for (let i = 0; i < rows.length; i++) {
-    const cells: Record<string, string> = {};
-    for (const col of descriptor.columns) {
-      const idx = mapping[col.key];
-      cells[col.key] = idx == null ? "" : (rows[i][idx] ?? "").trim();
+  if ("groupBy" in descriptor) {
+    const groupLabel = descriptor.columns.find((c) => c.key === descriptor.groupBy)?.label ?? descriptor.groupBy;
+    const groups = new Map<string, Array<{ cells: Record<string, string>; rowNumber: number }>>();
+    for (let i = 0; i < rows.length; i++) {
+      const cells = cellsOf(rows[i]);
+      const key = cells[descriptor.groupBy];
+      if (!key) {
+        results.push({ rowNumber: i + 1, status: "error", messages: [`${groupLabel} is required`] });
+        continue;
+      }
+      const list = groups.get(key) ?? [];
+      list.push({ cells, rowNumber: i + 1 });
+      groups.set(key, list);
     }
-    results.push(descriptor.resolveRow(cells, i + 1, ctx, seen));
+    for (const groupRows of groups.values()) {
+      results.push(descriptor.resolveGroup(groupRows, ctx, seen));
+    }
+  } else {
+    for (let i = 0; i < rows.length; i++) {
+      results.push(descriptor.resolveRow(cellsOf(rows[i]), i + 1, ctx, seen));
+    }
   }
 
   const validPayloads = results.filter((r) => r.status === "valid").map((r) => r.payload as TPayload);

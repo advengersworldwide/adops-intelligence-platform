@@ -6,7 +6,8 @@ export interface ColumnSpec {
   label: string;      // template header + mapping UI label
   required: boolean;
   aliases: string[];  // additional header spellings for auto-mapping
-  example: string;    // sample value used to build the downloadable template
+  example: string;    // sample value used in the downloadable sample CSV
+  note?: string;      // one-line "what goes here", shown in the Expected-columns table
 }
 
 export type RowStatus = "valid" | "skip" | "error";
@@ -31,13 +32,10 @@ export interface ImportSession {
   userId: number | null;
 }
 
-/**
- * A descriptor teaches the engine how to import one data type.
- * TCtx is batch-loaded lookup state; TPayload is a resolved insert record.
- */
-export interface ImportDescriptor<TCtx, TPayload> {
-  type: string;   // URL segment, e.g. "client-purchase-orders"
-  label: string;  // shown in the type picker
+/** A flat importer: one file row -> one record. */
+export interface FlatImportDescriptor<TCtx, TPayload> {
+  type: string;
+  label: string;
   columns: ColumnSpec[];
   loadContext(): Promise<TCtx>;
   resolveRow(
@@ -48,3 +46,22 @@ export interface ImportDescriptor<TCtx, TPayload> {
   ): RowResult<TPayload>;
   commit(payloads: TPayload[], ctx: TCtx, session: ImportSession): Promise<void>;
 }
+
+/** A grouped importer: rows sharing `groupBy`'s cell value -> one record (with children). */
+export interface GroupedImportDescriptor<TCtx, TPayload> {
+  type: string;
+  label: string;
+  columns: ColumnSpec[];
+  groupBy: string;   // a required column key; rows are grouped by this cell's value
+  loadContext(): Promise<TCtx>;
+  resolveGroup(
+    groupRows: Array<{ cells: Record<string, string>; rowNumber: number }>,
+    ctx: TCtx,
+    seen: Set<string>,
+  ): RowResult<TPayload>;
+  commit(payloads: TPayload[], ctx: TCtx, session: ImportSession): Promise<void>;
+}
+
+export type ImportDescriptor<TCtx, TPayload> =
+  | FlatImportDescriptor<TCtx, TPayload>
+  | GroupedImportDescriptor<TCtx, TPayload>;
