@@ -22,7 +22,5 @@ export type {
   ProfitTimePoint,
   Transaction,
   TransactionInput,
-  UploadPayload,
   UploadResult,
-  UploadRow,
 } from "./generated/types";

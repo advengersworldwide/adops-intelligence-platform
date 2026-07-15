@@ -100,8 +100,5 @@ export * from './taxSettings';
 export * from './taxSettingsInput';
 export * from './transaction';
 export * from './transactionInput';
-export * from './uploadDataResult';
-export * from './uploadPayload';
 export * from './uploadPaymentAttachmentBody';
 export * from './uploadResult';
-export * from './uploadRow';

@@ -707,25 +707,6 @@ export const DeleteTransactionParams = zod.object({
 
 
 /**
- * @summary Upload CSV/Excel data and auto-map to campaigns
- */
-export const UploadDataBody = zod.object({
-  "rows": zod.array(zod.object({
-  "date": zod.string(),
-  "campaignName": zod.string(),
-  "spend": zod.number(),
-  "cost": zod.number()
-}))
-})
-
-export const UploadDataResponse = zod.object({
-  "imported": zod.number(),
-  "skipped": zod.number(),
-  "errors": zod.array(zod.string())
-})
-
-
-/**
  * @summary Validate (dry-run) or commit a bulk data import for the given type
  */
 export const RunImportParams = zod.object({

@@ -90,8 +90,6 @@ import type {
   TaxSettingsInput,
   Transaction,
   TransactionInput,
-  UploadDataResult,
-  UploadPayload,
   UploadPaymentAttachmentBody,
   UploadResult
 } from './api.schemas';
@@ -2478,77 +2476,6 @@ export const useDeleteTransaction = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteTransactionMutationOptions(options));
-    }
-
-export const getUploadDataUrl = () => {
-
-
-
-
-  return `/api/upload`
-}
-
-/**
- * @summary Upload CSV/Excel data and auto-map to campaigns
- */
-export const uploadData = async (uploadPayload: UploadPayload, options?: RequestInit): Promise<UploadDataResult> => {
-
-  return customFetch<UploadDataResult>(getUploadDataUrl(),
-  {
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      uploadPayload,)
-  }
-);}
-
-
-
-
-export const getUploadDataMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadData>>, TError,{data: BodyType<UploadPayload>}, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof uploadData>>, TError,{data: BodyType<UploadPayload>}, TContext> => {
-
-const mutationKey = ['uploadData'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadData>>, {data: BodyType<UploadPayload>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  uploadData(data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UploadDataMutationResult = NonNullable<Awaited<ReturnType<typeof uploadData>>>
-    export type UploadDataMutationBody = BodyType<UploadPayload>
-    export type UploadDataMutationError = ErrorType<void>
-
-    /**
- * @summary Upload CSV/Excel data and auto-map to campaigns
- */
-export const useUploadData = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadData>>, TError,{data: BodyType<UploadPayload>}, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof uploadData>>,
-        TError,
-        {data: BodyType<UploadPayload>},
-        TContext
-      > => {
-      return useMutation(getUploadDataMutationOptions(options));
     }
 
 export const getRunImportUrl = (type: string,) => {

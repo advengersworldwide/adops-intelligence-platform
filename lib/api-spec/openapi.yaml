@@ -20,8 +20,6 @@ tags:
     description: Transaction/spend data
   - name: analytics
     description: Analytics and dashboard summaries
-  - name: uploads
-    description: Data upload operations
   - name: import
     description: Bulk data import
   - name: buying-houses
@@ -689,28 +687,6 @@ paths:
           description: Deleted
         "404":
           description: Not found
-
-  # ── Data Upload ───────────────────────────────────────────────────────────────
-  /upload:
-    post:
-      operationId: uploadData
-      tags: [uploads]
-      summary: Upload CSV/Excel data and auto-map to campaigns
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UploadPayload"
-      responses:
-        "200":
-          description: Upload result summary
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/UploadDataResult"
-        "400":
-          description: Validation error
 
   # ── Data Import ───────────────────────────────────────────────────────────────
   /import/{type}:
@@ -2468,42 +2444,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ImportRowResult"
-
-    # ── Upload ────────────────────────────────────────────────────────────────────
-    UploadRow:
-      type: object
-      required: [date, campaignName, spend, cost]
-      properties:
-        date:
-          type: string
-        campaignName:
-          type: string
-        spend:
-          type: number
-        cost:
-          type: number
-
-    UploadPayload:
-      type: object
-      required: [rows]
-      properties:
-        rows:
-          type: array
-          items:
-            $ref: "#/components/schemas/UploadRow"
-
-    UploadDataResult:
-      type: object
-      required: [imported, skipped, errors]
-      properties:
-        imported:
-          type: integer
-        skipped:
-          type: integer
-        errors:
-          type: array
-          items:
-            type: string
 
     # ── Analytics ─────────────────────────────────────────────────────────────────
     DashboardSummary:

@@ -688,23 +688,6 @@ export interface ImportResult {
   rows: ImportRowResult[];
 }
 
-export interface UploadRow {
-  date: string;
-  campaignName: string;
-  spend: number;
-  cost: number;
-}
-
-export interface UploadPayload {
-  rows: UploadRow[];
-}
-
-export interface UploadDataResult {
-  imported: number;
-  skipped: number;
-  errors: string[];
-}
-
 export interface DashboardSummary {
   totalRevenue: number;
   totalCost: number;
