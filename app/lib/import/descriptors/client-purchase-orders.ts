@@ -2,6 +2,10 @@
 import type { ImportDescriptor, RowResult } from "../types";
 import { normalizeName, parseDateCell, dedupKey } from "./cpo-helpers";
 import { clientPurchaseOrdersColumns } from "./client-purchase-orders.columns";
+import { db, clientsTable, clientPurchaseOrdersTable } from "@workspace/db";
+import { formatPoCode } from "@/lib/po-codes";
+import type { ImportSession } from "../types";
+import { isoToLocalDate, mmyyKey, seedMaxSeq } from "./cpo-helpers";
 
 export interface CpoContext {
   clientsByName: Map<string, Array<{ id: number; codePrefix: string }>>;
@@ -71,12 +75,59 @@ export const clientPurchaseOrdersDescriptor: ImportDescriptor<CpoContext, CpoPay
   type: "client-purchase-orders",
   label: "Client Purchase Orders",
   columns: clientPurchaseOrdersColumns,
-  // Implemented in Task 6:
   async loadContext(): Promise<CpoContext> {
-    throw new Error("not implemented");
+    const clients = await db
+      .select({ id: clientsTable.id, name: clientsTable.name, codePrefix: clientsTable.codePrefix })
+      .from(clientsTable);
+
+    const clientsByName = new Map<string, Array<{ id: number; codePrefix: string }>>();
+    for (const c of clients) {
+      const key = normalizeName(c.name);
+      const list = clientsByName.get(key) ?? [];
+      list.push({ id: c.id, codePrefix: c.codePrefix ?? "" });
+      clientsByName.set(key, list);
+    }
+
+    const existing = await db
+      .select({
+        code: clientPurchaseOrdersTable.code,
+        clientId: clientPurchaseOrdersTable.clientId,
+        receiveDate: clientPurchaseOrdersTable.receiveDate,
+        startDate: clientPurchaseOrdersTable.startDate,
+        endDate: clientPurchaseOrdersTable.endDate,
+      })
+      .from(clientPurchaseOrdersTable);
+
+    const existingKeys = new Set<string>();
+    for (const r of existing) {
+      existingKeys.add(dedupKey(r.clientId, r.receiveDate ?? null, r.startDate ?? null, r.endDate ?? null));
+    }
+    const maxSeqByGroup = seedMaxSeq(existing.map((r) => r.code));
+
+    return { clientsByName, existingKeys, maxSeqByGroup };
   },
   resolveRow,
-  async commit(): Promise<void> {
-    throw new Error("not implemented");
+  async commit(payloads: CpoPayload[], ctx: CpoContext, session: ImportSession): Promise<void> {
+    const counters = new Map(ctx.maxSeqByGroup);
+    await db.transaction(async (tx) => {
+      for (const p of payloads) {
+        const date = p.receiveDate ? isoToLocalDate(p.receiveDate) : new Date();
+        const group = `${p.prefix}|${mmyyKey(date)}`;
+        const next = (counters.get(group) ?? 0) + 1;
+        counters.set(group, next);
+        const code = formatPoCode(p.prefix, date, next);
+        await tx.insert(clientPurchaseOrdersTable).values({
+          code,
+          clientId: p.clientId,
+          attachmentUrl: "",
+          attachmentName: null,
+          attachments: [],
+          receiveDate: p.receiveDate,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          createdById: session.userId,
+        });
+      }
+    });
   },
 };
