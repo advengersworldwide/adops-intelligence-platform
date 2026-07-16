@@ -2,6 +2,15 @@
 import type { GroupedImportDescriptor, RowResult } from "../types";
 import { normalizeName, parseDateCell } from "./cpo-helpers";
 import { partnerPurchaseOrdersColumns } from "./partner-purchase-orders.columns";
+import {
+  db, partnerPurchaseOrdersTable, partnerPurchaseOrderItemsTable,
+  partnersTable, clientPurchaseOrdersTable, clientEventsTable,
+} from "@workspace/db";
+import { formatPoCode } from "@/lib/po-codes";
+import { lineBudget, totalBudget } from "@/lib/po-totals";
+import type { ImportSession } from "../types";
+import { isoToLocalDate, mmyyKey } from "./cpo-helpers";
+import { seedMaxSeq } from "../po-code-seq";
 
 export interface PpoContext {
   partnersByName: Map<string, Array<{ id: number; codePrefix: string }>>;
@@ -97,12 +106,80 @@ export const partnerPurchaseOrdersDescriptor: GroupedImportDescriptor<PpoContext
   label: "Partner Purchase Orders",
   columns: partnerPurchaseOrdersColumns,
   groupBy: "poReference",
-  // Implemented in Task 4:
   async loadContext(): Promise<PpoContext> {
-    throw new Error("not implemented");
+    const partners = await db
+      .select({ id: partnersTable.id, name: partnersTable.name, codePrefix: partnersTable.codePrefix })
+      .from(partnersTable);
+    const partnersByName = new Map<string, Array<{ id: number; codePrefix: string }>>();
+    for (const p of partners) {
+      const k = normalizeName(p.name);
+      const list = partnersByName.get(k) ?? [];
+      list.push({ id: p.id, codePrefix: p.codePrefix ?? "" });
+      partnersByName.set(k, list);
+    }
+
+    const cpos = await db
+      .select({ id: clientPurchaseOrdersTable.id, code: clientPurchaseOrdersTable.code, clientId: clientPurchaseOrdersTable.clientId })
+      .from(clientPurchaseOrdersTable);
+    const cpoByCode = new Map<string, { id: number; clientId: number }>();
+    for (const c of cpos) cpoByCode.set(c.code, { id: c.id, clientId: c.clientId });
+
+    const events = await db
+      .select({ id: clientEventsTable.id, clientId: clientEventsTable.clientId, name: clientEventsTable.name })
+      .from(clientEventsTable);
+    const eventsByClientAndName = new Map<string, Array<{ id: number }>>();
+    for (const e of events) {
+      const k = `${e.clientId}|${normalizeName(e.name)}`;
+      const list = eventsByClientAndName.get(k) ?? [];
+      list.push({ id: e.id });
+      eventsByClientAndName.set(k, list);
+    }
+
+    const existing = await db
+      .select({
+        code: partnerPurchaseOrdersTable.code,
+        partnerId: partnerPurchaseOrdersTable.partnerId,
+        clientPurchaseOrderId: partnerPurchaseOrdersTable.clientPurchaseOrderId,
+        startDate: partnerPurchaseOrdersTable.startDate,
+        endDate: partnerPurchaseOrdersTable.endDate,
+      })
+      .from(partnerPurchaseOrdersTable);
+    const existingKeys = new Set<string>();
+    for (const r of existing) existingKeys.add(`${r.partnerId}|${r.clientPurchaseOrderId}|${r.startDate}|${r.endDate}`);
+    const maxSeqByGroup = seedMaxSeq(existing.map((r) => r.code), "PPO");
+
+    return { partnersByName, cpoByCode, eventsByClientAndName, existingKeys, maxSeqByGroup };
   },
   resolveGroup,
-  async commit(): Promise<void> {
-    throw new Error("not implemented");
+  async commit(payloads: PpoPayload[], ctx: PpoContext, session: ImportSession): Promise<void> {
+    const counters = new Map(ctx.maxSeqByGroup);
+    await db.transaction(async (tx) => {
+      for (const p of payloads) {
+        const date = isoToLocalDate(p.startDate);
+        const group = `${p.prefix}|${mmyyKey(date)}`;
+        const next = (counters.get(group) ?? 0) + 1;
+        counters.set(group, next);
+        const code = "PPO-" + formatPoCode(p.prefix, date, next);
+        const total = totalBudget(p.items.map((i) => ({ cacRate: i.cacRate, eventCount: i.eventCount })));
+        const [ppo] = await tx.insert(partnerPurchaseOrdersTable).values({
+          code,
+          partnerId: p.partnerId,
+          clientPurchaseOrderId: p.clientPurchaseOrderId,
+          startDate: p.startDate,
+          endDate: p.endDate,
+          totalBudget: String(total),
+          notes: p.notes,
+          createdById: session.userId,
+        }).returning();
+        await tx.insert(partnerPurchaseOrderItemsTable).values(p.items.map((i) => ({
+          partnerPurchaseOrderId: ppo.id,
+          clientEventId: i.clientEventId,
+          eventName: i.eventName,
+          cacRate: String(i.cacRate),
+          eventCount: i.eventCount,
+          lineBudget: String(lineBudget(i.cacRate, i.eventCount)),
+        })));
+      }
+    });
   },
 };
