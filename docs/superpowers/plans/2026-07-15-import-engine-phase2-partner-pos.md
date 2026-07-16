@@ -759,7 +759,8 @@ export function listDescriptors(): Array<{ type: string; label: string }> {
 // app/app/api/import/[type]/partner-route.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const insertValues = vi.fn(() => ({ returning: async () => [{ id: 99 }] }));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const insertValues = vi.fn((..._args: any[]) => ({ returning: async () => [{ id: 99 }] }));
 const transaction = vi.fn(async (cb: (tx: unknown) => Promise<void>) =>
   cb({ insert: () => ({ values: insertValues }) }),
 );
