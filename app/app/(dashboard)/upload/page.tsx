@@ -8,6 +8,7 @@ import {
   getListClientPurchaseOrdersQueryKey,
   getListPartnerPurchaseOrdersQueryKey,
   getListPartnerBillsQueryKey,
+  getListPartnerPaymentsQueryKey,
 } from "@workspace/api-client-react";
 import type { ImportResult } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,6 +27,7 @@ const listKeyByType: Record<string, () => readonly unknown[]> = {
   "client-purchase-orders": getListClientPurchaseOrdersQueryKey,
   "partner-purchase-orders": getListPartnerPurchaseOrdersQueryKey,
   "partner-bills": getListPartnerBillsQueryKey,
+  "partner-payments": getListPartnerPaymentsQueryKey,
 };
 
 export default function ImportPage() {

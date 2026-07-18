@@ -2,6 +2,8 @@
 import type { FlatImportDescriptor, RowResult } from "../types";
 import { parseDateCell } from "./cpo-helpers";
 import { partnerPaymentsColumns } from "./partner-payments.columns";
+import { db, partnerPaymentsTable, partnerBillsTable } from "@workspace/db";
+import type { ImportSession } from "../types";
 
 export interface PpayContext {
   billByCode: Map<string, { id: number; partnerId: number; amount: number; remaining: number }>;
@@ -77,12 +79,46 @@ export const partnerPaymentsDescriptor: FlatImportDescriptor<PpayContext, PpayPa
   type: "partner-payments",
   label: "Partner Payments",
   columns: partnerPaymentsColumns,
-  // Implemented in Task 2:
   async loadContext(): Promise<PpayContext> {
-    throw new Error("not implemented");
+    const bills = await db
+      .select({ id: partnerBillsTable.id, code: partnerBillsTable.code, partnerId: partnerBillsTable.partnerId, amount: partnerBillsTable.amount })
+      .from(partnerBillsTable);
+    const payments = await db
+      .select({ partnerBillId: partnerPaymentsTable.partnerBillId, amount: partnerPaymentsTable.amount, paymentDate: partnerPaymentsTable.paymentDate })
+      .from(partnerPaymentsTable);
+
+    const allocatedByBill = new Map<number, number>();
+    const existingDedupKeys = new Set<string>();
+    for (const p of payments) {
+      allocatedByBill.set(p.partnerBillId, (allocatedByBill.get(p.partnerBillId) ?? 0) + Number(p.amount));
+      existingDedupKeys.add(`${p.partnerBillId}|${Number(p.amount)}|${p.paymentDate ?? ""}`);
+    }
+
+    const billByCode = new Map<string, { id: number; partnerId: number; amount: number; remaining: number }>();
+    for (const b of bills) {
+      const amt = Number(b.amount);
+      billByCode.set(b.code, { id: b.id, partnerId: b.partnerId, amount: amt, remaining: amt - (allocatedByBill.get(b.id) ?? 0) });
+    }
+
+    return { billByCode, existingDedupKeys, batchAllocated: new Map() };
   },
   resolveRow,
-  async commit(): Promise<void> {
-    throw new Error("not implemented");
+  async commit(payloads: PpayPayload[], _ctx: PpayContext, session: ImportSession): Promise<void> {
+    await db.transaction(async (tx) => {
+      for (const p of payloads) {
+        await tx.insert(partnerPaymentsTable).values({
+          partnerId: p.partnerId,
+          partnerBillId: p.partnerBillId,
+          sourceClientPaymentId: null,
+          amount: String(p.amount),
+          mode: p.mode,
+          status: p.status,
+          attachmentUrl: null,
+          paymentDate: p.paymentDate,
+          notes: p.notes,
+          createdById: session.userId,
+        });
+      }
+    });
   },
 };
