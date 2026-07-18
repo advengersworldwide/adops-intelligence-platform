@@ -7,6 +7,7 @@ import {
   useRunImport,
   getListClientPurchaseOrdersQueryKey,
   getListPartnerPurchaseOrdersQueryKey,
+  getListPartnerBillsQueryKey,
 } from "@workspace/api-client-react";
 import type { ImportResult } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,6 +25,7 @@ import { importCatalog, getCatalogEntry } from "@/lib/import/catalog";
 const listKeyByType: Record<string, () => readonly unknown[]> = {
   "client-purchase-orders": getListClientPurchaseOrdersQueryKey,
   "partner-purchase-orders": getListPartnerPurchaseOrdersQueryKey,
+  "partner-bills": getListPartnerBillsQueryKey,
 };
 
 export default function ImportPage() {

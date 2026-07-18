@@ -2,6 +2,11 @@
 import type { FlatImportDescriptor, RowResult } from "../types";
 import { normalizeName, parseDateCell } from "./cpo-helpers";
 import { partnerBillsColumns } from "./partner-bills.columns";
+import { db, partnerBillsTable, partnersTable, clientsTable, partnerPurchaseOrdersTable } from "@workspace/db";
+import { formatPoCode } from "@/lib/po-codes";
+import type { ImportSession } from "../types";
+import { isoToLocalDate, mmyyKey } from "./cpo-helpers";
+import { seedMaxSeq } from "../po-code-seq";
 
 export interface PbillContext {
   partnersByName: Map<string, Array<{ id: number; codePrefix: string }>>;
@@ -89,12 +94,66 @@ export const partnerBillsDescriptor: FlatImportDescriptor<PbillContext, PbillPay
   type: "partner-bills",
   label: "Partner Bills",
   columns: partnerBillsColumns,
-  // Implemented in Task 2:
   async loadContext(): Promise<PbillContext> {
-    throw new Error("not implemented");
+    const partners = await db
+      .select({ id: partnersTable.id, name: partnersTable.name, codePrefix: partnersTable.codePrefix })
+      .from(partnersTable);
+    const partnersByName = new Map<string, Array<{ id: number; codePrefix: string }>>();
+    for (const p of partners) {
+      const k = normalizeName(p.name);
+      const list = partnersByName.get(k) ?? [];
+      list.push({ id: p.id, codePrefix: p.codePrefix ?? "" });
+      partnersByName.set(k, list);
+    }
+
+    const clients = await db.select({ id: clientsTable.id, name: clientsTable.name }).from(clientsTable);
+    const clientsByName = new Map<string, Array<{ id: number }>>();
+    for (const c of clients) {
+      const k = normalizeName(c.name);
+      const list = clientsByName.get(k) ?? [];
+      list.push({ id: c.id });
+      clientsByName.set(k, list);
+    }
+
+    const ppos = await db.select({ id: partnerPurchaseOrdersTable.id, code: partnerPurchaseOrdersTable.code }).from(partnerPurchaseOrdersTable);
+    const ppoByCode = new Map<string, { id: number }>();
+    for (const p of ppos) ppoByCode.set(p.code, { id: p.id });
+
+    const existing = await db
+      .select({ partnerId: partnerBillsTable.partnerId, partnerInvoiceNumber: partnerBillsTable.partnerInvoiceNumber, code: partnerBillsTable.code })
+      .from(partnerBillsTable);
+    const existingKeys = new Set<string>();
+    for (const r of existing) {
+      if (r.partnerInvoiceNumber) existingKeys.add(`${r.partnerId}|${normalizeName(r.partnerInvoiceNumber)}`);
+    }
+    const maxSeqByGroup = seedMaxSeq(existing.map((r) => r.code), "PBILL");
+
+    return { partnersByName, clientsByName, ppoByCode, existingKeys, maxSeqByGroup };
   },
   resolveRow,
-  async commit(): Promise<void> {
-    throw new Error("not implemented");
+  async commit(payloads: PbillPayload[], ctx: PbillContext, session: ImportSession): Promise<void> {
+    const counters = new Map(ctx.maxSeqByGroup);
+    await db.transaction(async (tx) => {
+      for (const p of payloads) {
+        const date = p.dateReceived ? isoToLocalDate(p.dateReceived) : new Date();
+        const group = `${p.prefix}|${mmyyKey(date)}`;
+        const next = (counters.get(group) ?? 0) + 1;
+        counters.set(group, next);
+        const code = "PBILL-" + formatPoCode(p.prefix, date, next);
+        await tx.insert(partnerBillsTable).values({
+          code,
+          partnerInvoiceNumber: p.partnerInvoiceNumber,
+          partnerId: p.partnerId,
+          clientId: p.clientId,
+          partnerPurchaseOrderId: p.partnerPurchaseOrderId,
+          amount: String(p.amount),
+          attachmentUrl: null,
+          attachmentName: null,
+          dateReceived: p.dateReceived,
+          notes: p.notes,
+          createdById: session.userId,
+        });
+      }
+    });
   },
 };

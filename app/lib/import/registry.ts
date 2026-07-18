@@ -2,12 +2,14 @@
 import type { ImportDescriptor } from "./types";
 import { clientPurchaseOrdersDescriptor } from "./descriptors/client-purchase-orders";
 import { partnerPurchaseOrdersDescriptor } from "./descriptors/partner-purchase-orders";
+import { partnerBillsDescriptor } from "./descriptors/partner-bills";
 
 // Heterogeneous descriptors — ctx/payload types differ per entry.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const registry: Record<string, ImportDescriptor<any, any>> = {
   [clientPurchaseOrdersDescriptor.type]: clientPurchaseOrdersDescriptor,
   [partnerPurchaseOrdersDescriptor.type]: partnerPurchaseOrdersDescriptor,
+  [partnerBillsDescriptor.type]: partnerBillsDescriptor,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
