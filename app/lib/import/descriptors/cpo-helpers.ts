@@ -1,4 +1,5 @@
 // app/lib/import/descriptors/cpo-helpers.ts
+import { parsePoCode, seedMaxSeq as seedMaxSeqTagged } from "../po-code-seq";
 
 export function normalizeName(name: string): string {
   return name.trim().toLowerCase();
@@ -45,21 +46,14 @@ export function mmyyKey(date: Date): string {
   return `${mm}${yy}`;
 }
 
-/** Parse a "CPO-<prefix>-<mmyy>-<seq>" code. Prefix contains no hyphens. */
+/** Parse a "CPO-<prefix>-<mmyy>-<seq>" code. Delegates to the shared tagged parser. */
 export function parseCpoCode(code: string): { prefix: string; mmyy: string; seq: number } | null {
-  const m = /^CPO-(.+)-(\d{4})-(\d+)$/.exec(code);
-  if (!m) return null;
-  return { prefix: m[1], mmyy: m[2], seq: Number(m[3]) };
+  const p = parsePoCode(code);
+  if (!p || p.tag !== "CPO") return null;
+  return { prefix: p.prefix, mmyy: p.mmyy, seq: p.seq };
 }
 
-/** Build a map of `${prefix}|${mmyy}` -> highest existing sequence number. */
+/** Build a map of `${prefix}|${mmyy}` -> highest existing sequence number (CPO codes). */
 export function seedMaxSeq(codes: string[]): Map<string, number> {
-  const map = new Map<string, number>();
-  for (const code of codes) {
-    const parsed = parseCpoCode(code);
-    if (!parsed) continue;
-    const key = `${parsed.prefix}|${parsed.mmyy}`;
-    map.set(key, Math.max(map.get(key) ?? 0, parsed.seq));
-  }
-  return map;
+  return seedMaxSeqTagged(codes, "CPO");
 }
