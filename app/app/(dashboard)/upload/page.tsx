@@ -3,7 +3,11 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Download } from "lucide-react";
-import { useRunImport, getListClientPurchaseOrdersQueryKey } from "@workspace/api-client-react";
+import {
+  useRunImport,
+  getListClientPurchaseOrdersQueryKey,
+  getListPartnerPurchaseOrdersQueryKey,
+} from "@workspace/api-client-react";
 import type { ImportResult } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -14,11 +18,16 @@ import Papa from "papaparse";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { parseDelimited } from "@/lib/import/parse";
 import { autoMapColumns } from "@/lib/import/map-columns";
-import { clientPurchaseOrdersMeta } from "@/lib/import/descriptors/client-purchase-orders.columns";
+import { importCatalog, getCatalogEntry } from "@/lib/import/catalog";
 
-const IMPORT_TYPE = "client-purchase-orders";
+// Which list query to refresh after a successful import, per type.
+const listKeyByType: Record<string, () => readonly unknown[]> = {
+  "client-purchase-orders": getListClientPurchaseOrdersQueryKey,
+  "partner-purchase-orders": getListPartnerPurchaseOrdersQueryKey,
+};
 
 export default function ImportPage() {
+  const [importType, setImportType] = useState(importCatalog[0].type);
   const [dragging, setDragging] = useState(false);
   const [fileName, setFileName] = useState("");
   const [headers, setHeaders] = useState<string[]>([]);
@@ -29,7 +38,7 @@ export default function ImportPage() {
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  const entry = clientPurchaseOrdersMeta;
+  const entry = getCatalogEntry(importType)!;
   const columns = entry.columns;
 
   const missingRequired = useMemo(
@@ -38,9 +47,7 @@ export default function ImportPage() {
   );
 
   const runImportMutation = useRunImport({
-    mutation: {
-      onError: () => toast({ title: "Import failed", variant: "destructive" }),
-    },
+    mutation: { onError: () => toast({ title: "Import failed", variant: "destructive" }) },
   });
 
   const reset = () => {
@@ -73,7 +80,7 @@ export default function ImportPage() {
 
   const runDryRun = () => {
     runImportMutation.mutate(
-      { type: IMPORT_TYPE, data: { mapping, rows, dryRun: true } },
+      { type: importType, data: { mapping, rows, dryRun: true } },
       { onSuccess: (data: ImportResult) => {
           setPreview(data);
           if (data.fileErrors.length) toast({ title: data.fileErrors.join("; "), variant: "destructive" });
@@ -83,20 +90,21 @@ export default function ImportPage() {
 
   const runCommit = () => {
     runImportMutation.mutate(
-      { type: IMPORT_TYPE, data: { mapping, rows, dryRun: false } },
+      { type: importType, data: { mapping, rows, dryRun: false } },
       { onSuccess: (data: ImportResult) => {
           setResult(data);
-          qc.invalidateQueries({ queryKey: getListClientPurchaseOrdersQueryKey() });
+          const keyFn = listKeyByType[importType];
+          if (keyFn) qc.invalidateQueries({ queryKey: keyFn() });
         } },
     );
   };
 
-  const downloadTemplate = () => {
-    const csv = Papa.unparse([columns.map((c) => c.label), columns.map((c) => c.example)]);
+  const downloadSample = () => {
+    const csv = Papa.unparse([columns.map((c) => c.label), ...entry.sampleRows]);
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `${IMPORT_TYPE}-template.csv`; a.click();
+    a.href = url; a.download = `${importType}-sample.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -106,7 +114,7 @@ export default function ImportPage() {
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `${IMPORT_TYPE}-errors.csv`; a.click();
+    a.href = url; a.download = `${importType}-errors.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -121,23 +129,52 @@ export default function ImportPage() {
             <h1 className="text-xl font-bold text-foreground">Import Data</h1>
             <p className="text-sm text-muted-foreground">Bulk-import records from a CSV/TSV file. Entities are matched by name.</p>
           </div>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={downloadTemplate}>
-            <Download className="h-3.5 w-3.5" /> Download template
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={downloadSample}>
+            <Download className="h-3.5 w-3.5" /> Download sample CSV
           </Button>
         </div>
 
-        {/* Type selector — only Client POs enabled in Phase 1 */}
+        {/* Type selector */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <label className="text-sm font-semibold text-foreground">Data type</label>
-          <Select value={IMPORT_TYPE} onValueChange={() => {}}>
+          <Select value={importType} onValueChange={(v) => { setImportType(v); reset(); }}>
             <SelectTrigger className="mt-2 w-72 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {[clientPurchaseOrdersMeta].map((d) => (
+              {importCatalog.map((d) => (
                 <SelectItem key={d.type} value={d.type}>{d.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <p className="mt-2 text-xs text-muted-foreground">More types (partner POs, billing, payments) coming in later phases.</p>
+        </div>
+
+        {/* Expected columns */}
+        <div className="rounded-2xl border border-border bg-card shadow-sm">
+          <div className="border-b border-border px-5 py-4">
+            <h2 className="text-sm font-semibold text-foreground">Expected columns</h2>
+            <p className="text-xs text-muted-foreground">Your CSV/TSV should include these columns (any header order; names are auto-matched).</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead className="bg-muted/40">
+                <tr className="border-b border-border text-left text-muted-foreground">
+                  <th className="px-4 py-2 font-medium">Column</th>
+                  <th className="px-4 py-2 font-medium">Required</th>
+                  <th className="px-4 py-2 font-medium">Example</th>
+                  <th className="px-4 py-2 font-medium">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {columns.map((c) => (
+                  <tr key={c.key} className="border-b border-border last:border-0">
+                    <td className="px-4 py-2 font-medium text-foreground">{c.label}</td>
+                    <td className="px-4 py-2">{c.required ? <span className="text-red-500">Required</span> : <span className="text-muted-foreground">Optional</span>}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{c.example || "—"}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{c.note ?? ""}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Drop zone */}
@@ -237,7 +274,7 @@ export default function ImportPage() {
             <div className="border-t border-border px-5 py-4 flex justify-end gap-3">
               <Button variant="outline" size="sm" onClick={() => setPreview(null)}>Back</Button>
               <Button size="sm" disabled={preview.valid === 0 || runImportMutation.isPending} onClick={runCommit} data-testid="import-btn">
-                {runImportMutation.isPending ? "Importing…" : `Import ${preview.valid} valid rows`}
+                {runImportMutation.isPending ? "Importing…" : `Import ${preview.valid} valid`}
               </Button>
             </div>
           </div>
