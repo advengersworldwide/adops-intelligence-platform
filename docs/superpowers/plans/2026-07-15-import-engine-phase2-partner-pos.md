@@ -569,7 +569,7 @@ function resolveGroup(groupRows: GroupRow[], ctx: PpoContext, seen: Set<string>)
     if (evMatches.length > 1) return { rowNumber: gr.rowNumber, status: "error", messages: [`Ambiguous event "${eventName}" for this client (row ${gr.rowNumber})`] };
     const cacStr = (gr.cells.cacRate ?? "").trim();
     const cacRate = Number(cacStr);
-    if (!cacStr || Number.isNaN(cacRate) || cacRate < 0) return { rowNumber: gr.rowNumber, status: "error", messages: [`Invalid CAC Rate "${gr.cells.cacRate}" (row ${gr.rowNumber})`] };
+    if (!cacStr || !Number.isFinite(cacRate) || cacRate < 0) return { rowNumber: gr.rowNumber, status: "error", messages: [`Invalid CAC Rate "${gr.cells.cacRate}" (row ${gr.rowNumber})`] };
     const countStr = (gr.cells.eventCount ?? "").trim();
     const eventCount = Number(countStr);
     if (!countStr || !Number.isInteger(eventCount) || eventCount < 0) return { rowNumber: gr.rowNumber, status: "error", messages: [`Invalid Event Count "${gr.cells.eventCount}" (row ${gr.rowNumber})`] };
