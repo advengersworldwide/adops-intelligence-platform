@@ -1,8 +1,10 @@
 # Dashboard & Analytics Redesign — Design
 
 **Date:** 2026-07-11
-**Status:** Approved (design), pending implementation plan
+**Status:** Approved (design) · re-grounded 2026-07-11 after the import engine shipped
 **Scope decision:** Both surfaces as one coherent system · exec-first persona · all four insight domains · predictive/AI first-class · single implementation plan covering all phases.
+
+> **Revision (import engine):** The import engine landed, adding canonical financial-ops tables: `partner_bills` (partner invoices, explicit USD `amount`), `partner_payments` (settlements, `status` pending|settled, `sourceClientPaymentId` funding link), `payment_billings` (client payment → billing collections), `partner_purchase_order_items` (PPO line budgets), and `tax_settings` (single global tax row). **`partner_bills`/`partner_payments` is the canonical AP source of truth**; the older `billing_records → bills → payment_bills` chain is retained only for the fraud-quality view. Financial Ops (§6 Tab 2, §7) is re-grounded on these tables and the prior open questions (§12) are resolved.
 
 ---
 
@@ -14,7 +16,7 @@ Today the home Dashboard (`app/app/(dashboard)/page.tsx`) and Analytics page (`a
 
 - **Two revenue engines exist, not one.** *Media* (`transactions`) **and** *Performance/Events* (`billing_event_items`: `billableRate × eventCount` vs `payoutRate × eventCount`). The events engine has no visualization today.
 - **Margin leakage is measurable stage by stage** via `billings`/`billing_records`: FX spread (`forexSellingRate` vs `forexBuyingRate`), three taxes (`remittanceTaxPct`, `salesTaxPct`, `withholdingTaxPct`), and bulk discounts.
-- **A full financial-ops layer is unused:** receivables (`billings` + invoice status), payables (`bills` + `payments` via `payment_bills`), PPO budget pacing (`partner_purchase_orders.totalBudget` over `startDate→endDate`), and traffic quality / fraud (`fraudPins / appsflyerPins` in `billing_records`).
+- **A full financial-ops layer is unused:** receivables (`billings` invoices ← `payment_billings` collections), payables (`partner_bills` ← `partner_payments`), PPO budget pacing (`partner_purchase_order_items.lineBudget` over `partner_purchase_orders.startDate→endDate`), and traffic quality / fraud (`fraudPins / appsflyerPins` in `billing_records`).
 
 The existing AI module (`app/app/api/ai/chat/route.ts`, Groq + `lib/ai-context`) makes AI-narrated insights realistic to wire in.
 
@@ -53,7 +55,7 @@ Sticky on Analytics; compact variant on the Dashboard.
 | **Client / Partner / Buying House** | Multi-select | `clients`, `partners`, `buying_houses` |
 | **Cost model / Event** | Multi-select | `cost_models`, `client_events` |
 | **Purchase order** | CPO/PPO picker (drives pacing views) | `client_purchase_orders`, `partner_purchase_orders` |
-| **Status** (financial views) | Paid / Pending / Overdue / Dispute | `billings.status`, `bills.status` |
+| **Status** (financial views) | Paid / Pending / Overdue / Dispute | `billings.status` (AR), `partner_payments.status` (AP) |
 | **Currency** | Base currency + FX rates | settings store (§4.4) |
 
 ### 4.2 Comparison mode
@@ -96,11 +98,11 @@ Shared global filter bar at top; tabs below. Each chart is chosen so its form ma
 ### Tab 2 · Financial Operations
 | Insight | Chart | Reads |
 |---|---|---|
-| What's owed to us, and how old? | **AR aging stacked bars** (0–30 / 31–60 / 61–90 / 90+) | `billings` + status/collections |
-| What we owe, and how old? | **AP aging stacked bars** | `bills` + `payment_bills` |
-| Liquidity over time | **Cash-flow timeline** (collections in vs payments out, running balance) | `payments`, `billings` |
-| Invoice lifecycle | **Status funnel**: pending → approved → invoiced → paid | `billings.status` + payment linkage |
-| Are PPOs pacing to budget? | **PPO burn-down**: cumulative actual vs ideal pace vs projected exhaustion date | PPO budget + dates + attributed actuals |
+| What's owed to us, and how old? | **AR aging stacked bars** (0–30 / 31–60 / 61–90 / 90+) | `billings` (netReceivable) − `payment_billings.amountApplied`; age from `invoiceGeneratedAt` |
+| What we owe, and how old? | **AP aging stacked bars** | `partner_bills.amount` − settled `partner_payments.amount`; age from `dateReceived` |
+| Liquidity over time | **Cash-flow timeline** (collections in vs payouts out, running balance) + funded-vs-unfunded payout cut | in: client `payments` via `payment_billings`; out: settled `partner_payments`; funding via `sourceClientPaymentId` |
+| Invoice lifecycle | **Status funnel**: pending → approved → invoiced → paid/partial | `billings.status` × collection state from `payment_billings` |
+| Are PPOs pacing to budget? | **PPO burn-down**: cumulative actual vs ideal pace vs projected exhaustion date | consumed = Σ `partner_bills.amount` for the PPO vs Σ `partner_purchase_order_items.lineBudget` over `startDate→endDate` |
 
 ### Tab 3 · Relationships & Concentration
 | Insight | Chart | Reads |
@@ -121,19 +123,23 @@ Shared global filter bar at top; tabs below. Each chart is chosen so its form ma
 
 ## 7. Metric definitions (grounded)
 
-Confirmed against the schema. Items marked **⚠ confirm** are semantics to pin down against the existing billing/payments modules during implementation (see §12).
+All confirmed against the schema after the import-engine re-grounding.
 
 - **Media revenue / cost / profit** = `Σ transactions.spend` / `Σ transactions.cost` / `Σ transactions.profit`.
 - **Performance gross revenue** = `Σ (billing_event_items.billableRate × eventCount)`.
 - **Performance gross cost** = `Σ (billing_event_items.payoutRate × eventCount)`.
-- **Net invoice / receivable value** = billing gross adjusted by bulk discount, taxes, and forex. **⚠ confirm:** reuse the billing module's canonical computation rather than re-implementing.
+- **Net invoice / receivable value** = `computeBilling()` (`app/lib/compute-billing.ts`) → `netReceivable`; the leakage waterfall reuses its intermediate fields (`totalInvoice → lessWht → lessSst → lessBd → netReceivable → netPayablePkr → netMargin`). Never re-implemented.
 - **Margin %** = `profit / revenue`.
 - **Concentration**: revenue share of top N clients; **HHI** = `Σ(share_i²)`.
-- **PPO pacing**: consumed = `Σ (payoutRate × eventCount)` over `billing_lines` where `partnerPurchaseOrderId = PPO`; ideal pace = `totalBudget × (elapsed days / total days)`; projected exhaustion by linear extrapolation of consumed rate.
-- **Fraud rate** = `fraudPins / appsflyerPins`; valid pins = `appsflyerPins − fraudPins`.
-- **AR aging bucket**: age = today − `billings.invoiceGeneratedAt` (or due date = + payment-terms days); outstanding = net invoice value − collections. **⚠ confirm** collection source (payments link to `bills`, not directly to `billings`).
-- **AP aging bucket**: `bills` outstanding = bill total − `Σ payment_bills.amountApplied`; bill total derived from linked `billing_records` via `bill_transactions`. **⚠ confirm** the billing-record → bill amount formula (`bills` has no amount column).
-- **FX spread contribution** = `(forexSellingRate − forexBuyingRate)` applied to the invoice base. **⚠ confirm** exact base.
+- **AR outstanding** (per billing) = `netReceivable` − `Σ payment_billings.amountApplied`.
+- **AR aging bucket**: age = today − `billings.invoiceGeneratedAt`, bucketed 0–30 / 31–60 / 61–90 / 90+ (raw document-date aging; net-terms due dates are a later enhancement).
+- **AP outstanding** (per partner bill) = `partner_bills.amount` − `Σ partner_payments.amount` where `status = 'settled'`; `pending` payments reported separately as "in transit."
+- **AP aging bucket**: age = today − `partner_bills.dateReceived` (fallback `createdAt`), same buckets.
+- **Cash flow**: money-in = client `payments` applied via `payment_billings`; money-out = settled `partner_payments`; a payout is **funded** when `sourceClientPaymentId` is set, **unfunded** otherwise.
+- **PPO pacing**: consumed = `Σ partner_bills.amount` where `partnerPurchaseOrderId = PPO`; budget = `Σ partner_purchase_order_items.lineBudget` (== `partner_purchase_orders.totalBudget`); ideal pace = `budget × (elapsed days / total days)` over `startDate→endDate`; projected exhaustion by linear extrapolation of the consumed rate.
+- **Fraud rate** = `fraudPins / appsflyerPins`; valid pins = `appsflyerPins − fraudPins` (from `billing_records`).
+- **Forward-looking tax** (what-if simulator) reads the single `tax_settings` row; historical billings use their snapshotted rates.
+- **FX spread** is embedded in `computeBilling`: receivable uses `forexSellingRate`, payable uses `forexBuyingRate`; the spread contribution is the delta between those two legs.
 
 ## 8. API & data flow
 
@@ -159,17 +165,19 @@ Confirmed against the schema. Items marked **⚠ confirm** are semantics to pin 
 - **API:** route tests for each new endpoint (filters, empty data, auth).
 - **Component:** smoke tests that each tab renders with sample and empty data.
 
-## 12. Open questions / joins to confirm during implementation
-1. **AR collections source:** `payments`/`payment_bills` link to `bills`; confirm how client collections against `billings` invoices are recorded (are `bills` with `clientId` the receivable side?).
-2. **Bill amount:** `bills` has no amount column — confirm the derived total from linked `billing_records` (`appsflyerPins`/`fraudPins` × `payoutRate`, net of discounts/taxes?).
-3. **Net invoice value:** reuse the exact billing-module computation (discount → tax → forex order) rather than re-deriving.
-4. **Payment terms → due dates:** `payment_terms.name` is a label; confirm whether net-days is parseable from it or needs a numeric field.
-5. **PPO actual attribution:** confirm `billing_lines.partnerPurchaseOrderId` is reliably populated for pacing.
+## 12. Open questions — resolved by the import engine
+1. ~~AR collections source~~ → **`payment_billings`** (client `payments` → `billings`, `amountApplied`).
+2. ~~Bill amount derivation~~ → **`partner_bills.amount`** is an explicit USD column.
+3. ~~Net invoice value~~ → **`computeBilling()`** is the canonical source (see §7).
+4. ~~Payment terms → due dates~~ → **avoided**; aging uses raw document-date buckets, so `payment_terms` net-days is not required (a later enhancement).
+5. ~~PPO actual attribution~~ → **`partner_bills.partnerPurchaseOrderId`** attributes actuals to a PPO.
+
+Residual (decision, not a blocker): `partner_payments.status` values are `pending | settled`; outstanding AP counts only `settled`, pending shown as "in transit."
 
 ## 13. Phasing (internal structure of the single implementation plan)
 Delivered as one plan, sequenced so value ships progressively and risky joins are validated early:
 - **Phase 0 — Foundation:** filter bar + query contract, engine toggle, currency store, comparison mode, drill-down, error boundaries; refactor existing endpoints.
 - **Phase 1 — Profitability tab + cockpit KPIs:** two-engine KPIs (deltas + sparklines), profit trend, leakage waterfall, margin quadrant/distribution.
-- **Phase 2 — Financial Ops tab + working-capital panel:** AR/AP aging, cash-flow timeline, invoice status funnel, PPO burn-down. (Resolves §12 confirmations first.)
+- **Phase 2 — Financial Ops tab + working-capital panel:** AR/AP aging (`partner_bills`/`partner_payments` + `payment_billings`), cash-flow timeline with funded/unfunded cut, invoice status funnel, PPO burn-down. Fully specified — no discovery gate.
 - **Phase 3 — Relationships tab:** Pareto/HHI, Sankey, client×partner heatmap, treemap, fraud quality.
 - **Phase 4 — Forecast & Anomalies + AI:** forecast bands, anomaly markers, AI "what changed" strip, what-if simulator.

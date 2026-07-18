@@ -20,7 +20,7 @@
 - **Run tests:** `pnpm --filter @workspace/web test -- <path>`. **Typecheck:** `pnpm --filter @workspace/web typecheck`.
 - **Commit** after every green step (messages shown per task).
 
-> **Fidelity note:** Phase 0 and Phase 1 are specified at full step-level detail and are the first shippable increment (foundation + exec cockpit KPIs + Profitability tab). Phases 2–4 are specified as task-level breakdowns with files, reuse targets, tests, and acceptance criteria; their step-level code is finalized just-in-time because their exact SQL/response shapes depend on the AR/AP semantics resolved in **Task 2.0** (a required discovery task before Phase 2 code). This keeps the plan honest rather than guessing joins.
+> **Fidelity note:** Phase 0 and Phase 1 are specified at full step-level detail and are the first shippable increment (foundation + exec cockpit KPIs + Profitability tab). Phases 2–4 are specified as task-level breakdowns with files, reuse targets, tests, and acceptance criteria; their step-level code (exact tests + implementations) is expanded just before executing each task to keep code blocks accurate against the live schema. Financial-ops joins are now concrete (post import-engine re-grounding: `partner_bills`/`partner_payments`/`payment_billings`/`partner_purchase_order_items`), so there is **no discovery gate**.
 
 ---
 
@@ -782,33 +782,28 @@ git commit -m "feat(dashboard): executive KPI strip with deltas and sparklines"
 
 ---
 
-# PHASE 2 — Financial Operations (task-level; step code finalized after Task 2.0)
+# PHASE 2 — Financial Operations (fully grounded — no discovery gate)
 
-## Task 2.0 (REQUIRED DISCOVERY — do first): confirm AR/AP semantics
-Resolve spec §12 by reading the payments/billing modules and DB:
-- How client **collections** are recorded (do `bills.clientId` rows represent receivables, or is collection tracked against `billings` some other way?).
-- The `bills` **total amount** derivation (no amount column) from linked `billing_records` via `bill_transactions`.
-- Whether `payment_terms.name` yields net-days for due dates, or a numeric field is needed (if needed, add a `netDays` column migration as its own task).
+> Canonical AP is `partner_bills` (explicit USD `amount`) ← `partner_payments` (`status` pending|settled, `sourceClientPaymentId` funding link). Canonical AR is `billings` (`computeBilling().netReceivable`) ← `payment_billings.amountApplied`. PPO budget is `Σ partner_purchase_order_items.lineBudget`. Aging uses raw document-date buckets. All resolved in spec §7/§12.
 
-Write findings as a short `docs/superpowers/specs/2026-07-11-dashboard-analytics-redesign-design.md` update (append an "AR/AP resolution" section) and commit. **Phase 2 step code is written against these findings.**
-
-## Task 2.1: AR/AP aging pure function + endpoint
-- Create `app/lib/analytics/aging.ts` (+ test): `bucketByAge(items, asOf)` → `{ "0-30", "31-60", "61-90", "90+" }` totals. Reuse `computeBilling.netReceivable` for AR amounts and the confirmed bill-total formula for AP.
-- Add `/analytics/aging` OpenAPI + route (returns AR and AP bucket sets). TDD the pure function; route test with mocked db.
+## Task 2.1: Aging pure function + AR/AP aging endpoint
+- Create `app/lib/analytics/aging.ts` (+ `aging.test.ts`): `bucketByAge(items: { amount: number; date: string }[], asOf: Date)` → `{ "0-30": n, "31-60": n, "61-90": n, "90+": n }`. Pure; TDD first.
+- AR items: per `billings`, amount = `computeBilling().netReceivable` − `Σ payment_billings.amountApplied`, date = `invoiceGeneratedAt`. AP items: per `partner_bills`, amount = `partner_bills.amount` − `Σ` settled `partner_payments.amount`, date = `dateReceived` (fallback `createdAt`).
+- Add `/analytics/aging` OpenAPI (returns `{ ar: Bucket[]; ap: Bucket[] }`) + route (filters by client/partner); route test with mocked db. `AgingBars` component (recharts stacked `BarChart`, one series per bucket).
 
 ## Task 2.2: Cash-flow timeline endpoint + chart
-- `app/lib/analytics/cashflow.ts` (+ test): running-balance series from collections in (payments) and payouts out over the date range.
-- `/analytics/cashflow` endpoint; `CashFlowChart` (recharts `ComposedChart`: bars in/out + running-balance line).
+- `app/lib/analytics/cashflow.ts` (+ test): `runningBalance(inflows, outflows, range)` → daily/weekly series with cumulative balance; tag each outflow `funded` when `sourceClientPaymentId != null`.
+- Inflows = client `payments` applied via `payment_billings`; outflows = settled `partner_payments`. `/analytics/cashflow` endpoint; `CashFlowChart` (recharts `ComposedChart`: in/out bars + running-balance line, funded vs unfunded stacked on the out bars).
 
 ## Task 2.3: Invoice status funnel
-- Aggregate `billings.status` counts/amounts (pending→approved→invoiced→paid). `/analytics/invoice-funnel` endpoint; `StatusFunnel` component (stacked horizontal bars).
+- Aggregate `billings.status` (pending → approved → dispute) crossed with collection state (paid / partial / outstanding from `payment_billings`). `/analytics/invoice-funnel` endpoint; `StatusFunnel` component (stacked horizontal bars).
 
 ## Task 2.4: PPO burn-down pacing
-- `app/lib/analytics/pacing.ts` (+ test): `pace(consumed, totalBudget, start, end, asOf)` → `{ idealToDate, projectedExhaustion, overpacePct }`. Consumed = Σ event-item payout on billing_lines for the PPO (reuse `po-totals` where applicable).
-- `/analytics/po-pacing` endpoint; `PoBurnDownChart` (actual cumulative vs ideal pace line vs projected).
+- `app/lib/analytics/pacing.ts` (+ test): `pace(consumed, budget, start, end, asOf)` → `{ idealToDate, projectedExhaustion, overpacePct }`. Consumed = `Σ partner_bills.amount` where `partnerPurchaseOrderId = PPO`; budget = `Σ partner_purchase_order_items.lineBudget` (cross-check `partner_purchase_orders.totalBudget`; reuse `app/lib/po-totals.ts`).
+- `/analytics/po-pacing` endpoint; `PoBurnDownChart` (actual cumulative vs ideal pace line vs projected exhaustion).
 
 ## Task 2.5: Dashboard working-capital panel + Cash Position KPI
-- Add the Receivables vs Payables + net-liquidity-gap panel and the **Cash Position** KPI tile to the cockpit, plus the FinancialOpsTab assembling 2.1–2.4.
+- Add the Receivables vs Payables + net-liquidity-gap panel and the **Cash Position** KPI tile (AR outstanding − AP outstanding) to the cockpit, plus the `FinancialOpsTab` assembling 2.1–2.4.
 
 ---
 
@@ -857,4 +852,4 @@ Write findings as a short `docs/superpowers/specs/2026-07-11-dashboard-analytics
 - [ ] Spec §4 filters → Tasks 0.3, 0.5, 0.10; §5 cockpit → 1.5, 1.7, 2.5, 4.3; §6 Tab 1 → 1.1–1.6; Tab 2 → 2.x; Tab 3 → 3.x; Tab 4 → 4.x; §7 formulas → the `app/lib/analytics/*` pure fns; §8 endpoints → each `/analytics/*` task; §11 testing → per-fn/per-route tests.
 - [ ] Every new endpoint went through the codegen loop (openapi → codegen → route), no hand-edited generated files.
 - [ ] No inline money math — all via `compute-billing` / `app/lib/analytics/*`.
-- [ ] §12 open questions resolved in Task 2.0 before Phase 2 step code.
+- [ ] Financial-ops tasks read the canonical tables (`partner_bills`/`partner_payments`/`payment_billings`/`partner_purchase_order_items`), not the legacy `bills`/`payment_bills` chain (which stays only for fraud quality).
