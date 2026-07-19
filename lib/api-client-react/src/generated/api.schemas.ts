@@ -736,6 +736,18 @@ export interface PartnerAnalytics {
   transactionCount: number;
 }
 
+export interface ParetoPoint {
+  name: string;
+  revenue: number;
+  cumulativePct: number;
+}
+
+export interface ConcentrationResponse {
+  points: ParetoPoint[];
+  hhi: number;
+  top5Pct: number;
+}
+
 export type AlertType = typeof AlertType[keyof typeof AlertType];
 
 
@@ -1489,6 +1501,30 @@ export type GetPoPacingParams = {
  * @nullable
  */
 partnerIds?: PartnerIdsParameter;
+};
+
+export type GetConcentrationParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
 };
 
 export type ListAllBillingRecordsParams = {

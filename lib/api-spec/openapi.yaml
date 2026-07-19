@@ -982,6 +982,31 @@ paths:
                 items:
                   $ref: "#/components/schemas/PoPacing"
 
+  /analytics/concentration:
+    get:
+      operationId: getConcentration
+      tags: [analytics]
+      summary: Revenue concentration by client — Pareto (80/20) points + HHI
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+      responses:
+        "200":
+          description: Revenue concentration analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConcentrationResponse"
+
   # ── Buying Houses ─────────────────────────────────────────────────────────────
   /buying-houses:
     get:
@@ -2682,6 +2707,30 @@ components:
           type: number
         transactionCount:
           type: integer
+
+    ParetoPoint:
+      type: object
+      required: [name, revenue, cumulativePct]
+      properties:
+        name:
+          type: string
+        revenue:
+          type: number
+        cumulativePct:
+          type: number
+
+    ConcentrationResponse:
+      type: object
+      required: [points, hhi, top5Pct]
+      properties:
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParetoPoint"
+        hhi:
+          type: number
+        top5Pct:
+          type: number
 
     Alert:
       type: object

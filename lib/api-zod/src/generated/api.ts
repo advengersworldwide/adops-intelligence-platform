@@ -986,6 +986,28 @@ export const GetPoPacingResponse = zod.array(GetPoPacingResponseItem)
 
 
 /**
+ * @summary Revenue concentration by client — Pareto (80/20) points + HHI
+ */
+export const GetConcentrationQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish()
+})
+
+export const GetConcentrationResponse = zod.object({
+  "points": zod.array(zod.object({
+  "name": zod.string(),
+  "revenue": zod.number(),
+  "cumulativePct": zod.number()
+})),
+  "hhi": zod.number(),
+  "top5Pct": zod.number()
+})
+
+
+/**
  * @summary List all buying houses with aggregate stats
  */
 export const ListBuyingHousesResponseItem = zod.object({

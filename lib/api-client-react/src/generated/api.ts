@@ -46,6 +46,7 @@ import type {
   ClientPurchaseOrderInput,
   ClientPurchaseOrderUpdate,
   ClientUpdate,
+  ConcentrationResponse,
   CostModel,
   CostModelInput,
   CostResource,
@@ -55,6 +56,7 @@ import type {
   GetAnalyticsByClientParams,
   GetAnalyticsByPartnerParams,
   GetCashFlowParams,
+  GetConcentrationParams,
   GetDashboardSummaryParams,
   GetInvoiceFunnelParams,
   GetMarginDistributionParams,
@@ -3467,6 +3469,90 @@ export function useGetPoPacing<TData = Awaited<ReturnType<typeof getPoPacing>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetPoPacingQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetConcentrationUrl = (params?: GetConcentrationParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/concentration?${stringifiedParams}` : `/api/analytics/concentration`
+}
+
+/**
+ * @summary Revenue concentration by client — Pareto (80/20) points + HHI
+ */
+export const getConcentration = async (params?: GetConcentrationParams, options?: RequestInit): Promise<ConcentrationResponse> => {
+
+  return customFetch<ConcentrationResponse>(getGetConcentrationUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetConcentrationQueryKey = (params?: GetConcentrationParams,) => {
+    return [
+    `/api/analytics/concentration`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetConcentrationQueryOptions = <TData = Awaited<ReturnType<typeof getConcentration>>, TError = ErrorType<unknown>>(params?: GetConcentrationParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConcentration>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetConcentrationQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getConcentration>>> = ({ signal }) => getConcentration(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getConcentration>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetConcentrationQueryResult = NonNullable<Awaited<ReturnType<typeof getConcentration>>>
+export type GetConcentrationQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Revenue concentration by client — Pareto (80/20) points + HHI
+ */
+
+export function useGetConcentration<TData = Awaited<ReturnType<typeof getConcentration>>, TError = ErrorType<unknown>>(
+ params?: GetConcentrationParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getConcentration>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetConcentrationQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
