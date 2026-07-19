@@ -775,6 +775,42 @@ paths:
                 items:
                   $ref: "#/components/schemas/ProfitTimePoint"
 
+  /analytics/forecast:
+    get:
+      operationId: getForecast
+      tags: [analytics]
+      summary: Linear revenue/cost/profit forecast projected beyond the selected date range
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+        - { $ref: "#/components/parameters/Engine" }
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+        - name: metric
+          in: query
+          description: revenue|cost|profit, default profit
+          schema:
+            type: ["string", "null"]
+        - name: horizon
+          in: query
+          description: Number of future days to project, default 7
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Historical series plus a projected forecast with confidence band
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ForecastResponse"
+
   /analytics/by-client:
     get:
       operationId: getAnalyticsByClient
@@ -3357,6 +3393,25 @@ components:
         overpacePct: { type: number }
         pctConsumed: { type: number }
         projectedExhaustion: { type: ["string", "null"] }
+
+    ForecastHistoryPoint:
+      type: object
+      required: [date, value]
+      properties: { date: { type: string }, value: { type: number } }
+    ForecastFuturePoint:
+      type: object
+      required: [date, value, lower, upper]
+      properties:
+        date: { type: string }
+        value: { type: number }
+        lower: { type: number }
+        upper: { type: number }
+    ForecastResponse:
+      type: object
+      required: [history, forecast]
+      properties:
+        history: { type: array, items: { $ref: "#/components/schemas/ForecastHistoryPoint" } }
+        forecast: { type: array, items: { $ref: "#/components/schemas/ForecastFuturePoint" } }
 
   parameters:
     Engine:

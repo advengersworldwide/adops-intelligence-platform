@@ -53,6 +53,7 @@ import type {
   CostResourceInput,
   DashboardSummary,
   FlowGraph,
+  ForecastResponse,
   FraudPoint,
   GetAgingParams,
   GetAnalyticsByClientParams,
@@ -60,6 +61,7 @@ import type {
   GetCashFlowParams,
   GetConcentrationParams,
   GetDashboardSummaryParams,
+  GetForecastParams,
   GetFraudQualityParams,
   GetInvoiceFunnelParams,
   GetMarginDistributionParams,
@@ -2726,6 +2728,90 @@ export function useGetProfitOverTime<TData = Awaited<ReturnType<typeof getProfit
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetProfitOverTimeQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetForecastUrl = (params?: GetForecastParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/forecast?${stringifiedParams}` : `/api/analytics/forecast`
+}
+
+/**
+ * @summary Linear revenue/cost/profit forecast projected beyond the selected date range
+ */
+export const getForecast = async (params?: GetForecastParams, options?: RequestInit): Promise<ForecastResponse> => {
+
+  return customFetch<ForecastResponse>(getGetForecastUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetForecastQueryKey = (params?: GetForecastParams,) => {
+    return [
+    `/api/analytics/forecast`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetForecastQueryOptions = <TData = Awaited<ReturnType<typeof getForecast>>, TError = ErrorType<unknown>>(params?: GetForecastParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getForecast>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetForecastQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getForecast>>> = ({ signal }) => getForecast(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getForecast>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetForecastQueryResult = NonNullable<Awaited<ReturnType<typeof getForecast>>>
+export type GetForecastQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Linear revenue/cost/profit forecast projected beyond the selected date range
+ */
+
+export function useGetForecast<TData = Awaited<ReturnType<typeof getForecast>>, TError = ErrorType<unknown>>(
+ params?: GetForecastParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getForecast>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetForecastQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

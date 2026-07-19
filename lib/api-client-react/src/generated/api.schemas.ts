@@ -1265,6 +1265,23 @@ export interface PoPacing {
   projectedExhaustion: string | null;
 }
 
+export interface ForecastHistoryPoint {
+  date: string;
+  value: number;
+}
+
+export interface ForecastFuturePoint {
+  date: string;
+  value: number;
+  lower: number;
+  upper: number;
+}
+
+export interface ForecastResponse {
+  history: ForecastHistoryPoint[];
+  forecast: ForecastFuturePoint[];
+}
+
 export type EngineParameter = RevenueEngine;
 
 /**
@@ -1382,6 +1399,41 @@ costModelId?: CostModelIdParameter;
  * @nullable
  */
 compare?: CompareParameter;
+};
+
+export type GetForecastParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
+engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+/**
+ * revenue|cost|profit, default profit
+ * @nullable
+ */
+metric?: string | null;
+/**
+ * Number of future days to project, default 7
+ * @nullable
+ */
+horizon?: number | null;
 };
 
 export type GetAnalyticsByClientParams = {

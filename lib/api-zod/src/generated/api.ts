@@ -786,6 +786,34 @@ export const GetProfitOverTimeResponse = zod.array(GetProfitOverTimeResponseItem
 
 
 /**
+ * @summary Linear revenue/cost/profit forecast projected beyond the selected date range
+ */
+export const GetForecastQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "engine": zod.enum(['media', 'performance', 'combined']).optional(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish(),
+  "metric": zod.coerce.string().nullish().describe('revenue|cost|profit, default profit'),
+  "horizon": zod.coerce.number().nullish().describe('Number of future days to project, default 7')
+})
+
+export const GetForecastResponse = zod.object({
+  "history": zod.array(zod.object({
+  "date": zod.string(),
+  "value": zod.number()
+})),
+  "forecast": zod.array(zod.object({
+  "date": zod.string(),
+  "value": zod.number(),
+  "lower": zod.number(),
+  "upper": zod.number()
+}))
+})
+
+
+/**
  * @summary Spend, cost, profit, and margin grouped by client
  */
 export const GetAnalyticsByClientQueryParams = zod.object({
