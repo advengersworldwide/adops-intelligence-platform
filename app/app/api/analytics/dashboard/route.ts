@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db, transactionsTable, campaignsTable, clientsTable, partnersTable } from "@workspace/db";
 import { GetDashboardSummaryQueryParams, GetDashboardSummaryResponse } from "@workspace/api-zod";
+import { parseIdList } from "@/lib/analytics/parse-params";
+import { buildTransactionConditions } from "@/lib/analytics/route-filters";
 
 export const runtime = "nodejs";
 
@@ -10,9 +12,13 @@ export async function GET(req: Request): Promise<Response> {
   const qp = GetDashboardSummaryQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });
 
-  const conditions = [];
-  if (qp.data.dateFrom) conditions.push(gte(transactionsTable.date, qp.data.dateFrom));
-  if (qp.data.dateTo) conditions.push(lte(transactionsTable.date, qp.data.dateTo));
+  const conditions = buildTransactionConditions({
+    dateFrom: qp.data.dateFrom,
+    dateTo: qp.data.dateTo,
+    clientIds: parseIdList(qp.data.clientIds),
+    partnerIds: parseIdList(qp.data.partnerIds),
+    buyingHouseIds: parseIdList(qp.data.buyingHouseIds),
+  });
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [agg] = await db.select({
@@ -20,7 +26,10 @@ export async function GET(req: Request): Promise<Response> {
     totalCost: sql<string>`coalesce(sum(${transactionsTable.cost}), 0)`,
     totalProfit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
     transactionCount: sql<number>`count(*)::int`,
-  }).from(transactionsTable).where(whereClause);
+  }).from(transactionsTable)
+    .leftJoin(campaignsTable, eq(campaignsTable.id, transactionsTable.campaignId))
+    .leftJoin(clientsTable, eq(clientsTable.id, campaignsTable.clientId))
+    .where(whereClause);
 
   const [counts] = await db.select({
     clientCount: sql<number>`count(distinct ${clientsTable.id})::int`,
