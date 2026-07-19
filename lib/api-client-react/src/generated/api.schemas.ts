@@ -1282,6 +1282,13 @@ export interface ForecastResponse {
   forecast: ForecastFuturePoint[];
 }
 
+export interface AnomalyPoint {
+  date: string;
+  value: number;
+  z: number;
+  isAnomaly: boolean;
+}
+
 export type EngineParameter = RevenueEngine;
 
 /**
@@ -1434,6 +1441,41 @@ metric?: string | null;
  * @nullable
  */
 horizon?: number | null;
+};
+
+export type GetAnomaliesParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
+engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+/**
+ * revenue|cost|profit, default profit
+ * @nullable
+ */
+metric?: string | null;
+/**
+ * Z-score magnitude above which a point is flagged, default 2.5
+ * @nullable
+ */
+threshold?: number | null;
 };
 
 export type GetAnalyticsByClientParams = {

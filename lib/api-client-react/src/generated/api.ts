@@ -22,6 +22,7 @@ import type {
 import type {
   AgingResponse,
   Alert,
+  AnomalyPoint,
   BillDetail,
   BillInput,
   BillSummary,
@@ -58,6 +59,7 @@ import type {
   GetAgingParams,
   GetAnalyticsByClientParams,
   GetAnalyticsByPartnerParams,
+  GetAnomaliesParams,
   GetCashFlowParams,
   GetConcentrationParams,
   GetDashboardSummaryParams,
@@ -2812,6 +2814,90 @@ export function useGetForecast<TData = Awaited<ReturnType<typeof getForecast>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetForecastQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAnomaliesUrl = (params?: GetAnomaliesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/anomalies?${stringifiedParams}` : `/api/analytics/anomalies`
+}
+
+/**
+ * @summary Z-score anomaly detection over the daily revenue/cost/profit series
+ */
+export const getAnomalies = async (params?: GetAnomaliesParams, options?: RequestInit): Promise<AnomalyPoint[]> => {
+
+  return customFetch<AnomalyPoint[]>(getGetAnomaliesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAnomaliesQueryKey = (params?: GetAnomaliesParams,) => {
+    return [
+    `/api/analytics/anomalies`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAnomaliesQueryOptions = <TData = Awaited<ReturnType<typeof getAnomalies>>, TError = ErrorType<unknown>>(params?: GetAnomaliesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAnomaliesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnomalies>>> = ({ signal }) => getAnomalies(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAnomaliesQueryResult = NonNullable<Awaited<ReturnType<typeof getAnomalies>>>
+export type GetAnomaliesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Z-score anomaly detection over the daily revenue/cost/profit series
+ */
+
+export function useGetAnomalies<TData = Awaited<ReturnType<typeof getAnomalies>>, TError = ErrorType<unknown>>(
+ params?: GetAnomaliesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAnomaliesQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

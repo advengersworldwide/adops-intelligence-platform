@@ -814,6 +814,29 @@ export const GetForecastResponse = zod.object({
 
 
 /**
+ * @summary Z-score anomaly detection over the daily revenue/cost/profit series
+ */
+export const GetAnomaliesQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "engine": zod.enum(['media', 'performance', 'combined']).optional(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish(),
+  "metric": zod.coerce.string().nullish().describe('revenue|cost|profit, default profit'),
+  "threshold": zod.coerce.number().nullish().describe('Z-score magnitude above which a point is flagged, default 2.5')
+})
+
+export const GetAnomaliesResponseItem = zod.object({
+  "date": zod.string(),
+  "value": zod.number(),
+  "z": zod.number(),
+  "isAnomaly": zod.boolean()
+})
+export const GetAnomaliesResponse = zod.array(GetAnomaliesResponseItem)
+
+
+/**
  * @summary Spend, cost, profit, and margin grouped by client
  */
 export const GetAnalyticsByClientQueryParams = zod.object({
