@@ -53,6 +53,7 @@ import type {
   GetAnalyticsByPartnerParams,
   GetDashboardSummaryParams,
   GetProfitOverTimeParams,
+  GetProfitWaterfallParams,
   HealthStatus,
   ImportRequest,
   ImportResult,
@@ -91,7 +92,8 @@ import type {
   Transaction,
   TransactionInput,
   UploadPaymentAttachmentBody,
-  UploadResult
+  UploadResult,
+  WaterfallStage
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -2951,6 +2953,90 @@ export function useGetAlerts<TData = Awaited<ReturnType<typeof getAlerts>>, TErr
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAlertsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetProfitWaterfallUrl = (params?: GetProfitWaterfallParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/waterfall?${stringifiedParams}` : `/api/analytics/waterfall`
+}
+
+/**
+ * @summary Profit-leakage waterfall across matching billings
+ */
+export const getProfitWaterfall = async (params?: GetProfitWaterfallParams, options?: RequestInit): Promise<WaterfallStage[]> => {
+
+  return customFetch<WaterfallStage[]>(getGetProfitWaterfallUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProfitWaterfallQueryKey = (params?: GetProfitWaterfallParams,) => {
+    return [
+    `/api/analytics/waterfall`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetProfitWaterfallQueryOptions = <TData = Awaited<ReturnType<typeof getProfitWaterfall>>, TError = ErrorType<unknown>>(params?: GetProfitWaterfallParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfitWaterfall>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProfitWaterfallQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfitWaterfall>>> = ({ signal }) => getProfitWaterfall(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfitWaterfall>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProfitWaterfallQueryResult = NonNullable<Awaited<ReturnType<typeof getProfitWaterfall>>>
+export type GetProfitWaterfallQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Profit-leakage waterfall across matching billings
+ */
+
+export function useGetProfitWaterfall<TData = Awaited<ReturnType<typeof getProfitWaterfall>>, TError = ErrorType<unknown>>(
+ params?: GetProfitWaterfallParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfitWaterfall>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProfitWaterfallQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

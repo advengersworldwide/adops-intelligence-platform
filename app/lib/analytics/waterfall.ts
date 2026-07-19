@@ -1,4 +1,23 @@
-import type { ComputeBillingResult } from "@/lib/compute-billing";
+import { computeBilling, type ComputeBillingResult } from "@/lib/compute-billing";
+
+export interface BillingRates {
+  forexSellingRate: number;
+  forexBuyingRate: number;
+  remittanceTaxPct: number;
+  salesTaxPct: number;
+  withholdingTaxPct: number;
+  bulkDiscountPct: number;
+  whtApplied: boolean;
+}
+
+export interface LineEvents {
+  events: { eventCount: number; billableRate: number; payoutRate: number }[];
+}
+
+/** Map each billing line's events through computeBilling using the billing's shared rates. */
+export function billingLineResults(rates: BillingRates, lines: LineEvents[]): ComputeBillingResult[] {
+  return lines.map((line) => computeBilling({ events: line.events, ...rates }));
+}
 
 export interface WaterfallStage {
   key: "totalInvoice" | "lessWht" | "lessSst" | "lessBd" | "netReceivable" | "partnerPayout" | "netMargin";

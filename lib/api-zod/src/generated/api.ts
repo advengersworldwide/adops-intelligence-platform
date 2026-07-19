@@ -856,6 +856,24 @@ export const GetAlertsResponse = zod.array(GetAlertsResponseItem)
 
 
 /**
+ * @summary Profit-leakage waterfall across matching billings
+ */
+export const GetProfitWaterfallQueryParams = zod.object({
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "period": zod.coerce.string().nullish()
+})
+
+export const GetProfitWaterfallResponseItem = zod.object({
+  "key": zod.string(),
+  "label": zod.string(),
+  "value": zod.number(),
+  "kind": zod.enum(['start', 'decrease', 'subtotal', 'total'])
+})
+export const GetProfitWaterfallResponse = zod.array(GetProfitWaterfallResponseItem)
+
+
+/**
  * @summary List all buying houses with aggregate stats
  */
 export const ListBuyingHousesResponseItem = zod.object({

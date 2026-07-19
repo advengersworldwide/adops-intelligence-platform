@@ -850,6 +850,28 @@ paths:
                 items:
                   $ref: "#/components/schemas/Alert"
 
+  /analytics/waterfall:
+    get:
+      operationId: getProfitWaterfall
+      tags: [analytics]
+      summary: Profit-leakage waterfall across matching billings
+      parameters:
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - name: period
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Ordered leakage stages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WaterfallStage"
+
   # ── Buying Houses ─────────────────────────────────────────────────────────────
   /buying-houses:
     get:
@@ -2575,6 +2597,15 @@ components:
           type: ["string", "null"]
         value:
           type: ["number", "null"]
+
+    WaterfallStage:
+      type: object
+      required: [key, label, value, kind]
+      properties:
+        key: { type: string }
+        label: { type: string }
+        value: { type: number }
+        kind: { type: string, enum: [start, decrease, subtotal, total] }
 
     BillSummary:
       type: object

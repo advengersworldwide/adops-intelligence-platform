@@ -767,6 +767,23 @@ export interface Alert {
   value?: number | null;
 }
 
+export type WaterfallStageKind = typeof WaterfallStageKind[keyof typeof WaterfallStageKind];
+
+
+export const WaterfallStageKind = {
+  start: 'start',
+  decrease: 'decrease',
+  subtotal: 'subtotal',
+  total: 'total',
+} as const;
+
+export interface WaterfallStage {
+  key: string;
+  label: string;
+  value: number;
+  kind: WaterfallStageKind;
+}
+
 export interface BillSummary {
   id: number;
   billNumber: string;
@@ -1322,6 +1339,22 @@ costModelId?: CostModelIdParameter;
  * @nullable
  */
 compare?: CompareParameter;
+};
+
+export type GetProfitWaterfallParams = {
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+period?: string | null;
 };
 
 export type ListAllBillingRecordsParams = {

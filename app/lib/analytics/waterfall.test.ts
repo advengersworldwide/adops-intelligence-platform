@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildWaterfall } from "./waterfall";
+import { buildWaterfall, billingLineResults, type BillingRates, type LineEvents } from "./waterfall";
 import { computeBilling, type ComputeBillingInput } from "@/lib/compute-billing";
 
 const billing: ComputeBillingInput = {
@@ -21,5 +21,31 @@ describe("buildWaterfall", () => {
   it("sums stages across multiple billings", () => {
     const w = buildWaterfall([computeBilling(billing), computeBilling(billing)]);
     expect(w.find((s) => s.key === "totalInvoice")!.value).toBeCloseTo(280000, 2);
+  });
+});
+
+describe("billingLineResults", () => {
+  const rates: BillingRates = {
+    forexSellingRate: 280, forexBuyingRate: 275,
+    remittanceTaxPct: 2, salesTaxPct: 15, withholdingTaxPct: 4, bulkDiscountPct: 1,
+    whtApplied: true,
+  };
+  const lines: LineEvents[] = [
+    { events: [{ eventCount: 100, billableRate: 5, payoutRate: 3 }] },
+    { events: [{ eventCount: 50, billableRate: 8, payoutRate: 6 }, { eventCount: 20, billableRate: 2, payoutRate: 1 }] },
+  ];
+
+  it("maps each line through computeBilling with the billing's shared rates", () => {
+    const results = billingLineResults(rates, lines);
+    expect(results).toHaveLength(2);
+
+    // Expected: apply computeBilling directly to each line's events with the same rates,
+    // proving the helper doesn't drop lines or leak rates across lines.
+    const expected = lines.map((line) => computeBilling({ events: line.events, ...rates }));
+    expect(results).toEqual(expected);
+
+    const expectedNetMargin = expected.reduce((s, r) => s + r.netMargin, 0);
+    const w = buildWaterfall(results);
+    expect(w.find((s) => s.key === "netMargin")!.value).toBeCloseTo(expectedNetMargin, 6);
   });
 });
