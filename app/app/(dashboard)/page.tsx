@@ -349,15 +349,20 @@ function DashboardContent() {
             </div>
             {alerts && alerts.length > 0 ? (
               <div className="space-y-2">
-                {alerts.map(a => (
-                  <div key={a.id} className={cn(
-                    "rounded-lg p-2.5 text-xs",
-                    a.severity === "critical" ? "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400" : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
-                  )}>
-                    <p className="font-medium">{a.campaignName}</p>
-                    <p className="text-[10px] opacity-80 mt-0.5">{a.message}</p>
-                  </div>
-                ))}
+                {alerts.map(a => {
+                  const title = a.label ?? a.campaignName ?? a.message;
+                  return (
+                    <div key={a.id} className={cn(
+                      "rounded-lg p-2.5 text-xs",
+                      a.severity === "critical" ? "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400" : "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400"
+                    )}>
+                      <p className="font-medium">{title}</p>
+                      {title !== a.message && (
+                        <p className="text-[10px] opacity-80 mt-0.5">{a.message}</p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">No active alerts</p>
