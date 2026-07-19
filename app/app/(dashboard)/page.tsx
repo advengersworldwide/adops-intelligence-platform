@@ -5,6 +5,7 @@ import { TrendingUp, TrendingDown, DollarSign, Target, Users, Monitor, Megaphone
 import { useGetDashboardSummary, useGetProfitOverTime, useGetAnalyticsByClient, useGetAlerts, useListTransactions, useGetAnalyticsByPartner } from "@workspace/api-client-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
+import { formatMoney, convertTo, DEFAULT_RATES } from "@/lib/analytics/currency";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,18 +25,6 @@ const widgetOptions = [
   { id: "platform-performance", label: "Platform Performance", description: "Breakdown by platform" },
 ];
 
-function fmt(n: number, currency = "USD") {
-  const prefix = currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : `${currency} `;
-  const isNeg = n < 0;
-  const absVal = Math.abs(n);
-  let valStr = "";
-  if (absVal >= 1_000_000) valStr = `${(absVal / 1_000_000).toFixed(1)}M`;
-  else if (absVal >= 1_000) valStr = `${(absVal / 1_000).toFixed(1)}K`;
-  else valStr = absVal.toFixed(0);
-
-  return `${isNeg ? "-" : ""}${prefix}${valStr}`;
-}
-
 function fmtPct(n: number | null | undefined) {
   if (n == null) return null;
   return `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
@@ -48,8 +37,9 @@ interface KpiCardProps {
   positive?: boolean;
   icon: React.ReactNode;
   loading?: boolean;
+  sparkline?: number[];
 }
-function KpiCard({ title, value, change, positive, icon, loading }: KpiCardProps) {
+function KpiCard({ title, value, change, positive, icon, loading, sparkline }: KpiCardProps) {
   return (
     <div className="flex flex-col h-full rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
       <div className="flex justify-center p-1 cursor-grab active:cursor-grabbing bg-muted/10 border-b border-border widget-drag-handle">
@@ -77,6 +67,28 @@ function KpiCard({ title, value, change, positive, icon, loading }: KpiCardProps
           </div>
           <div className="rounded-xl bg-primary/10 p-2.5 text-primary">{icon}</div>
         </div>
+        {!loading && sparkline && sparkline.length > 1 && (
+          <div className="mt-2 h-9 -mx-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={sparkline.map(v => ({ v }))} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+                <defs>
+                  <linearGradient id={`kpiSparkGrad-${title.replace(/\s+/g, "")}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(221,83%,53%)" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="hsl(221,83%,53%)" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="v"
+                  stroke="hsl(221,83%,53%)"
+                  strokeWidth={1.5}
+                  fill={`url(#kpiSparkGrad-${title.replace(/\s+/g, "")})`}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -118,24 +130,15 @@ function DashboardContent() {
 
   const baseCurrency = typeof window !== "undefined" ? (localStorage.getItem("adops-base-currency") || "USD") : "USD";
   const rawRates = typeof window !== "undefined" ? localStorage.getItem("adops-exchange-rates") : null;
-  const exchangeRates = rawRates ? JSON.parse(rawRates) : { usd: 1.0, eur: 0.92, gbp: 0.79, inr: 83.0, jpy: 155.0, cad: 1.36, aud: 1.50, pkr: 278.0, sar: 3.75, aed: 3.67 };
-
-  const convert = (amount: number, from: string) => {
-    const fromKey = (from || "USD").toLowerCase();
-    const rate = exchangeRates[fromKey];
-    if (rate && rate > 0) {
-      return amount / rate;
-    }
-    return amount;
-  };
+  const exchangeRates = rawRates ? JSON.parse(rawRates) : DEFAULT_RATES;
 
   let convertedRevenue = 0;
   let convertedCost = 0;
 
   if (byPlatform && byPlatform.length > 0) {
     byPlatform.forEach(p => {
-      convertedRevenue += convert(p.revenue, "USD");
-      convertedCost += convert(p.cost, "USD");
+      convertedRevenue += convertTo(p.revenue, "USD", exchangeRates);
+      convertedCost += convertTo(p.cost, "USD", exchangeRates);
     });
   } else {
     convertedRevenue = summary?.totalRevenue ?? 0;
@@ -198,11 +201,12 @@ function DashboardContent() {
           <div key="revenue-kpi">
             <KpiCard
               title="Total Revenue"
-              value={adjustedSummary ? fmt(adjustedSummary.totalRevenue, baseCurrency) : "$0"}
+              value={adjustedSummary ? formatMoney(adjustedSummary.totalRevenue, baseCurrency) : "$0"}
               change={fmtPct(adjustedSummary?.revenueChange)}
               positive={(adjustedSummary?.revenueChange ?? 0) >= 0}
               icon={<DollarSign className="h-4 w-4" />}
               loading={summaryLoading}
+              sparkline={profitTimeSeries?.map(p => p.revenue)}
             />
           </div>
         )}
@@ -211,7 +215,7 @@ function DashboardContent() {
           <div key="cost-kpi">
             <KpiCard
               title="Total Cost"
-              value={adjustedSummary ? fmt(adjustedSummary.totalCost, baseCurrency) : "$0"}
+              value={adjustedSummary ? formatMoney(adjustedSummary.totalCost, baseCurrency) : "$0"}
               change={fmtPct(adjustedSummary?.costChange)}
               positive={(adjustedSummary?.costChange ?? 0) <= 0}
               icon={<Target className="h-4 w-4" />}
@@ -224,11 +228,12 @@ function DashboardContent() {
           <div key="profit-kpi">
             <KpiCard
               title="Total Profit"
-              value={adjustedSummary ? fmt(adjustedSummary.totalProfit, baseCurrency) : "$0"}
+              value={adjustedSummary ? formatMoney(adjustedSummary.totalProfit, baseCurrency) : "$0"}
               change={fmtPct(adjustedSummary?.profitChange)}
               positive={(adjustedSummary?.profitChange ?? 0) >= 0}
               icon={<TrendingUp className="h-4 w-4" />}
               loading={summaryLoading}
+              sparkline={profitTimeSeries?.map(p => p.profit)}
             />
           </div>
         )}
@@ -283,7 +288,7 @@ function DashboardContent() {
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">Total Profit</h2>
                   {adjustedSummary && (
-                    <p className="text-2xl font-bold text-foreground mt-0.5">{fmt(adjustedSummary.totalProfit, baseCurrency)}</p>
+                    <p className="text-2xl font-bold text-foreground mt-0.5">{formatMoney(adjustedSummary.totalProfit, baseCurrency)}</p>
                   )}
                 </div>
               </div>
@@ -308,7 +313,7 @@ function DashboardContent() {
                       <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
                       <Tooltip
                         contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
-                        formatter={(val: number, name: string) => [fmt(val), name.charAt(0).toUpperCase() + name.slice(1)]}
+                        formatter={(val: number, name: string) => [formatMoney(val), name.charAt(0).toUpperCase() + name.slice(1)]}
                       />
                       <Area type="monotone" dataKey="revenue" stroke="hsl(160,84%,39%)" strokeWidth={1.5} fill="url(#revenueGrad)" />
                       <Area type="monotone" dataKey="profit" stroke="hsl(221,83%,53%)" strokeWidth={2} fill="url(#profitGrad)" />
@@ -370,7 +375,7 @@ function DashboardContent() {
                       <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
                       <Tooltip
                         contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
-                        formatter={(val: number) => [fmt(val)]}
+                        formatter={(val: number) => [formatMoney(val)]}
                       />
                       <Bar dataKey="revenue" fill="hsl(221,83%,53%)" radius={[4, 4, 0, 0]} name="Revenue" />
                       <Bar dataKey="profit" fill="hsl(160,84%,39%)" radius={[4, 4, 0, 0]} name="Profit" />
@@ -402,7 +407,7 @@ function DashboardContent() {
                       <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
                       <Tooltip
                         contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
-                        formatter={(val: number) => [fmt(val)]}
+                        formatter={(val: number) => [formatMoney(val)]}
                       />
                       <Bar dataKey="revenue" fill="hsl(221,83%,53%)" radius={[4, 4, 0, 0]} name="Revenue" />
                       <Bar dataKey="profit" fill="hsl(160,84%,39%)" radius={[4, 4, 0, 0]} name="Profit" />
@@ -456,10 +461,10 @@ function DashboardContent() {
                         <td className="px-5 py-3 text-xs font-medium text-foreground">{tx.campaignName ?? "—"}</td>
                         <td className="px-5 py-3 text-xs text-muted-foreground">{tx.clientName ?? "—"}</td>
                         <td className="px-5 py-3 text-xs text-muted-foreground">{tx.platformName ?? "—"}</td>
-                        <td className="px-5 py-3 text-xs font-medium">{fmt(tx.spend)}</td>
-                        <td className="px-5 py-3 text-xs text-muted-foreground">{fmt(tx.cost)}</td>
+                        <td className="px-5 py-3 text-xs font-medium">{formatMoney(tx.spend)}</td>
+                        <td className="px-5 py-3 text-xs text-muted-foreground">{formatMoney(tx.cost)}</td>
                         <td className={cn("px-5 py-3 text-xs font-semibold", isNeg ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}>
-                          {fmt(tx.profit)}
+                          {formatMoney(tx.profit)}
                         </td>
                         <td className="px-5 py-3 text-xs">
                           <span className={cn(
