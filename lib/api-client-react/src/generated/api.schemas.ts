@@ -1164,6 +1164,18 @@ export interface MarginBucket {
   isNegative: boolean;
 }
 
+export interface AgingBuckets {
+  '0-30': number;
+  '31-60': number;
+  '61-90': number;
+  '90+': number;
+}
+
+export interface AgingResponse {
+  ar: AgingBuckets;
+  ap: AgingBuckets;
+}
+
 export type EngineParameter = RevenueEngine;
 
 /**
@@ -1372,6 +1384,18 @@ partnerIds?: PartnerIdsParameter;
  * @nullable
  */
 buyingHouseIds?: BuyingHouseIdsParameter;
+};
+
+export type GetAgingParams = {
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
 };
 
 export type GetProfitWaterfallParams = {

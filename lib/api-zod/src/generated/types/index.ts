@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './agingBuckets';
+export * from './agingResponse';
 export * from './alert';
 export * from './alertSeverity';
 export * from './alertType';
@@ -55,6 +57,7 @@ export * from './costResource';
 export * from './costResourceInput';
 export * from './dashboardSummary';
 export * from './engineParameter';
+export * from './getAgingParams';
 export * from './getAnalyticsByClientParams';
 export * from './getAnalyticsByPartnerParams';
 export * from './getDashboardSummaryParams';

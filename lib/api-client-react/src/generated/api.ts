@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AgingResponse,
   Alert,
   BillDetail,
   BillInput,
@@ -49,6 +50,7 @@ import type {
   CostResource,
   CostResourceInput,
   DashboardSummary,
+  GetAgingParams,
   GetAnalyticsByClientParams,
   GetAnalyticsByPartnerParams,
   GetDashboardSummaryParams,
@@ -2962,6 +2964,90 @@ export function useGetMarginDistribution<TData = Awaited<ReturnType<typeof getMa
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMarginDistributionQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetAgingUrl = (params?: GetAgingParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/aging?${stringifiedParams}` : `/api/analytics/aging`
+}
+
+/**
+ * @summary AR/AP outstanding balances bucketed by age (AR in PKR, AP in USD)
+ */
+export const getAging = async (params?: GetAgingParams, options?: RequestInit): Promise<AgingResponse> => {
+
+  return customFetch<AgingResponse>(getGetAgingUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAgingQueryKey = (params?: GetAgingParams,) => {
+    return [
+    `/api/analytics/aging`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAgingQueryOptions = <TData = Awaited<ReturnType<typeof getAging>>, TError = ErrorType<unknown>>(params?: GetAgingParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAging>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAgingQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAging>>> = ({ signal }) => getAging(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAging>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAgingQueryResult = NonNullable<Awaited<ReturnType<typeof getAging>>>
+export type GetAgingQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary AR/AP outstanding balances bucketed by age (AR in PKR, AP in USD)
+ */
+
+export function useGetAging<TData = Awaited<ReturnType<typeof getAging>>, TError = ErrorType<unknown>>(
+ params?: GetAgingParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAging>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAgingQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

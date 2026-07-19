@@ -861,6 +861,30 @@ export const GetMarginDistributionResponse = zod.array(GetMarginDistributionResp
 
 
 /**
+ * @summary AR/AP outstanding balances bucketed by age (AR in PKR, AP in USD)
+ */
+export const GetAgingQueryParams = zod.object({
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish()
+})
+
+export const GetAgingResponse = zod.object({
+  "ar": zod.object({
+  "0-30": zod.number(),
+  "31-60": zod.number(),
+  "61-90": zod.number(),
+  "90+": zod.number()
+}),
+  "ap": zod.object({
+  "0-30": zod.number(),
+  "31-60": zod.number(),
+  "61-90": zod.number(),
+  "90+": zod.number()
+})
+})
+
+
+/**
  * @summary Get active alerts for negative profit or low margin campaigns
  */
 export const GetAlertsResponseItem = zod.object({
