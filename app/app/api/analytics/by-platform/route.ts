@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { and, eq, gte, lte, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, partnersTable } from "@workspace/db";
+import { and, eq, sql } from "drizzle-orm";
+import { db, transactionsTable, campaignsTable, partnersTable, clientsTable } from "@workspace/db";
 import { GetAnalyticsByPartnerQueryParams, GetAnalyticsByPartnerResponse } from "@workspace/api-zod";
+import { parseIdList } from "@/lib/analytics/parse-params";
+import { buildTransactionConditions } from "@/lib/analytics/route-filters";
 
 export const runtime = "nodejs";
 
@@ -10,9 +12,13 @@ export async function GET(req: Request): Promise<Response> {
   const qp = GetAnalyticsByPartnerQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });
 
-  const conditions = [];
-  if (qp.data.dateFrom) conditions.push(gte(transactionsTable.date, qp.data.dateFrom));
-  if (qp.data.dateTo) conditions.push(lte(transactionsTable.date, qp.data.dateTo));
+  const conditions = buildTransactionConditions({
+    dateFrom: qp.data.dateFrom,
+    dateTo: qp.data.dateTo,
+    clientIds: parseIdList(qp.data.clientIds),
+    partnerIds: parseIdList(qp.data.partnerIds),
+    buyingHouseIds: parseIdList(qp.data.buyingHouseIds),
+  });
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const rows = await db.select({
@@ -23,6 +29,7 @@ export async function GET(req: Request): Promise<Response> {
     transactionCount: sql<number>`count(${transactionsTable.id})::int`,
   }).from(partnersTable)
     .leftJoin(campaignsTable, eq(campaignsTable.platformId, partnersTable.id))
+    .leftJoin(clientsTable, eq(clientsTable.id, campaignsTable.clientId))
     .leftJoin(transactionsTable, and(eq(transactionsTable.campaignId, campaignsTable.id), whereClause))
     .groupBy(partnersTable.id, partnersTable.name)
     .orderBy(sql`sum(${transactionsTable.profit}) desc nulls last`);
