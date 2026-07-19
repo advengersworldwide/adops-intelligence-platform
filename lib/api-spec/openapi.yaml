@@ -942,6 +942,29 @@ paths:
                 items:
                   $ref: "#/components/schemas/WaterfallStage"
 
+  /analytics/invoice-funnel:
+    get:
+      operationId: getInvoiceFunnel
+      tags: [analytics]
+      summary: Invoice status funnel — billings grouped by status and by collection state
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+        - { $ref: "#/components/parameters/ClientIds" }
+      responses:
+        "200":
+          description: Invoice status and collection-state funnel stages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvoiceFunnelResponse"
+
   # ── Buying Houses ─────────────────────────────────────────────────────────────
   /buying-houses:
     get:
@@ -3110,6 +3133,20 @@ components:
       properties:
         ar: { $ref: "#/components/schemas/AgingBuckets" }
         ap: { $ref: "#/components/schemas/AgingBuckets" }
+
+    FunnelStage:
+      type: object
+      required: [label, count, amount]
+      properties:
+        label: { type: string }
+        count: { type: integer }
+        amount: { type: number }
+    InvoiceFunnelResponse:
+      type: object
+      required: [byStatus, byCollection]
+      properties:
+        byStatus: { type: array, items: { $ref: "#/components/schemas/FunnelStage" } }
+        byCollection: { type: array, items: { $ref: "#/components/schemas/FunnelStage" } }
 
   parameters:
     Engine:

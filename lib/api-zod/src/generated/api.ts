@@ -940,6 +940,29 @@ export const GetProfitWaterfallResponse = zod.array(GetProfitWaterfallResponseIt
 
 
 /**
+ * @summary Invoice status funnel — billings grouped by status and by collection state
+ */
+export const GetInvoiceFunnelQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids')
+})
+
+export const GetInvoiceFunnelResponse = zod.object({
+  "byStatus": zod.array(zod.object({
+  "label": zod.string(),
+  "count": zod.number(),
+  "amount": zod.number()
+})),
+  "byCollection": zod.array(zod.object({
+  "label": zod.string(),
+  "count": zod.number(),
+  "amount": zod.number()
+}))
+})
+
+
+/**
  * @summary List all buying houses with aggregate stats
  */
 export const ListBuyingHousesResponseItem = zod.object({

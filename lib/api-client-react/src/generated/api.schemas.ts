@@ -1184,6 +1184,17 @@ export interface AgingResponse {
   ap: AgingBuckets;
 }
 
+export interface FunnelStage {
+  label: string;
+  count: number;
+  amount: number;
+}
+
+export interface InvoiceFunnelResponse {
+  byStatus: FunnelStage[];
+  byCollection: FunnelStage[];
+}
+
 export type EngineParameter = RevenueEngine;
 
 /**
@@ -1440,6 +1451,22 @@ partnerIds?: PartnerIdsParameter;
  * @nullable
  */
 period?: string | null;
+};
+
+export type GetInvoiceFunnelParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
 };
 
 export type ListAllBillingRecordsParams = {

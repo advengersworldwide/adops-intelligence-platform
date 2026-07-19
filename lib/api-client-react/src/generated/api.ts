@@ -56,12 +56,14 @@ import type {
   GetAnalyticsByPartnerParams,
   GetCashFlowParams,
   GetDashboardSummaryParams,
+  GetInvoiceFunnelParams,
   GetMarginDistributionParams,
   GetProfitOverTimeParams,
   GetProfitWaterfallParams,
   HealthStatus,
   ImportRequest,
   ImportResult,
+  InvoiceFunnelResponse,
   LinkPartnerClientInput,
   ListAllBillingRecordsParams,
   ListBillingRecordsParams,
@@ -3295,6 +3297,90 @@ export function useGetProfitWaterfall<TData = Awaited<ReturnType<typeof getProfi
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetProfitWaterfallQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetInvoiceFunnelUrl = (params?: GetInvoiceFunnelParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/invoice-funnel?${stringifiedParams}` : `/api/analytics/invoice-funnel`
+}
+
+/**
+ * @summary Invoice status funnel — billings grouped by status and by collection state
+ */
+export const getInvoiceFunnel = async (params?: GetInvoiceFunnelParams, options?: RequestInit): Promise<InvoiceFunnelResponse> => {
+
+  return customFetch<InvoiceFunnelResponse>(getGetInvoiceFunnelUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetInvoiceFunnelQueryKey = (params?: GetInvoiceFunnelParams,) => {
+    return [
+    `/api/analytics/invoice-funnel`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetInvoiceFunnelQueryOptions = <TData = Awaited<ReturnType<typeof getInvoiceFunnel>>, TError = ErrorType<unknown>>(params?: GetInvoiceFunnelParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInvoiceFunnel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetInvoiceFunnelQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInvoiceFunnel>>> = ({ signal }) => getInvoiceFunnel(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getInvoiceFunnel>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetInvoiceFunnelQueryResult = NonNullable<Awaited<ReturnType<typeof getInvoiceFunnel>>>
+export type GetInvoiceFunnelQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Invoice status funnel — billings grouped by status and by collection state
+ */
+
+export function useGetInvoiceFunnel<TData = Awaited<ReturnType<typeof getInvoiceFunnel>>, TError = ErrorType<unknown>>(
+ params?: GetInvoiceFunnelParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getInvoiceFunnel>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetInvoiceFunnelQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
