@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TrendingUp, TrendingDown, DollarSign, Target, Users, Monitor, Megaphone, AlertTriangle, Plus, BarChart2, GripHorizontal } from "lucide-react";
-import { useGetDashboardSummary, useGetProfitOverTime, useGetAnalyticsByClient, useGetAlerts, useListTransactions, useGetAnalyticsByPartner } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetProfitOverTime, useGetAnalyticsByClient, useGetAlerts, useListTransactions, useGetAnalyticsByPartner, useGetAging } from "@workspace/api-client-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { formatMoney, convertTo, DEFAULT_RATES } from "@/lib/analytics/currency";
@@ -105,6 +105,7 @@ const defaultLayout: any[] = [
   { i: "client-performance-chart", x: 0, y: 15, w: 6, h: 8, minW: 4, minH: 5 },
   { i: "platform-performance-chart", x: 6, y: 15, w: 6, h: 8, minW: 4, minH: 5 },
   { i: "transactions-table", x: 0, y: 23, w: 12, h: 8, minW: 6, minH: 5 },
+  { i: "working-capital", x: 0, y: 31, w: 4, h: 8, minW: 3, minH: 5 },
 ];
 
 function DashboardContent() {
@@ -127,10 +128,17 @@ function DashboardContent() {
   const { data: byPlatform } = useGetAnalyticsByPartner();
   const { data: alerts } = useGetAlerts();
   const { data: transactions, isLoading: txLoading } = useListTransactions({ limit: 10 } as never);
+  const { data: aging } = useGetAging();
 
   const baseCurrency = typeof window !== "undefined" ? (localStorage.getItem("adops-base-currency") || "USD") : "USD";
   const rawRates = typeof window !== "undefined" ? localStorage.getItem("adops-exchange-rates") : null;
   const exchangeRates = rawRates ? JSON.parse(rawRates) : DEFAULT_RATES;
+
+  const sumBuckets = (b?: { "0-30": number; "31-60": number; "61-90": number; "90+": number }) =>
+    b ? b["0-30"] + b["31-60"] + b["61-90"] + b["90+"] : 0;
+  const arTotalBase = convertTo(sumBuckets(aging?.ar), "PKR", exchangeRates);
+  const apTotalBase = convertTo(sumBuckets(aging?.ap), "USD", exchangeRates);
+  const cashPosition = arTotalBase - apTotalBase;
 
   let convertedRevenue = 0;
   let convertedCost = 0;
@@ -354,6 +362,39 @@ function DashboardContent() {
             ) : (
               <p className="text-xs text-muted-foreground">No active alerts</p>
             )}
+          </div>
+        </div>
+
+        <div key="working-capital" className="flex flex-col h-full rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="flex justify-center p-1 cursor-grab active:cursor-grabbing bg-muted/10 border-b border-border widget-drag-handle shrink-0">
+            <GripHorizontal className="h-3 w-3 text-muted-foreground/50" />
+          </div>
+          <div className="flex-1 p-4 overflow-y-auto">
+            <h3 className="text-sm font-semibold text-foreground mb-3">Working Capital</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Receivables</p>
+                <p className="mt-0.5 text-base font-semibold text-emerald-600 dark:text-emerald-400">
+                  {formatMoney(arTotalBase, baseCurrency)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Payables</p>
+                <p className="mt-0.5 text-base font-semibold text-red-600 dark:text-red-400">
+                  {formatMoney(apTotalBase, baseCurrency)}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-border">
+              <p className="text-xs text-muted-foreground">Cash Position</p>
+              <p className={cn(
+                "mt-1 text-2xl font-bold tracking-tight",
+                cashPosition >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+              )}>
+                {formatMoney(cashPosition, baseCurrency)}
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Receivables − Payables</p>
+            </div>
           </div>
         </div>
 
