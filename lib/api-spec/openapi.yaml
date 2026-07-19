@@ -863,6 +863,31 @@ paths:
                 items:
                   $ref: "#/components/schemas/MarginBucket"
 
+  /analytics/matrix:
+    get:
+      operationId: getMarginMatrix
+      tags: [analytics]
+      summary: Client x partner margin matrix
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+      responses:
+        "200":
+          description: Client x partner margin matrix
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatrixResponse"
+
   /analytics/aging:
     get:
       operationId: getAging
@@ -3227,6 +3252,22 @@ components:
         max: { type: number }
         count: { type: integer }
         isNegative: { type: boolean }
+
+    MatrixCell:
+      type: object
+      required: [client, partner, marginPct, revenue]
+      properties:
+        client: { type: string }
+        partner: { type: string }
+        marginPct: { type: number }
+        revenue: { type: number }
+    MatrixResponse:
+      type: object
+      required: [clients, partners, cells]
+      properties:
+        clients: { type: array, items: { type: string } }
+        partners: { type: array, items: { type: string } }
+        cells: { type: array, items: { $ref: "#/components/schemas/MatrixCell" } }
 
     AgingBuckets:
       type: object

@@ -61,6 +61,7 @@ import type {
   GetDashboardSummaryParams,
   GetInvoiceFunnelParams,
   GetMarginDistributionParams,
+  GetMarginMatrixParams,
   GetMoneyFlowParams,
   GetPoPacingParams,
   GetProfitOverTimeParams,
@@ -79,6 +80,7 @@ import type {
   ListPartnerPurchaseOrdersParams,
   ListTransactionsParams,
   MarginBucket,
+  MatrixResponse,
   Partner,
   PartnerAnalytics,
   PartnerBill,
@@ -2974,6 +2976,90 @@ export function useGetMarginDistribution<TData = Awaited<ReturnType<typeof getMa
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetMarginDistributionQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMarginMatrixUrl = (params?: GetMarginMatrixParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/matrix?${stringifiedParams}` : `/api/analytics/matrix`
+}
+
+/**
+ * @summary Client x partner margin matrix
+ */
+export const getMarginMatrix = async (params?: GetMarginMatrixParams, options?: RequestInit): Promise<MatrixResponse> => {
+
+  return customFetch<MatrixResponse>(getGetMarginMatrixUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMarginMatrixQueryKey = (params?: GetMarginMatrixParams,) => {
+    return [
+    `/api/analytics/matrix`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetMarginMatrixQueryOptions = <TData = Awaited<ReturnType<typeof getMarginMatrix>>, TError = ErrorType<unknown>>(params?: GetMarginMatrixParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMarginMatrix>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMarginMatrixQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMarginMatrix>>> = ({ signal }) => getMarginMatrix(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMarginMatrix>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMarginMatrixQueryResult = NonNullable<Awaited<ReturnType<typeof getMarginMatrix>>>
+export type GetMarginMatrixQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Client x partner margin matrix
+ */
+
+export function useGetMarginMatrix<TData = Awaited<ReturnType<typeof getMarginMatrix>>, TError = ErrorType<unknown>>(
+ params?: GetMarginMatrixParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMarginMatrix>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMarginMatrixQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

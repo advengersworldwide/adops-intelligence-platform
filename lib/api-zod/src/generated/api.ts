@@ -861,6 +861,29 @@ export const GetMarginDistributionResponse = zod.array(GetMarginDistributionResp
 
 
 /**
+ * @summary Client x partner margin matrix
+ */
+export const GetMarginMatrixQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish()
+})
+
+export const GetMarginMatrixResponse = zod.object({
+  "clients": zod.array(zod.string()),
+  "partners": zod.array(zod.string()),
+  "cells": zod.array(zod.object({
+  "client": zod.string(),
+  "partner": zod.string(),
+  "marginPct": zod.number(),
+  "revenue": zod.number()
+}))
+})
+
+
+/**
  * @summary AR/AP outstanding balances bucketed by age (AR in PKR, AP in USD)
  */
 export const GetAgingQueryParams = zod.object({

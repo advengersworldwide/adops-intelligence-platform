@@ -1199,6 +1199,19 @@ export interface MarginBucket {
   isNegative: boolean;
 }
 
+export interface MatrixCell {
+  client: string;
+  partner: string;
+  marginPct: number;
+  revenue: number;
+}
+
+export interface MatrixResponse {
+  clients: string[];
+  partners: string[];
+  cells: MatrixCell[];
+}
+
 export interface AgingBuckets {
   '0-30': number;
   '31-60': number;
@@ -1432,6 +1445,30 @@ dateFrom?: string | null;
  */
 dateTo?: string | null;
 engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+};
+
+export type GetMarginMatrixParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
 /**
  * Comma-separated client ids
  * @nullable
