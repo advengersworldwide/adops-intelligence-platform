@@ -1008,6 +1008,29 @@ export const GetConcentrationResponse = zod.object({
 
 
 /**
+ * @summary Money-flow Sankey — spend from clients through buying houses to partners
+ */
+export const GetMoneyFlowQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish()
+})
+
+export const GetMoneyFlowResponse = zod.object({
+  "nodes": zod.array(zod.object({
+  "name": zod.string()
+})),
+  "links": zod.array(zod.object({
+  "source": zod.number(),
+  "target": zod.number(),
+  "value": zod.number()
+}))
+})
+
+
+/**
  * @summary List all buying houses with aggregate stats
  */
 export const ListBuyingHousesResponseItem = zod.object({

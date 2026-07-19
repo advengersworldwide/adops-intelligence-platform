@@ -804,6 +804,21 @@ export interface CashFlowBucket {
   unfundedOutUsd: number;
 }
 
+export interface FlowNode {
+  name: string;
+}
+
+export interface FlowLink {
+  source: number;
+  target: number;
+  value: number;
+}
+
+export interface FlowGraph {
+  nodes: FlowNode[];
+  links: FlowLink[];
+}
+
 export interface BillSummary {
   id: number;
   billNumber: string;
@@ -1504,6 +1519,30 @@ partnerIds?: PartnerIdsParameter;
 };
 
 export type GetConcentrationParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+};
+
+export type GetMoneyFlowParams = {
 /**
  * @nullable
  */

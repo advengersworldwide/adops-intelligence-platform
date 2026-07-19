@@ -52,6 +52,7 @@ import type {
   CostResource,
   CostResourceInput,
   DashboardSummary,
+  FlowGraph,
   GetAgingParams,
   GetAnalyticsByClientParams,
   GetAnalyticsByPartnerParams,
@@ -60,6 +61,7 @@ import type {
   GetDashboardSummaryParams,
   GetInvoiceFunnelParams,
   GetMarginDistributionParams,
+  GetMoneyFlowParams,
   GetPoPacingParams,
   GetProfitOverTimeParams,
   GetProfitWaterfallParams,
@@ -3553,6 +3555,90 @@ export function useGetConcentration<TData = Awaited<ReturnType<typeof getConcent
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetConcentrationQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMoneyFlowUrl = (params?: GetMoneyFlowParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/flow?${stringifiedParams}` : `/api/analytics/flow`
+}
+
+/**
+ * @summary Money-flow Sankey — spend from clients through buying houses to partners
+ */
+export const getMoneyFlow = async (params?: GetMoneyFlowParams, options?: RequestInit): Promise<FlowGraph> => {
+
+  return customFetch<FlowGraph>(getGetMoneyFlowUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMoneyFlowQueryKey = (params?: GetMoneyFlowParams,) => {
+    return [
+    `/api/analytics/flow`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetMoneyFlowQueryOptions = <TData = Awaited<ReturnType<typeof getMoneyFlow>>, TError = ErrorType<unknown>>(params?: GetMoneyFlowParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMoneyFlow>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMoneyFlowQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMoneyFlow>>> = ({ signal }) => getMoneyFlow(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMoneyFlow>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMoneyFlowQueryResult = NonNullable<Awaited<ReturnType<typeof getMoneyFlow>>>
+export type GetMoneyFlowQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Money-flow Sankey — spend from clients through buying houses to partners
+ */
+
+export function useGetMoneyFlow<TData = Awaited<ReturnType<typeof getMoneyFlow>>, TError = ErrorType<unknown>>(
+ params?: GetMoneyFlowParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMoneyFlow>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMoneyFlowQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

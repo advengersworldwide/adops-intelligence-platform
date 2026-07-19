@@ -1007,6 +1007,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ConcentrationResponse"
 
+  /analytics/flow:
+    get:
+      operationId: getMoneyFlow
+      tags: [analytics]
+      summary: Money-flow Sankey — spend from clients through buying houses to partners
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+      responses:
+        "200":
+          description: Sankey graph of client → buying house → partner spend
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlowGraph"
+
   # ── Buying Houses ─────────────────────────────────────────────────────────────
   /buying-houses:
     get:
@@ -2775,6 +2800,24 @@ components:
         outflowUsd: { type: number }
         fundedOutUsd: { type: number }
         unfundedOutUsd: { type: number }
+
+    FlowNode:
+      type: object
+      required: [name]
+      properties: { name: { type: string } }
+    FlowLink:
+      type: object
+      required: [source, target, value]
+      properties:
+        source: { type: integer }
+        target: { type: integer }
+        value: { type: number }
+    FlowGraph:
+      type: object
+      required: [nodes, links]
+      properties:
+        nodes: { type: array, items: { $ref: "#/components/schemas/FlowNode" } }
+        links: { type: array, items: { $ref: "#/components/schemas/FlowLink" } }
 
     BillSummary:
       type: object
