@@ -894,6 +894,32 @@ paths:
                 items:
                   $ref: "#/components/schemas/Alert"
 
+  /analytics/cashflow:
+    get:
+      operationId: getCashFlow
+      tags: [analytics]
+      summary: Cash-flow timeline — client collections (PKR) vs partner payouts (USD), per date
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+      responses:
+        "200":
+          description: Cash-flow buckets by date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CashFlowBucket"
+
   /analytics/waterfall:
     get:
       operationId: getProfitWaterfall
@@ -2650,6 +2676,16 @@ components:
         label: { type: string }
         value: { type: number }
         kind: { type: string, enum: [start, decrease, subtotal, total] }
+
+    CashFlowBucket:
+      type: object
+      required: [date, inflowPkr, outflowUsd, fundedOutUsd, unfundedOutUsd]
+      properties:
+        date: { type: string }
+        inflowPkr: { type: number }
+        outflowUsd: { type: number }
+        fundedOutUsd: { type: number }
+        unfundedOutUsd: { type: number }
 
     BillSummary:
       type: object

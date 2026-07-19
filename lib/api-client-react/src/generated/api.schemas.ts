@@ -784,6 +784,14 @@ export interface WaterfallStage {
   kind: WaterfallStageKind;
 }
 
+export interface CashFlowBucket {
+  date: string;
+  inflowPkr: number;
+  outflowUsd: number;
+  fundedOutUsd: number;
+  unfundedOutUsd: number;
+}
+
 export interface BillSummary {
   id: number;
   billNumber: string;
@@ -1387,6 +1395,26 @@ buyingHouseIds?: BuyingHouseIdsParameter;
 };
 
 export type GetAgingParams = {
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+};
+
+export type GetCashFlowParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
 /**
  * Comma-separated client ids
  * @nullable

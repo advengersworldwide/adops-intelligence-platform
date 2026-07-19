@@ -35,6 +35,7 @@ import type {
   BuyingHouseAnalytics,
   BuyingHouseBillingRecord,
   BuyingHouseInput,
+  CashFlowBucket,
   Client,
   ClientAnalytics,
   ClientEvent,
@@ -53,6 +54,7 @@ import type {
   GetAgingParams,
   GetAnalyticsByClientParams,
   GetAnalyticsByPartnerParams,
+  GetCashFlowParams,
   GetDashboardSummaryParams,
   GetMarginDistributionParams,
   GetProfitOverTimeParams,
@@ -3125,6 +3127,90 @@ export function useGetAlerts<TData = Awaited<ReturnType<typeof getAlerts>>, TErr
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAlertsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetCashFlowUrl = (params?: GetCashFlowParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/cashflow?${stringifiedParams}` : `/api/analytics/cashflow`
+}
+
+/**
+ * @summary Cash-flow timeline — client collections (PKR) vs partner payouts (USD), per date
+ */
+export const getCashFlow = async (params?: GetCashFlowParams, options?: RequestInit): Promise<CashFlowBucket[]> => {
+
+  return customFetch<CashFlowBucket[]>(getGetCashFlowUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetCashFlowQueryKey = (params?: GetCashFlowParams,) => {
+    return [
+    `/api/analytics/cashflow`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetCashFlowQueryOptions = <TData = Awaited<ReturnType<typeof getCashFlow>>, TError = ErrorType<unknown>>(params?: GetCashFlowParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCashFlow>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetCashFlowQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getCashFlow>>> = ({ signal }) => getCashFlow(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getCashFlow>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCashFlowQueryResult = NonNullable<Awaited<ReturnType<typeof getCashFlow>>>
+export type GetCashFlowQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Cash-flow timeline — client collections (PKR) vs partner payouts (USD), per date
+ */
+
+export function useGetCashFlow<TData = Awaited<ReturnType<typeof getCashFlow>>, TError = ErrorType<unknown>>(
+ params?: GetCashFlowParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getCashFlow>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetCashFlowQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

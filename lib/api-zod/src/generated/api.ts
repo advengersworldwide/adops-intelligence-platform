@@ -902,6 +902,26 @@ export const GetAlertsResponse = zod.array(GetAlertsResponseItem)
 
 
 /**
+ * @summary Cash-flow timeline — client collections (PKR) vs partner payouts (USD), per date
+ */
+export const GetCashFlowQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish()
+})
+
+export const GetCashFlowResponseItem = zod.object({
+  "date": zod.string(),
+  "inflowPkr": zod.number(),
+  "outflowUsd": zod.number(),
+  "fundedOutUsd": zod.number(),
+  "unfundedOutUsd": zod.number()
+})
+export const GetCashFlowResponse = zod.array(GetCashFlowResponseItem)
+
+
+/**
  * @summary Profit-leakage waterfall across matching billings
  */
 export const GetProfitWaterfallQueryParams = zod.object({
