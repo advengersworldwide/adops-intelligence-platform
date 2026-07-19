@@ -86,11 +86,13 @@ export default function Topbar({ onMenuToggle }: TopbarProps) {
                         {alert.severity === "critical" ? <AlertCircle className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                       </div>
                       <div className="flex-1 space-y-1">
-                        <p className="text-sm font-semibold leading-none">{alert.campaignName}</p>
+                        <p className="text-sm font-semibold leading-none">{alert.label ?? alert.campaignName ?? alert.message}</p>
                         <p className="text-xs text-muted-foreground leading-relaxed">{alert.message}</p>
-                        <p className="text-[10px] text-muted-foreground/70 font-medium pt-1">
-                          {alert.platformName} {alert.clientName ? `• ${alert.clientName}` : ''}
-                        </p>
+                        {(alert.platformName || alert.clientName) && (
+                          <p className="text-[10px] text-muted-foreground/70 font-medium pt-1">
+                            {alert.platformName} {alert.clientName ? `• ${alert.clientName}` : ''}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
