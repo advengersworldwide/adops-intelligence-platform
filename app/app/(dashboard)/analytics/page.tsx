@@ -5,6 +5,7 @@ import { FilterBar } from "@/components/analytics/FilterBar";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ProfitabilityTab } from "@/components/analytics/tabs/ProfitabilityTab";
+import { FinancialOpsTab } from "@/components/analytics/tabs/FinancialOpsTab";
 
 function ComingSoon({ label }: { label: string }) {
   return (
@@ -42,7 +43,7 @@ export default function AnalyticsPage() {
               <ProfitabilityTab />
             </TabsContent>
             <TabsContent value="financial">
-              <ComingSoon label="Financial Operations" />
+              <FinancialOpsTab />
             </TabsContent>
             <TabsContent value="relationships">
               <ComingSoon label="Relationships & Concentration" />
