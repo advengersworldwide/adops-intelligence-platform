@@ -5,6 +5,13 @@
  * AdOps Intelligence Platform API
  * OpenAPI spec version: 0.1.0
  */
+import type { BuyingHouseIdsParameter } from './buyingHouseIdsParameter';
+import type { ClientIdsParameter } from './clientIdsParameter';
+import type { CompareParameter } from './compareParameter';
+import type { CostModelIdParameter } from './costModelIdParameter';
+import type { EngineParameter } from './engineParameter';
+import type { PartnerIdsParameter } from './partnerIdsParameter';
+import type { RevenueEngine } from './revenueEngine';
 
 export type GetAnalyticsByClientParams = {
 /**
@@ -15,4 +22,26 @@ dateFrom?: string | null;
  * @nullable
  */
 dateTo?: string | null;
+engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+/**
+ * @nullable
+ */
+costModelId?: CostModelIdParameter;
+/**
+ * @nullable
+ */
+compare?: CompareParameter;
 };

@@ -738,7 +738,13 @@ export const RunImportResponse = zod.object({
  */
 export const GetDashboardSummaryQueryParams = zod.object({
   "dateFrom": zod.coerce.string().nullish(),
-  "dateTo": zod.coerce.string().nullish()
+  "dateTo": zod.coerce.string().nullish(),
+  "engine": zod.enum(['media', 'performance', 'combined']).optional(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish(),
+  "costModelId": zod.coerce.number().nullish(),
+  "compare": zod.coerce.boolean().nullish()
 })
 
 export const GetDashboardSummaryResponse = zod.object({
@@ -761,7 +767,13 @@ export const GetDashboardSummaryResponse = zod.object({
  */
 export const GetProfitOverTimeQueryParams = zod.object({
   "dateFrom": zod.coerce.string().nullish(),
-  "dateTo": zod.coerce.string().nullish()
+  "dateTo": zod.coerce.string().nullish(),
+  "engine": zod.enum(['media', 'performance', 'combined']).optional(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish(),
+  "costModelId": zod.coerce.number().nullish(),
+  "compare": zod.coerce.boolean().nullish()
 })
 
 export const GetProfitOverTimeResponseItem = zod.object({
@@ -778,7 +790,13 @@ export const GetProfitOverTimeResponse = zod.array(GetProfitOverTimeResponseItem
  */
 export const GetAnalyticsByClientQueryParams = zod.object({
   "dateFrom": zod.coerce.string().nullish(),
-  "dateTo": zod.coerce.string().nullish()
+  "dateTo": zod.coerce.string().nullish(),
+  "engine": zod.enum(['media', 'performance', 'combined']).optional(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish(),
+  "costModelId": zod.coerce.number().nullish(),
+  "compare": zod.coerce.boolean().nullish()
 })
 
 export const GetAnalyticsByClientResponseItem = zod.object({
@@ -799,7 +817,13 @@ export const GetAnalyticsByClientResponse = zod.array(GetAnalyticsByClientRespon
  */
 export const GetAnalyticsByPartnerQueryParams = zod.object({
   "dateFrom": zod.coerce.string().nullish(),
-  "dateTo": zod.coerce.string().nullish()
+  "dateTo": zod.coerce.string().nullish(),
+  "engine": zod.enum(['media', 'performance', 'combined']).optional(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish(),
+  "costModelId": zod.coerce.number().nullish(),
+  "compare": zod.coerce.boolean().nullish()
 })
 
 export const GetAnalyticsByPartnerResponseItem = zod.object({

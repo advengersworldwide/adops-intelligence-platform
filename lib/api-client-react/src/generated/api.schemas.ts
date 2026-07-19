@@ -1130,6 +1130,30 @@ export interface PartnerPaymentStatusInput {
   status: PartnerPaymentStatusInputStatus;
 }
 
+export type RevenueEngine = typeof RevenueEngine[keyof typeof RevenueEngine];
+
+
+export const RevenueEngine = {
+  media: 'media',
+  performance: 'performance',
+  combined: 'combined',
+} as const;
+
+export type EngineParameter = RevenueEngine;
+
+/**
+ * Comma-separated client ids
+ */
+export type ClientIdsParameter = string | null;
+
+export type PartnerIdsParameter = string | null;
+
+export type BuyingHouseIdsParameter = string | null;
+
+export type CostModelIdParameter = number | null;
+
+export type CompareParameter = boolean | null;
+
 export type ListBillingRecordsParams = {
 /**
  * @nullable
@@ -1177,6 +1201,28 @@ dateFrom?: string | null;
  * @nullable
  */
 dateTo?: string | null;
+engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+/**
+ * @nullable
+ */
+costModelId?: CostModelIdParameter;
+/**
+ * @nullable
+ */
+compare?: CompareParameter;
 };
 
 export type GetProfitOverTimeParams = {
@@ -1188,6 +1234,28 @@ dateFrom?: string | null;
  * @nullable
  */
 dateTo?: string | null;
+engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+/**
+ * @nullable
+ */
+costModelId?: CostModelIdParameter;
+/**
+ * @nullable
+ */
+compare?: CompareParameter;
 };
 
 export type GetAnalyticsByClientParams = {
@@ -1199,6 +1267,28 @@ dateFrom?: string | null;
  * @nullable
  */
 dateTo?: string | null;
+engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+/**
+ * @nullable
+ */
+costModelId?: CostModelIdParameter;
+/**
+ * @nullable
+ */
+compare?: CompareParameter;
 };
 
 export type GetAnalyticsByPartnerParams = {
@@ -1210,6 +1300,28 @@ dateFrom?: string | null;
  * @nullable
  */
 dateTo?: string | null;
+engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+/**
+ * @nullable
+ */
+costModelId?: CostModelIdParameter;
+/**
+ * @nullable
+ */
+compare?: CompareParameter;
 };
 
 export type ListAllBillingRecordsParams = {

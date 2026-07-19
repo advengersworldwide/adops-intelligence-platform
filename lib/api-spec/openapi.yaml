@@ -731,6 +731,12 @@ paths:
           in: query
           schema:
             type: ["string", "null"]
+        - { $ref: "#/components/parameters/Engine" }
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+        - { $ref: "#/components/parameters/CostModelId" }
+        - { $ref: "#/components/parameters/Compare" }
       responses:
         "200":
           description: Dashboard summary
@@ -753,6 +759,12 @@ paths:
           in: query
           schema:
             type: ["string", "null"]
+        - { $ref: "#/components/parameters/Engine" }
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+        - { $ref: "#/components/parameters/CostModelId" }
+        - { $ref: "#/components/parameters/Compare" }
       responses:
         "200":
           description: Time series data
@@ -777,6 +789,12 @@ paths:
           in: query
           schema:
             type: ["string", "null"]
+        - { $ref: "#/components/parameters/Engine" }
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+        - { $ref: "#/components/parameters/CostModelId" }
+        - { $ref: "#/components/parameters/Compare" }
       responses:
         "200":
           description: Per-client analytics
@@ -801,6 +819,12 @@ paths:
           in: query
           schema:
             type: ["string", "null"]
+        - { $ref: "#/components/parameters/Engine" }
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+        - { $ref: "#/components/parameters/CostModelId" }
+        - { $ref: "#/components/parameters/Compare" }
       responses:
         "200":
           description: Per-platform analytics
@@ -2945,3 +2969,35 @@ components:
       required: [status]
       properties:
         status: { type: string, enum: [pending, settled] }
+
+    # ── Analytics shared filters ──────────────────────────────────────────────
+    RevenueEngine:
+      type: string
+      enum: [media, performance, combined]
+
+  parameters:
+    Engine:
+      name: engine
+      in: query
+      schema: { $ref: "#/components/schemas/RevenueEngine" }
+    ClientIds:
+      name: clientIds
+      in: query
+      description: Comma-separated client ids
+      schema: { type: ["string", "null"] }
+    PartnerIds:
+      name: partnerIds
+      in: query
+      schema: { type: ["string", "null"] }
+    BuyingHouseIds:
+      name: buyingHouseIds
+      in: query
+      schema: { type: ["string", "null"] }
+    CostModelId:
+      name: costModelId
+      in: query
+      schema: { type: ["integer", "null"] }
+    Compare:
+      name: compare
+      in: query
+      schema: { type: ["boolean", "null"] }
