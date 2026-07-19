@@ -2826,22 +2826,24 @@ components:
 
     Alert:
       type: object
-      required: [id, type, severity, message, campaignId, campaignName]
+      required: [id, type, severity, message]
       properties:
         id:
           type: string
         type:
           type: string
-          enum: [negative_profit, low_margin]
+          enum: [negative_profit, low_margin, overdue_invoice, ppo_overspend, fraud_spike]
         severity:
           type: string
           enum: [warning, critical]
         message:
           type: string
         campaignId:
-          type: integer
+          type: ["integer", "null"]
         campaignName:
-          type: string
+          type: ["string", "null"]
+        label:
+          type: ["string", "null"]
         clientName:
           type: ["string", "null"]
         platformName:

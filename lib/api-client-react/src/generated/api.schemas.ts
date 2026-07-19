@@ -762,6 +762,9 @@ export type AlertType = typeof AlertType[keyof typeof AlertType];
 export const AlertType = {
   negative_profit: 'negative_profit',
   low_margin: 'low_margin',
+  overdue_invoice: 'overdue_invoice',
+  ppo_overspend: 'ppo_overspend',
+  fraud_spike: 'fraud_spike',
 } as const;
 
 export type AlertSeverity = typeof AlertSeverity[keyof typeof AlertSeverity];
@@ -777,8 +780,12 @@ export interface Alert {
   type: AlertType;
   severity: AlertSeverity;
   message: string;
-  campaignId: number;
-  campaignName: string;
+  /** @nullable */
+  campaignId?: number | null;
+  /** @nullable */
+  campaignName?: string | null;
+  /** @nullable */
+  label?: string | null;
   /** @nullable */
   clientName?: string | null;
   /** @nullable */

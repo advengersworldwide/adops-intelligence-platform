@@ -13,8 +13,12 @@ export interface Alert {
   type: AlertType;
   severity: AlertSeverity;
   message: string;
-  campaignId: number;
-  campaignName: string;
+  /** @nullable */
+  campaignId?: number | null;
+  /** @nullable */
+  campaignName?: string | null;
+  /** @nullable */
+  label?: string | null;
   /** @nullable */
   clientName?: string | null;
   /** @nullable */

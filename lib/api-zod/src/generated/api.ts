@@ -912,11 +912,12 @@ export const GetAgingResponse = zod.object({
  */
 export const GetAlertsResponseItem = zod.object({
   "id": zod.string(),
-  "type": zod.enum(['negative_profit', 'low_margin']),
+  "type": zod.enum(['negative_profit', 'low_margin', 'overdue_invoice', 'ppo_overspend', 'fraud_spike']),
   "severity": zod.enum(['warning', 'critical']),
   "message": zod.string(),
-  "campaignId": zod.number(),
-  "campaignName": zod.string(),
+  "campaignId": zod.number().nullish(),
+  "campaignName": zod.string().nullish(),
+  "label": zod.string().nullish(),
   "clientName": zod.string().nullish(),
   "platformName": zod.string().nullish(),
   "value": zod.number().nullish()
