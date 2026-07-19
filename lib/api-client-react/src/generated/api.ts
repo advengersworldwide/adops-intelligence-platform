@@ -52,6 +52,7 @@ import type {
   GetAnalyticsByClientParams,
   GetAnalyticsByPartnerParams,
   GetDashboardSummaryParams,
+  GetMarginDistributionParams,
   GetProfitOverTimeParams,
   GetProfitWaterfallParams,
   HealthStatus,
@@ -66,6 +67,7 @@ import type {
   ListCostResourcesParams,
   ListPartnerPurchaseOrdersParams,
   ListTransactionsParams,
+  MarginBucket,
   Partner,
   PartnerAnalytics,
   PartnerBill,
@@ -2876,6 +2878,90 @@ export function useGetAnalyticsByPartner<TData = Awaited<ReturnType<typeof getAn
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetAnalyticsByPartnerQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetMarginDistributionUrl = (params?: GetMarginDistributionParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/margin-distribution?${stringifiedParams}` : `/api/analytics/margin-distribution`
+}
+
+/**
+ * @summary Campaign margin distribution as fixed-width histogram buckets
+ */
+export const getMarginDistribution = async (params?: GetMarginDistributionParams, options?: RequestInit): Promise<MarginBucket[]> => {
+
+  return customFetch<MarginBucket[]>(getGetMarginDistributionUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetMarginDistributionQueryKey = (params?: GetMarginDistributionParams,) => {
+    return [
+    `/api/analytics/margin-distribution`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetMarginDistributionQueryOptions = <TData = Awaited<ReturnType<typeof getMarginDistribution>>, TError = ErrorType<unknown>>(params?: GetMarginDistributionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMarginDistribution>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetMarginDistributionQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getMarginDistribution>>> = ({ signal }) => getMarginDistribution(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMarginDistribution>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetMarginDistributionQueryResult = NonNullable<Awaited<ReturnType<typeof getMarginDistribution>>>
+export type GetMarginDistributionQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Campaign margin distribution as fixed-width histogram buckets
+ */
+
+export function useGetMarginDistribution<TData = Awaited<ReturnType<typeof getMarginDistribution>>, TError = ErrorType<unknown>>(
+ params?: GetMarginDistributionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getMarginDistribution>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetMarginDistributionQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

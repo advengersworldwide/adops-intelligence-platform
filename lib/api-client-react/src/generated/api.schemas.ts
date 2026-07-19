@@ -1156,6 +1156,14 @@ export const RevenueEngine = {
   combined: 'combined',
 } as const;
 
+export interface MarginBucket {
+  label: string;
+  min: number;
+  max: number;
+  count: number;
+  isNegative: boolean;
+}
+
 export type EngineParameter = RevenueEngine;
 
 /**
@@ -1339,6 +1347,31 @@ costModelId?: CostModelIdParameter;
  * @nullable
  */
 compare?: CompareParameter;
+};
+
+export type GetMarginDistributionParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
+engine?: EngineParameter;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
 };
 
 export type GetProfitWaterfallParams = {

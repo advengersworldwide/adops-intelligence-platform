@@ -839,6 +839,28 @@ export const GetAnalyticsByPartnerResponse = zod.array(GetAnalyticsByPartnerResp
 
 
 /**
+ * @summary Campaign margin distribution as fixed-width histogram buckets
+ */
+export const GetMarginDistributionQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "engine": zod.enum(['media', 'performance', 'combined']).optional(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish()
+})
+
+export const GetMarginDistributionResponseItem = zod.object({
+  "label": zod.string(),
+  "min": zod.number(),
+  "max": zod.number(),
+  "count": zod.number(),
+  "isNegative": zod.boolean()
+})
+export const GetMarginDistributionResponse = zod.array(GetMarginDistributionResponseItem)
+
+
+/**
  * @summary Get active alerts for negative profit or low margin campaigns
  */
 export const GetAlertsResponseItem = zod.object({
