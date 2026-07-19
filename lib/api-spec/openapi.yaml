@@ -965,6 +965,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/InvoiceFunnelResponse"
 
+  /analytics/po-pacing:
+    get:
+      operationId: getPoPacing
+      tags: [analytics]
+      summary: PPO burn-down pacing — consumed vs ideal-to-date spend per partner purchase order
+      parameters:
+        - { $ref: "#/components/parameters/PartnerIds" }
+      responses:
+        "200":
+          description: Pacing details per partner purchase order
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PoPacing"
+
   # ── Buying Houses ─────────────────────────────────────────────────────────────
   /buying-houses:
     get:
@@ -3147,6 +3164,22 @@ components:
       properties:
         byStatus: { type: array, items: { $ref: "#/components/schemas/FunnelStage" } }
         byCollection: { type: array, items: { $ref: "#/components/schemas/FunnelStage" } }
+
+    PoPacing:
+      type: object
+      required: [poId, code, partnerId, startDate, endDate, budget, consumed, idealToDate, overpacePct, pctConsumed, projectedExhaustion]
+      properties:
+        poId: { type: integer }
+        code: { type: string }
+        partnerId: { type: integer }
+        startDate: { type: string }
+        endDate: { type: string }
+        budget: { type: number }
+        consumed: { type: number }
+        idealToDate: { type: number }
+        overpacePct: { type: number }
+        pctConsumed: { type: number }
+        projectedExhaustion: { type: ["string", "null"] }
 
   parameters:
     Engine:

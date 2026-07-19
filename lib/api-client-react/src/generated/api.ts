@@ -58,6 +58,7 @@ import type {
   GetDashboardSummaryParams,
   GetInvoiceFunnelParams,
   GetMarginDistributionParams,
+  GetPoPacingParams,
   GetProfitOverTimeParams,
   GetProfitWaterfallParams,
   HealthStatus,
@@ -94,6 +95,7 @@ import type {
   PaymentStatusInput,
   PaymentTerm,
   PaymentTermInput,
+  PoPacing,
   ProfitTimePoint,
   TaxSettings,
   TaxSettingsInput,
@@ -3381,6 +3383,90 @@ export function useGetInvoiceFunnel<TData = Awaited<ReturnType<typeof getInvoice
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetInvoiceFunnelQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPoPacingUrl = (params?: GetPoPacingParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/po-pacing?${stringifiedParams}` : `/api/analytics/po-pacing`
+}
+
+/**
+ * @summary PPO burn-down pacing — consumed vs ideal-to-date spend per partner purchase order
+ */
+export const getPoPacing = async (params?: GetPoPacingParams, options?: RequestInit): Promise<PoPacing[]> => {
+
+  return customFetch<PoPacing[]>(getGetPoPacingUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPoPacingQueryKey = (params?: GetPoPacingParams,) => {
+    return [
+    `/api/analytics/po-pacing`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPoPacingQueryOptions = <TData = Awaited<ReturnType<typeof getPoPacing>>, TError = ErrorType<unknown>>(params?: GetPoPacingParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPoPacing>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPoPacingQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPoPacing>>> = ({ signal }) => getPoPacing(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPoPacing>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPoPacingQueryResult = NonNullable<Awaited<ReturnType<typeof getPoPacing>>>
+export type GetPoPacingQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary PPO burn-down pacing — consumed vs ideal-to-date spend per partner purchase order
+ */
+
+export function useGetPoPacing<TData = Awaited<ReturnType<typeof getPoPacing>>, TError = ErrorType<unknown>>(
+ params?: GetPoPacingParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPoPacing>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPoPacingQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

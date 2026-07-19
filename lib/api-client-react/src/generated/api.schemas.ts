@@ -1195,6 +1195,21 @@ export interface InvoiceFunnelResponse {
   byCollection: FunnelStage[];
 }
 
+export interface PoPacing {
+  poId: number;
+  code: string;
+  partnerId: number;
+  startDate: string;
+  endDate: string;
+  budget: number;
+  consumed: number;
+  idealToDate: number;
+  overpacePct: number;
+  pctConsumed: number;
+  /** @nullable */
+  projectedExhaustion: string | null;
+}
+
 export type EngineParameter = RevenueEngine;
 
 /**
@@ -1467,6 +1482,13 @@ dateTo?: string | null;
  * @nullable
  */
 clientIds?: ClientIdsParameter;
+};
+
+export type GetPoPacingParams = {
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
 };
 
 export type ListAllBillingRecordsParams = {

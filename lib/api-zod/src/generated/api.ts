@@ -963,6 +963,29 @@ export const GetInvoiceFunnelResponse = zod.object({
 
 
 /**
+ * @summary PPO burn-down pacing — consumed vs ideal-to-date spend per partner purchase order
+ */
+export const GetPoPacingQueryParams = zod.object({
+  "partnerIds": zod.coerce.string().nullish()
+})
+
+export const GetPoPacingResponseItem = zod.object({
+  "poId": zod.number(),
+  "code": zod.string(),
+  "partnerId": zod.number(),
+  "startDate": zod.string(),
+  "endDate": zod.string(),
+  "budget": zod.number(),
+  "consumed": zod.number(),
+  "idealToDate": zod.number(),
+  "overpacePct": zod.number(),
+  "pctConsumed": zod.number(),
+  "projectedExhaustion": zod.string().nullable()
+})
+export const GetPoPacingResponse = zod.array(GetPoPacingResponseItem)
+
+
+/**
  * @summary List all buying houses with aggregate stats
  */
 export const ListBuyingHousesResponseItem = zod.object({
