@@ -1032,6 +1032,33 @@ paths:
               schema:
                 $ref: "#/components/schemas/ConcentrationResponse"
 
+  /analytics/quality/fraud:
+    get:
+      operationId: getFraudQuality
+      tags: [analytics]
+      summary: Fraud-quality trend — appsflyer pins vs fraud pins by period, from billing records
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: dateTo
+          in: query
+          schema:
+            type: ["string", "null"]
+        - { $ref: "#/components/parameters/ClientIds" }
+        - { $ref: "#/components/parameters/PartnerIds" }
+        - { $ref: "#/components/parameters/BuyingHouseIds" }
+      responses:
+        "200":
+          description: Fraud-quality trend series by period
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FraudPoint"
+
   /analytics/flow:
     get:
       operationId: getMoneyFlow
@@ -2780,6 +2807,21 @@ components:
         hhi:
           type: number
         top5Pct:
+          type: number
+
+    FraudPoint:
+      type: object
+      required: [period, appsflyerPins, fraudPins, validPins, fraudRatePct]
+      properties:
+        period:
+          type: string
+        appsflyerPins:
+          type: integer
+        fraudPins:
+          type: integer
+        validPins:
+          type: integer
+        fraudRatePct:
           type: number
 
     Alert:

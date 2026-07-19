@@ -748,6 +748,14 @@ export interface ConcentrationResponse {
   top5Pct: number;
 }
 
+export interface FraudPoint {
+  period: string;
+  appsflyerPins: number;
+  fraudPins: number;
+  validPins: number;
+  fraudRatePct: number;
+}
+
 export type AlertType = typeof AlertType[keyof typeof AlertType];
 
 
@@ -1556,6 +1564,30 @@ partnerIds?: PartnerIdsParameter;
 };
 
 export type GetConcentrationParams = {
+/**
+ * @nullable
+ */
+dateFrom?: string | null;
+/**
+ * @nullable
+ */
+dateTo?: string | null;
+/**
+ * Comma-separated client ids
+ * @nullable
+ */
+clientIds?: ClientIdsParameter;
+/**
+ * @nullable
+ */
+partnerIds?: PartnerIdsParameter;
+/**
+ * @nullable
+ */
+buyingHouseIds?: BuyingHouseIdsParameter;
+};
+
+export type GetFraudQualityParams = {
 /**
  * @nullable
  */

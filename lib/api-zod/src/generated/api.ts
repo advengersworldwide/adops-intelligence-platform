@@ -1031,6 +1031,27 @@ export const GetConcentrationResponse = zod.object({
 
 
 /**
+ * @summary Fraud-quality trend — appsflyer pins vs fraud pins by period, from billing records
+ */
+export const GetFraudQualityQueryParams = zod.object({
+  "dateFrom": zod.coerce.string().nullish(),
+  "dateTo": zod.coerce.string().nullish(),
+  "clientIds": zod.coerce.string().nullish().describe('Comma-separated client ids'),
+  "partnerIds": zod.coerce.string().nullish(),
+  "buyingHouseIds": zod.coerce.string().nullish()
+})
+
+export const GetFraudQualityResponseItem = zod.object({
+  "period": zod.string(),
+  "appsflyerPins": zod.number(),
+  "fraudPins": zod.number(),
+  "validPins": zod.number(),
+  "fraudRatePct": zod.number()
+})
+export const GetFraudQualityResponse = zod.array(GetFraudQualityResponseItem)
+
+
+/**
  * @summary Money-flow Sankey — spend from clients through buying houses to partners
  */
 export const GetMoneyFlowQueryParams = zod.object({

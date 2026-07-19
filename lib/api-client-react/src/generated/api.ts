@@ -53,12 +53,14 @@ import type {
   CostResourceInput,
   DashboardSummary,
   FlowGraph,
+  FraudPoint,
   GetAgingParams,
   GetAnalyticsByClientParams,
   GetAnalyticsByPartnerParams,
   GetCashFlowParams,
   GetConcentrationParams,
   GetDashboardSummaryParams,
+  GetFraudQualityParams,
   GetInvoiceFunnelParams,
   GetMarginDistributionParams,
   GetMarginMatrixParams,
@@ -3641,6 +3643,90 @@ export function useGetConcentration<TData = Awaited<ReturnType<typeof getConcent
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetConcentrationQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetFraudQualityUrl = (params?: GetFraudQualityParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/analytics/quality/fraud?${stringifiedParams}` : `/api/analytics/quality/fraud`
+}
+
+/**
+ * @summary Fraud-quality trend — appsflyer pins vs fraud pins by period, from billing records
+ */
+export const getFraudQuality = async (params?: GetFraudQualityParams, options?: RequestInit): Promise<FraudPoint[]> => {
+
+  return customFetch<FraudPoint[]>(getGetFraudQualityUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFraudQualityQueryKey = (params?: GetFraudQualityParams,) => {
+    return [
+    `/api/analytics/quality/fraud`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetFraudQualityQueryOptions = <TData = Awaited<ReturnType<typeof getFraudQuality>>, TError = ErrorType<unknown>>(params?: GetFraudQualityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFraudQuality>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFraudQualityQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFraudQuality>>> = ({ signal }) => getFraudQuality(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFraudQuality>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFraudQualityQueryResult = NonNullable<Awaited<ReturnType<typeof getFraudQuality>>>
+export type GetFraudQualityQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Fraud-quality trend — appsflyer pins vs fraud pins by period, from billing records
+ */
+
+export function useGetFraudQuality<TData = Awaited<ReturnType<typeof getFraudQuality>>, TError = ErrorType<unknown>>(
+ params?: GetFraudQualityParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFraudQuality>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFraudQualityQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 
