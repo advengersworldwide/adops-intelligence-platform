@@ -7,16 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ProfitabilityTab } from "@/components/analytics/tabs/ProfitabilityTab";
 import { FinancialOpsTab } from "@/components/analytics/tabs/FinancialOpsTab";
 import { RelationshipsTab } from "@/components/analytics/tabs/RelationshipsTab";
-
-function ComingSoon({ label }: { label: string }) {
-  return (
-    <div className="rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
-      <p className="text-sm text-muted-foreground">
-        <span className="font-medium text-foreground">{label}</span> — coming in this rollout
-      </p>
-    </div>
-  );
-}
+import { ForecastTab } from "@/components/analytics/tabs/ForecastTab";
 
 export default function AnalyticsPage() {
   return (
@@ -50,7 +41,7 @@ export default function AnalyticsPage() {
               <RelationshipsTab />
             </TabsContent>
             <TabsContent value="forecast">
-              <ComingSoon label="Forecast & Anomalies" />
+              <ForecastTab />
             </TabsContent>
           </Tabs>
         </div>
