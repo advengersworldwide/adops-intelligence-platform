@@ -8,6 +8,8 @@
 
 export * from './agingBuckets';
 export * from './agingResponse';
+export * from './aiInsight';
+export * from './aiInsightSentiment';
 export * from './alert';
 export * from './alertSeverity';
 export * from './alertType';

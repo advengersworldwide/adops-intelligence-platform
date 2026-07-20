@@ -1158,6 +1158,21 @@ paths:
               schema:
                 $ref: "#/components/schemas/FlowGraph"
 
+  /analytics/ai-insights:
+    get:
+      operationId: getAiInsights
+      tags: [analytics]
+      summary: AI-generated "what changed" executive insights over the trailing 30 vs prior 30 days
+      responses:
+        "200":
+          description: Short list of AI-generated insights (empty when AI is unavailable)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiInsight"
+
   # ── Buying Houses ─────────────────────────────────────────────────────────────
   /buying-houses:
     get:
@@ -3459,6 +3474,14 @@ components:
         value: { type: number }
         z: { type: number }
         isAnomaly: { type: boolean }
+
+    AiInsight:
+      type: object
+      required: [title, detail, sentiment]
+      properties:
+        title: { type: string }
+        detail: { type: string }
+        sentiment: { type: string, enum: [positive, negative, neutral] }
 
   parameters:
     Engine:

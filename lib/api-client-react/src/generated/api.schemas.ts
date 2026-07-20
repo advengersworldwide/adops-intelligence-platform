@@ -1289,6 +1289,21 @@ export interface AnomalyPoint {
   isAnomaly: boolean;
 }
 
+export type AiInsightSentiment = typeof AiInsightSentiment[keyof typeof AiInsightSentiment];
+
+
+export const AiInsightSentiment = {
+  positive: 'positive',
+  negative: 'negative',
+  neutral: 'neutral',
+} as const;
+
+export interface AiInsight {
+  title: string;
+  detail: string;
+  sentiment: AiInsightSentiment;
+}
+
 export type EngineParameter = RevenueEngine;
 
 /**

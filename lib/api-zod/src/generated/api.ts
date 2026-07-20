@@ -1127,6 +1127,17 @@ export const GetMoneyFlowResponse = zod.object({
 
 
 /**
+ * @summary AI-generated "what changed" executive insights over the trailing 30 vs prior 30 days
+ */
+export const GetAiInsightsResponseItem = zod.object({
+  "title": zod.string(),
+  "detail": zod.string(),
+  "sentiment": zod.enum(['positive', 'negative', 'neutral'])
+})
+export const GetAiInsightsResponse = zod.array(GetAiInsightsResponseItem)
+
+
+/**
  * @summary List all buying houses with aggregate stats
  */
 export const ListBuyingHousesResponseItem = zod.object({
