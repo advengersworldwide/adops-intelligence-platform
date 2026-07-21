@@ -25,3 +25,4 @@ export * from "./billing-event-items";
 export * from "./payment-billings";
 export * from "./partner-bills";
 export * from "./partner-payments";
+export * from "./dashboard-layouts";
