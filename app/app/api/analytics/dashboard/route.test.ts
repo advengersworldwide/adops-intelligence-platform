@@ -51,6 +51,28 @@ describe("GET /api/analytics/dashboard", () => {
     expect(json.totalRevenue).toBe(100);
     // Only the agg query calls .where(); with nothing to filter on it should be undefined.
     expect(capturedWheres).toEqual([undefined]);
+    // No date range supplied -> deltas stay null (no prior-period query is issued).
+    expect(json.revenueChange).toBeNull();
+    expect(json.profitChange).toBeNull();
+    expect(json.costChange).toBeNull();
+  });
+
+  it("returns non-null revenue/profit/cost deltas when a date range is supplied", async () => {
+    // 1st select(): current-period aggregate
+    selectQueue.push([{ totalRevenue: "200", totalCost: "120", totalProfit: "80", transactionCount: 4 }]);
+    // 2nd select(): client/platform/campaign counts (unrelated to deltas)
+    selectQueue.push([{ clientCount: 2, platformCount: 1, campaignCount: 3 }]);
+    // 3rd select(): prior-period aggregate (same shape as the current one)
+    selectQueue.push([{ totalRevenue: "100", totalCost: "60", totalProfit: "40", transactionCount: 2 }]);
+
+    const res = await get("?dateFrom=2026-06-01&dateTo=2026-06-30");
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.revenueChange).toBeCloseTo(100);
+    expect(body.profitChange).not.toBeNull();
+    expect(body.profitChange).toBeCloseTo(100);
+    expect(body.costChange).not.toBeNull();
+    expect(body.costChange).toBeCloseTo(100);
   });
 
   it("threads clientIds into an inArray condition on campaigns.client_id (narrows the aggregation)", async () => {
