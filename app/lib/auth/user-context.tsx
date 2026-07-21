@@ -66,6 +66,25 @@ export function useHasPermission(permission: string): boolean | null {
   return userRole?.permissions.includes(permission) ?? false;
 }
 
+export function usePermissionSet(): { has: (permission: string) => boolean; isLoading: boolean } {
+  const { user, isLoading } = useContext(UserContext);
+  const { data: roles } = useQuery<Role[]>({
+    queryKey: ["roles"],
+    queryFn: () => fetch("/api/roles").then((r) => r.json()),
+    staleTime: Infinity,
+    enabled: !!user && user.role !== "System Admin" && !user.isSystem,
+  });
+
+  const isAdmin = !!user && (user.role === "System Admin" || user.isSystem);
+  const granted = new Set<string>(
+    isAdmin ? [] : (roles?.find((r) => r.name.toLowerCase() === user?.role.toLowerCase())?.permissions ?? []),
+  );
+  return {
+    has: (permission: string) => isAdmin || granted.has(permission),
+    isLoading: isLoading || (!!user && !isAdmin && !roles),
+  };
+}
+
 export function useLogout() {
   const router = useRouter();
   const queryClient = useQueryClient();
