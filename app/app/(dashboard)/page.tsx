@@ -13,12 +13,16 @@ import { usePermissionSet } from "@/lib/auth/user-context";
 import { useDashboardLayout } from "@/lib/dashboard/use-dashboard-layout";
 import { visibleWidgetIds } from "@/lib/dashboard/role-gating";
 import { widgetRegistry, widgetList } from "@/components/dashboard/widget-registry";
+import { DashboardDateRange } from "@/components/dashboard/DashboardDateRange";
+import { DashboardRangeContext, computePreset, type DashRange } from "@/lib/dashboard/range-context";
 import type { DashboardLayoutItem } from "@/lib/dashboard/types";
 
 const RGL = ResponsiveGridLayout as React.ComponentType<ResponsiveGridLayoutProps & { draggableHandle?: string }>;
 
 function DashboardContent() {
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [rangeKey, setRangeKey] = useState("mtd");
+  const [range, setRange] = useState<DashRange>(() => computePreset("mtd"));
   const { width, containerRef } = useContainerWidth();
   const perms = usePermissionSet();
   const dash = useDashboardLayout();
@@ -49,27 +53,38 @@ function DashboardContent() {
           <h1 className="text-xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground">AdOps Intelligence Overview</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setPaletteOpen(true)} className="gap-1.5 text-xs" data-testid="add-widget-btn">
-          <Plus className="h-3.5 w-3.5" /> Add Widget
-        </Button>
+        <div className="flex items-center gap-2">
+          <DashboardDateRange
+            value={rangeKey}
+            onChange={(k, r) => {
+              setRangeKey(k);
+              setRange(r);
+            }}
+          />
+          <Button variant="outline" size="sm" onClick={() => setPaletteOpen(true)} className="gap-1.5 text-xs" data-testid="add-widget-btn">
+            <Plus className="h-3.5 w-3.5" /> Add Widget
+          </Button>
+        </div>
       </div>
 
-      <RGL
-        className="layout"
-        width={width}
-        layouts={{ lg: layoutFor(visible) }}
-        breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-        cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-        rowHeight={30}
-        onLayoutChange={(l: DashboardLayoutItem[]) => dash.setLayout(l)}
-        draggableHandle=".widget-drag-handle"
-        margin={[16, 16]}
-      >
-        {visible.map((id) => {
-          const W = widgetRegistry[id].Component;
-          return <div key={id}><W /></div>;
-        })}
-      </RGL>
+      <DashboardRangeContext.Provider value={range}>
+        <RGL
+          className="layout"
+          width={width}
+          layouts={{ lg: layoutFor(visible) }}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+          rowHeight={30}
+          onLayoutChange={(l: DashboardLayoutItem[]) => dash.setLayout(l)}
+          draggableHandle=".widget-drag-handle"
+          margin={[16, 16]}
+        >
+          {visible.map((id) => {
+            const W = widgetRegistry[id].Component;
+            return <div key={id}><W /></div>;
+          })}
+        </RGL>
+      </DashboardRangeContext.Provider>
 
       <Dialog open={paletteOpen} onOpenChange={setPaletteOpen}>
         <DialogContent className="sm:max-w-md">

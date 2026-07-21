@@ -4,9 +4,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useGetAnalyticsByPartner } from "@workspace/api-client-react";
 import { formatMoney } from "@/lib/analytics/currency";
 import { DashboardWidget } from "@/components/dashboard/DashboardWidget";
+import { useDashboardRange } from "@/lib/dashboard/range-context";
 
 export function PlatformPerformance() {
-  const { data: byPlatform } = useGetAnalyticsByPartner();
+  const range = useDashboardRange();
+  const { data: byPlatform } = useGetAnalyticsByPartner(range as never);
 
   return (
     <DashboardWidget

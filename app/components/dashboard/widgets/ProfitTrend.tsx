@@ -6,9 +6,11 @@ import { formatMoney } from "@/lib/analytics/currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardWidget } from "@/components/dashboard/DashboardWidget";
 import { useAdjustedSummary } from "@/lib/dashboard/use-adjusted-summary";
+import { useDashboardRange } from "@/lib/dashboard/range-context";
 
 export function ProfitTrend() {
-  const { data: profitTimeSeries, isLoading: timeLoading } = useGetProfitOverTime();
+  const range = useDashboardRange();
+  const { data: profitTimeSeries, isLoading: timeLoading } = useGetProfitOverTime(range as never);
   const { adjustedSummary, baseCurrency } = useAdjustedSummary();
 
   return (

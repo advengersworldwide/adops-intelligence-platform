@@ -2,6 +2,7 @@
 
 import { useGetDashboardSummary, useGetAnalyticsByPartner } from "@workspace/api-client-react";
 import { convertTo, DEFAULT_RATES } from "@/lib/analytics/currency";
+import { useDashboardRange } from "@/lib/dashboard/range-context";
 
 /**
  * Shared currency-adjustment logic lifted verbatim from the dashboard page's
@@ -13,8 +14,9 @@ import { convertTo, DEFAULT_RATES } from "@/lib/analytics/currency";
  * page previously computed inline.
  */
 export function useAdjustedSummary() {
-  const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary();
-  const { data: byPlatform } = useGetAnalyticsByPartner();
+  const range = useDashboardRange();
+  const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary(range as never);
+  const { data: byPlatform } = useGetAnalyticsByPartner(range as never);
 
   const baseCurrency = typeof window !== "undefined" ? (localStorage.getItem("adops-base-currency") || "USD") : "USD";
   const rawRates = typeof window !== "undefined" ? localStorage.getItem("adops-exchange-rates") : null;

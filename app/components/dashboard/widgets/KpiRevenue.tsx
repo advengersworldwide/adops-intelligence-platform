@@ -6,10 +6,12 @@ import { formatMoney } from "@/lib/analytics/currency";
 import { KpiCard } from "@/components/analytics/KpiCard";
 import { DashboardWidget } from "@/components/dashboard/DashboardWidget";
 import { useAdjustedSummary } from "@/lib/dashboard/use-adjusted-summary";
+import { useDashboardRange } from "@/lib/dashboard/range-context";
 
 export function KpiRevenue() {
   const { adjustedSummary, isLoading, baseCurrency } = useAdjustedSummary();
-  const { data: profitTimeSeries } = useGetProfitOverTime();
+  const range = useDashboardRange();
+  const { data: profitTimeSeries } = useGetProfitOverTime(range as never);
 
   return (
     <DashboardWidget fill={false}>
