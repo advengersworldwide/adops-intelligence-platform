@@ -1,6 +1,7 @@
 "use client";
 
-import { ResponsiveContainer, Sankey, Tooltip } from "recharts";
+import { Sankey, Tooltip } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { SankeyNodeProps } from "recharts";
 import { formatMoney } from "@/lib/analytics/currency";
 
@@ -50,7 +51,7 @@ export function FlowSankey({ nodes, links, currency }: FlowSankeyProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={360}>
+    <ResponsiveChart width="100%" height={360}>
       <Sankey
         data={{ nodes, links }}
         nodePadding={24}
@@ -60,6 +61,6 @@ export function FlowSankey({ nodes, links, currency }: FlowSankeyProps) {
       >
         <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => formatMoney(value, currency)} />
       </Sankey>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

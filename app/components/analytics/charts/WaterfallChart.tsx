@@ -8,8 +8,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
 } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { WaterfallStage } from "@/lib/analytics/waterfall";
 import { formatMoney } from "@/lib/analytics/currency";
 
@@ -60,7 +60,7 @@ export function WaterfallChart({ stages, currency }: { stages: WaterfallStage[];
   const rows = buildRows(stages);
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveChart width="100%" height={280}>
       <BarChart data={rows} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis
@@ -92,6 +92,6 @@ export function WaterfallChart({ stages, currency }: { stages: WaterfallStage[];
           ))}
         </Bar>
       </BarChart>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

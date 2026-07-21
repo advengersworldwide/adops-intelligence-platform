@@ -1,6 +1,7 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import { formatMoney } from "@/lib/analytics/currency";
 
 export interface AnomalyChartPoint {
@@ -56,7 +57,7 @@ export function AnomalyChart({ points, currency }: { points: AnomalyChartPoint[]
   }
 
   return (
-    <ResponsiveContainer width="100%" height={320}>
+    <ResponsiveChart width="100%" height={320}>
       <LineChart data={points} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis
@@ -81,6 +82,6 @@ export function AnomalyChart({ points, currency }: { points: AnomalyChartPoint[]
           name="Value"
         />
       </LineChart>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

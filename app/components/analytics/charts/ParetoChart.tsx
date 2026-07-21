@@ -9,8 +9,8 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceLine,
-  ResponsiveContainer,
 } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { ParetoPoint } from "@workspace/api-client-react";
 import { formatMoney } from "@/lib/analytics/currency";
 
@@ -44,7 +44,7 @@ export function ParetoChart({
           {top5Pct !== undefined && <span>Top 5 = {top5Pct.toFixed(0)}%</span>}
         </div>
       )}
-      <ResponsiveContainer width="100%" height={320}>
+      <ResponsiveChart width="100%" height={320}>
         <ComposedChart data={points} margin={{ top: 8, right: 8, bottom: 24, left: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
           <XAxis
@@ -90,7 +90,7 @@ export function ParetoChart({
             name="Cumulative %"
           />
         </ComposedChart>
-      </ResponsiveContainer>
+      </ResponsiveChart>
     </div>
   );
 }

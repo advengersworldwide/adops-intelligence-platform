@@ -1,6 +1,7 @@
 "use client";
 
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import { formatMoney } from "@/lib/analytics/currency";
 
 export interface MarginQuadrantPoint {
@@ -43,7 +44,7 @@ export function MarginQuadrant({ points }: { points: MarginQuadrantPoint[] }) {
   const medianRevenue = median(points.map(p => p.revenue));
 
   return (
-    <ResponsiveContainer width="100%" height={280}>
+    <ResponsiveChart width="100%" height={280}>
       <ScatterChart margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis
@@ -70,6 +71,6 @@ export function MarginQuadrant({ points }: { points: MarginQuadrantPoint[] }) {
         <ReferenceLine x={medianRevenue} stroke="hsl(var(--border))" strokeDasharray="3 3" />
         <Scatter data={points} fill="hsl(221,83%,53%)" />
       </ScatterChart>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

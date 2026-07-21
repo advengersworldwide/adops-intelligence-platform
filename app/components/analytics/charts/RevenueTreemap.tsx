@@ -1,6 +1,7 @@
 "use client";
 
-import { ResponsiveContainer, Treemap, Tooltip } from "recharts";
+import { Treemap, Tooltip } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { TreemapNode as RechartsTreemapNode, TreemapProps } from "recharts";
 import { buildTreemap } from "@/lib/analytics/treemap";
 import { formatMoney } from "@/lib/analytics/currency";
@@ -63,7 +64,7 @@ export function RevenueTreemap({ cells, currency }: RevenueTreemapProps) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={340}>
+    <ResponsiveChart width="100%" height={340}>
       <Treemap
         // recharts' TreemapDataType requires an index signature our plain
         // { name, children } tree doesn't declare; cast at this boundary only.
@@ -80,6 +81,6 @@ export function RevenueTreemap({ cells, currency }: RevenueTreemapProps) {
           formatter={(value, name) => [formatMoney(Number(value), currency), String(name)]}
         />
       </Treemap>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

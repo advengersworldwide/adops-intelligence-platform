@@ -2,7 +2,8 @@
 
 import { useId } from "react";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer } from "recharts";
+import { AreaChart, Area } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -51,7 +52,7 @@ export function KpiCard({ title, value, delta, positive, sparkline, loading, ico
 
       {hasSparkline && !loading && (
         <div className="mt-3 h-10 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveChart width="100%" height="100%">
             <AreaChart data={sparkline.map((v, i) => ({ i, v }))} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -67,7 +68,7 @@ export function KpiCard({ title, value, delta, positive, sparkline, loading, ico
                 fill={`url(#${gradientId})`}
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ResponsiveChart>
         </div>
       )}
     </div>

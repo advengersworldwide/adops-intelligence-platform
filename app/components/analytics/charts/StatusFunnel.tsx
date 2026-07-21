@@ -1,6 +1,7 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { FunnelStage } from "@workspace/api-client-react";
 import { formatMoney } from "@/lib/analytics/currency";
 
@@ -37,7 +38,7 @@ function FunnelRow({ title, stages, colors, currency }: FunnelRowProps) {
   return (
     <div>
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
-      <ResponsiveContainer width="100%" height={40}>
+      <ResponsiveChart width="100%" height={40}>
         <BarChart data={data} layout="vertical" margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
           <XAxis type="number" hide />
           <YAxis type="category" hide />
@@ -58,7 +59,7 @@ function FunnelRow({ title, stages, colors, currency }: FunnelRowProps) {
             />
           ))}
         </BarChart>
-      </ResponsiveContainer>
+      </ResponsiveChart>
       <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
         {stages.map((s) => (
           <div key={s.label} className="flex items-center gap-1.5">

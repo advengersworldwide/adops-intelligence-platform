@@ -1,6 +1,7 @@
 "use client";
 
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { AgingBuckets } from "@/lib/analytics/aging";
 import { formatMoney } from "@/lib/analytics/currency";
 
@@ -31,7 +32,7 @@ export function AgingBars({ buckets, currency, title }: { buckets: AgingBuckets;
       {!hasData ? (
         <p className="py-12 text-center text-sm text-muted-foreground">No outstanding balances for selected period</p>
       ) : (
-        <ResponsiveContainer width="100%" height={220}>
+        <ResponsiveChart width="100%" height={220}>
           <BarChart data={rows} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis
@@ -56,7 +57,7 @@ export function AgingBars({ buckets, currency, title }: { buckets: AgingBuckets;
               ))}
             </Bar>
           </BarChart>
-        </ResponsiveContainer>
+        </ResponsiveChart>
       )}
     </div>
   );

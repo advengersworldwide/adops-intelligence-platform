@@ -1,6 +1,7 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { MarginBucket } from "@/lib/analytics/distribution";
 
 const tooltipStyle = {
@@ -16,7 +17,7 @@ export function MarginHistogram({ buckets }: { buckets: MarginBucket[] }) {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
+    <ResponsiveChart width="100%" height={220}>
       <BarChart data={buckets} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis dataKey="label" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} />
@@ -28,6 +29,6 @@ export function MarginHistogram({ buckets }: { buckets: MarginBucket[] }) {
           ))}
         </Bar>
       </BarChart>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }

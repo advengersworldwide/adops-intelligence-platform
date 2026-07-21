@@ -7,7 +7,8 @@ import {
   useGetProfitWaterfall,
   useGetMarginDistribution,
 } from "@workspace/api-client-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import { useAnalyticsFilters } from "@/hooks/use-analytics-filters";
 import { buildAnalyticsParams } from "@/lib/analytics/filters";
 import { formatMoney } from "@/lib/analytics/currency";
@@ -79,7 +80,7 @@ export function ProfitabilityTab() {
           {profitSeriesLoading ? (
             <Skeleton className="h-56 w-full" />
           ) : profitSeries && profitSeries.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveChart width="100%" height={220}>
               <AreaChart data={profitSeries} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="profitTabRevGrad" x1="0" y1="0" x2="0" y2="1">
@@ -112,7 +113,7 @@ export function ProfitabilityTab() {
                 <Area type="monotone" dataKey="cost" stroke="hsl(0,84%,60%)" strokeWidth={1.5} fill="url(#profitTabCostGrad)" name="cost" />
                 <Area type="monotone" dataKey="profit" stroke="hsl(160,84%,39%)" strokeWidth={2} fill="url(#profitTabProfitGrad)" name="profit" />
               </AreaChart>
-            </ResponsiveContainer>
+            </ResponsiveChart>
           ) : (
             <p className="py-12 text-center text-sm text-muted-foreground">No data for selected period</p>
           )}

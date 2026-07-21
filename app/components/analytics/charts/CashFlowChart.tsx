@@ -9,8 +9,8 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ResponsiveContainer,
 } from "recharts";
+import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { CashFlowBucket } from "@workspace/api-client-react";
 import { runningBalance, type CashFlowInput } from "@/lib/analytics/cashflow";
 import { convertTo, formatMoney, DEFAULT_RATES } from "@/lib/analytics/currency";
@@ -42,7 +42,7 @@ export function CashFlowChart({ buckets }: { buckets: CashFlowBucket[] }) {
   const data = runningBalance(rows);
 
   return (
-    <ResponsiveContainer width="100%" height={320}>
+    <ResponsiveChart width="100%" height={320}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
         <XAxis
@@ -67,6 +67,6 @@ export function CashFlowChart({ buckets }: { buckets: CashFlowBucket[] }) {
         <Bar dataKey="unfundedOut" stackId="out" fill="hsl(38,92%,50%)" radius={[3, 3, 0, 0]} name="Unfunded Payout" />
         <Line type="monotone" dataKey="balance" stroke="hsl(221,83%,53%)" strokeWidth={2} dot={false} name="Running Balance" />
       </ComposedChart>
-    </ResponsiveContainer>
+    </ResponsiveChart>
   );
 }
