@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useGetPartner } from "@workspace/api-client-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { GatedTabs } from "@/components/rbac/GatedTabs";
+import { PARTNER_DETAIL_TABS } from "@/lib/rbac/tabs";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import PartnerDetailsTab from "./DetailsTab";
 import PartnerClientsTab from "./ClientsTab";
@@ -33,26 +34,15 @@ function PartnerDetailPage({ id }: { id: number }) {
           {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
         </div>
       ) : partner ? (
-        <Tabs defaultValue="details">
-          <TabsList className="mb-4">
-            <TabsTrigger value="details">Details</TabsTrigger>
-            <TabsTrigger value="clients">Clients</TabsTrigger>
-            <TabsTrigger value="data">Data</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </TabsList>
-          <TabsContent value="details">
-            <PartnerDetailsTab partner={partner} />
-          </TabsContent>
-          <TabsContent value="clients">
-            <PartnerClientsTab partnerId={id} />
-          </TabsContent>
-          <TabsContent value="data">
-            <PlatformDataTab platformId={id} platform={partner} />
-          </TabsContent>
-          <TabsContent value="analytics">
-            <PlatformAnalyticsTab platformId={id} platform={partner} />
-          </TabsContent>
-        </Tabs>
+        <GatedTabs
+          nodes={PARTNER_DETAIL_TABS}
+          content={{
+            details: <PartnerDetailsTab partner={partner} />,
+            clients: <PartnerClientsTab partnerId={id} />,
+            data: <PlatformDataTab platformId={id} platform={partner} />,
+            analytics: <PlatformAnalyticsTab platformId={id} platform={partner} />,
+          }}
+        />
       ) : (
         <p className="text-sm text-muted-foreground">Partner not found.</p>
       )}

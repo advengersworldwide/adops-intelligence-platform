@@ -52,8 +52,9 @@ function Field({ label, value, onChange, disabled, type = "text", filterFn }: {
   );
 }
 
-export function KycFields({ value, onChange, disabled }: {
+export function KycFields({ value, onChange, disabled, showBank = true, showTax = true }: {
   value: KycState; onChange: (next: KycState) => void; disabled: boolean;
+  showBank?: boolean; showTax?: boolean;
 }) {
   const set = (key: keyof KycState) => (v: string) => onChange({ ...value, [key]: v });
   return (
@@ -69,18 +70,24 @@ export function KycFields({ value, onChange, disabled }: {
           <Field label="POC Email" type="email" value={value.pocEmail} onChange={set("pocEmail")} disabled={disabled} />
         </div>
       </div>
-      <div className="rounded-lg border border-border bg-card p-5">
-        <h3 className="mb-4 text-sm font-semibold text-foreground">Banking & Legal</h3>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Bank Name" value={value.bankName} onChange={set("bankName")} disabled={disabled} />
-          <Field label="Account Number" value={value.bankAccountNumber} onChange={set("bankAccountNumber")} disabled={disabled} />
-          <Field label="Bank Address" value={value.bankAddress} onChange={set("bankAddress")} disabled={disabled} />
-          <Field label="SWIFT" value={value.swiftCode} onChange={set("swiftCode")} disabled={disabled} />
-          <Field label="IBAN" value={value.iban} onChange={set("iban")} disabled={disabled} />
-          <Field label="Sales Tax Number" value={value.salesTaxNumber} onChange={set("salesTaxNumber")} disabled={disabled} />
-          <Field label="NTN Number" value={value.ntnNumber} onChange={set("ntnNumber")} disabled={disabled} />
+      {(showBank || showTax) && (
+        <div className="rounded-lg border border-border bg-card p-5">
+          <h3 className="mb-4 text-sm font-semibold text-foreground">Banking &amp; Legal</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {showBank && <>
+              <Field label="Bank Name" value={value.bankName} onChange={set("bankName")} disabled={disabled} />
+              <Field label="Account Number" value={value.bankAccountNumber} onChange={set("bankAccountNumber")} disabled={disabled} />
+              <Field label="Bank Address" value={value.bankAddress} onChange={set("bankAddress")} disabled={disabled} />
+              <Field label="SWIFT" value={value.swiftCode} onChange={set("swiftCode")} disabled={disabled} />
+              <Field label="IBAN" value={value.iban} onChange={set("iban")} disabled={disabled} />
+            </>}
+            {showTax && <>
+              <Field label="Sales Tax Number" value={value.salesTaxNumber} onChange={set("salesTaxNumber")} disabled={disabled} />
+              <Field label="NTN Number" value={value.ntnNumber} onChange={set("ntnNumber")} disabled={disabled} />
+            </>}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

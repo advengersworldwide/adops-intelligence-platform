@@ -14,12 +14,13 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { GatedTabs } from "@/components/rbac/GatedTabs";
+import { CLIENT_DETAIL_TABS } from "@/lib/rbac/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useHasPermission } from "@/lib/auth/user-context";
+import { useHasPermission, useCan } from "@/lib/auth/user-context";
 import { KycFields, kycFromRecord, kycToPayload, type KycState, EMPTY_KYC } from "@/components/KycFields";
 import { cn } from "@/lib/utils";
 import { computeRow } from "@/lib/compute-row";
@@ -46,6 +47,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const canEdit = useHasPermission("clients:edit");
+  const can = useCan();
   const { data: client } = useGetClient(clientId);
   const { data: paymentTerms } = useListPaymentTerms();
   const updateClient = useUpdateClient();
@@ -86,7 +88,8 @@ function DetailsTab({ clientId }: { clientId: number }) {
 
   return (
     <div className="space-y-6">
-      <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
+      <KycFields value={kyc} onChange={setKyc} disabled={!canEdit}
+        showBank={can("clients.bank:view")} showTax={can("clients.tax:view")} />
       <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">PO Code Prefix</span>
         <Input value={codePrefix} disabled={!canEdit} maxLength={4}
@@ -391,22 +394,14 @@ function ClientDetailPage({ id }: { id: number }) {
         )}
       </div>
 
-      <Tabs defaultValue="details">
-        <TabsList className="mb-4">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="events">Events</TabsTrigger>
-          <TabsTrigger value="data">Data</TabsTrigger>
-        </TabsList>
-        <TabsContent value="details">
-          <DetailsTab clientId={id} />
-        </TabsContent>
-        <TabsContent value="events">
-          <EventsTab clientId={id} />
-        </TabsContent>
-        <TabsContent value="data">
-          <DataTab clientId={id} />
-        </TabsContent>
-      </Tabs>
+      <GatedTabs
+        nodes={CLIENT_DETAIL_TABS}
+        content={{
+          details: <DetailsTab clientId={id} />,
+          events: <EventsTab clientId={id} />,
+          data: <DataTab clientId={id} />,
+        }}
+      />
     </div>
   );
 }

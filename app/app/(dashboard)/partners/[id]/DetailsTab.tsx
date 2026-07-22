@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useHasPermission } from "@/lib/auth/user-context";
+import { useHasPermission, useCan } from "@/lib/auth/user-context";
 import { KycFields, kycFromRecord, kycToPayload, type KycState } from "@/components/KycFields";
 
 export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
   const qc = useQueryClient();
   const { toast } = useToast();
   const canEdit = useHasPermission("partners:edit");
+  const can = useCan();
   const { data: paymentTerms } = useListPaymentTerms();
   const updatePartner = useUpdatePartner();
 
@@ -48,7 +49,8 @@ export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
 
   return (
     <div className="space-y-6">
-      <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
+      <KycFields value={kyc} onChange={setKyc} disabled={!canEdit}
+        showBank={can("partners.bank:view")} />
       <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
         <span className="text-xs font-medium text-muted-foreground">PO Code Prefix</span>
         <Input value={codePrefix} disabled={!canEdit} maxLength={4}

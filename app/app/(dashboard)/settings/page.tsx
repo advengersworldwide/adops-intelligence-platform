@@ -16,21 +16,10 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { PermissionGuard } from "@/components/PermissionGuard";
-
-// All permissions defined inline (was exported from @/lib/auth in the source app)
-const ALL_PERMISSIONS = [
-  "View Transactions",
-  "View Billings",
-  "View Billing Detail",
-  "View Payments",
-  "View Cost",
-  "View Analytics",
-  "Upload Data",
-  "Manage Settings",
-  "View Clients",
-  "View Buying Houses",
-  "View Partners",
-];
+import { useCan } from "@/lib/auth/user-context";
+import { visibleTabs, SETTINGS_TABS } from "@/lib/rbac/tabs";
+import { RolePermissionEditor } from "@/components/settings/RolePermissionEditor";
+import { ALL_PERMISSIONS } from "@/lib/rbac/catalog";
 
 interface Role {
   name: string;
@@ -89,8 +78,13 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { toast } = useToast();
 
-  // Active settings tabs
+  // Active settings tabs — filtered by the caller's settings.* permissions.
   const [activeTab, setActiveTab] = useState<"general" | "roles" | "users" | "costModels" | "paymentTerms">("general");
+  const can = useCan();
+  const settingsTabs = visibleTabs(SETTINGS_TABS, can);
+  const active = settingsTabs.some((t) => t.id === activeTab)
+    ? activeTab
+    : ((settingsTabs[0]?.id ?? "general") as typeof activeTab);
 
   // General Settings States
   const [alertNegative, setAlertNegative] = useState(
@@ -318,20 +312,14 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground">Manage your platform preferences, configurations, and user rights</p>
         </div>
 
-        {/* Settings Navigation Tabs */}
+        {/* Settings Navigation Tabs — only the ones this role may access */}
         <div className="flex border-b border-border">
-          {[
-            { id: "general", label: "Currency & Appearance" },
-            { id: "roles", label: "Roles & Rights" },
-            { id: "users", label: "User Accounts" },
-            { id: "costModels", label: "Cost Models" },
-            { id: "paymentTerms", label: "Payment Terms" },
-          ].map(tab => (
+          {settingsTabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`px-4 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors cursor-pointer ${
-                activeTab === tab.id
+                active === tab.id
                   ? "border-primary text-primary"
                   : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
@@ -342,7 +330,7 @@ export default function SettingsPage() {
         </div>
 
         {/* GENERAL SETTINGS TAB */}
-        {activeTab === "general" && (
+        {active === "general" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Column */}
             <div className="space-y-6">
@@ -565,7 +553,7 @@ export default function SettingsPage() {
         )}
 
         {/* ROLES & RIGHTS MANAGEMENT TAB */}
-        {activeTab === "roles" && (
+        {active === "roles" && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -670,19 +658,17 @@ export default function SettingsPage() {
 
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-muted-foreground block">Select Right Permissions</label>
-                    <div className="grid grid-cols-2 gap-2.5 border border-border rounded-xl p-3 bg-muted/20 max-h-60 overflow-y-auto">
-                      {ALL_PERMISSIONS.map(perm => (
-                        <label key={perm} className="flex items-center gap-2 text-xs font-medium text-foreground cursor-pointer select-none">
-                          <input
-                            type="checkbox"
-                            checked={selectedPermissions.includes(perm)}
-                            onChange={() => togglePermission(perm)}
-                            className="rounded border-slate-300 text-violet-600 focus:ring-violet-500 h-4 w-4 cursor-pointer"
-                          />
-                          <span>{perm}</span>
-                        </label>
-                      ))}
-                    </div>
+                    <RolePermissionEditor
+                      selected={selectedPermissions}
+                      onToggle={(key) => togglePermission(key)}
+                      onToggleGroup={(keys, allOn) =>
+                        setSelectedPermissions((prev) => {
+                          const s = new Set(prev);
+                          keys.forEach((k) => (allOn ? s.add(k) : s.delete(k)));
+                          return [...s];
+                        })
+                      }
+                    />
                   </div>
 
                   <DialogFooter className="pt-2">
@@ -700,7 +686,7 @@ export default function SettingsPage() {
         )}
 
         {/* USER ACCOUNTS MANAGEMENT TAB */}
-        {activeTab === "users" && (
+        {active === "users" && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -853,7 +839,7 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {activeTab === "costModels" && (
+        {active === "costModels" && (
           <CatalogTab
             title="Cost Models" description="Names referenced when configuring client events."
             placeholder="e.g. CPI, CPA, CPL"
@@ -863,7 +849,7 @@ export default function SettingsPage() {
           />
         )}
 
-        {activeTab === "paymentTerms" && (
+        {active === "paymentTerms" && (
           <CatalogTab
             title="Payment Terms" description="Names referenced by clients and partners."
             placeholder="e.g. Net 30, Net 60"
