@@ -14,6 +14,7 @@ import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import type { CashFlowBucket } from "@workspace/api-client-react";
 import { runningBalance, type CashFlowInput } from "@/lib/analytics/cashflow";
 import { convertTo, formatMoney, DEFAULT_RATES } from "@/lib/analytics/currency";
+import { useBaseCurrency } from "@/lib/dashboard/use-base-currency";
 
 const tooltipStyle = {
   backgroundColor: "hsl(var(--card))",
@@ -23,13 +24,13 @@ const tooltipStyle = {
 };
 
 export function CashFlowChart({ buckets }: { buckets: CashFlowBucket[] }) {
+  const baseCurrency = useBaseCurrency();
+  const rawRates = typeof window !== "undefined" ? localStorage.getItem("adops-exchange-rates") : null;
+  const exchangeRates = rawRates ? JSON.parse(rawRates) : DEFAULT_RATES;
+
   if (!buckets || buckets.length === 0) {
     return <p className="py-12 text-center text-sm text-muted-foreground">No data for selected period</p>;
   }
-
-  const baseCurrency = typeof window !== "undefined" ? (localStorage.getItem("adops-base-currency") || "USD") : "USD";
-  const rawRates = typeof window !== "undefined" ? localStorage.getItem("adops-exchange-rates") : null;
-  const exchangeRates = rawRates ? JSON.parse(rawRates) : DEFAULT_RATES;
 
   const rows: CashFlowInput[] = buckets.map((b) => ({
     date: b.date,

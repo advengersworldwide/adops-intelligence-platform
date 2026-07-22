@@ -17,7 +17,7 @@ export function KpiRevenue() {
     <DashboardWidget fill={false}>
       <KpiCard
         title="Total Revenue"
-        value={adjustedSummary ? formatMoney(adjustedSummary.totalRevenue, baseCurrency) : "$0"}
+        value={adjustedSummary ? formatMoney(adjustedSummary.totalRevenue, baseCurrency) : formatMoney(0, baseCurrency)}
         delta={adjustedSummary?.revenueChange}
         positive={(adjustedSummary?.revenueChange ?? 0) >= 0}
         sparkline={profitTimeSeries?.map(p => p.revenue)}

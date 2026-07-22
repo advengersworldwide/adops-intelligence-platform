@@ -106,7 +106,7 @@ export async function GET(): Promise<Response> {
     if (budget > 0 && consumed > budget) {
       alerts.push({
         id: `ppo-${ppo.id}`, type: "ppo_overspend", severity: "critical",
-        message: `PPO ${ppo.code} overspent: ${formatMoney(consumed)} of ${formatMoney(budget)}`,
+        message: `PPO ${ppo.code} overspent: ${formatMoney(consumed, "USD")} of ${formatMoney(budget, "USD")}`,
         label: ppo.code, campaignId: null, campaignName: null, value: consumed - budget,
       });
     }

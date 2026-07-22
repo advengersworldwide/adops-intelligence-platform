@@ -13,7 +13,7 @@ export function KpiCost() {
     <DashboardWidget fill={false}>
       <KpiCard
         title="Total Cost"
-        value={adjustedSummary ? formatMoney(adjustedSummary.totalCost, baseCurrency) : "$0"}
+        value={adjustedSummary ? formatMoney(adjustedSummary.totalCost, baseCurrency) : formatMoney(0, baseCurrency)}
         delta={adjustedSummary?.costChange}
         positive={(adjustedSummary?.costChange ?? 0) <= 0}
         icon={<Target className="h-4 w-4" />}
