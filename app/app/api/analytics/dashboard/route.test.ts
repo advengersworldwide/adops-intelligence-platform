@@ -35,22 +35,60 @@ async function get(qs = "") {
   return GET(new Request(`http://localhost/api/analytics/dashboard${qs}`));
 }
 
+// A billing_records row that, per computeRow, yields receivable=125, payable=80, profit=45
+// (100 pins, no fraud, payoutRate 1, marginPct 20, forex 1, all taxes/discounts 0).
+function rec(overrides: Record<string, unknown> = {}) {
+  return {
+    clientId: 1,
+    platformId: 1,
+    buyingHouseId: 1,
+    period: "2026-06",
+    appsflyerPins: 100,
+    fraudPins: 0,
+    payoutRate: "1",
+    marginPct: "20",
+    forexSellingRate: "1",
+    forexBuyingRate: "1",
+    salesTaxPct: "0",
+    remittanceTaxPct: "0",
+    withholdingTaxPct: "0",
+    bulkDiscountPct: "0",
+    platformBulkDiscountPct: "0",
+    ...overrides,
+  };
+}
+
 describe("GET /api/analytics/dashboard", () => {
   it("returns 400 for an invalid query param", async () => {
     const res = await get("?costModelId=not-a-number");
     expect(res.status).toBe(400);
   });
 
-  it("with no filters, queries with no where clause (unchanged from before filters existed)", async () => {
-    selectQueue.push([{ totalRevenue: "100", totalCost: "40", totalProfit: "60", transactionCount: 2 }]);
-    selectQueue.push([{ clientCount: 3, platformCount: 2, campaignCount: 5 }]);
+  it("with no filters, aggregates billing_records with no where clause and derives totals/counts from the rows", async () => {
+    selectQueue.push([
+      rec({ clientId: 1, platformId: 1 }),
+      rec({ clientId: 2, platformId: 1 }),
+      rec({ clientId: null, platformId: 2 }),
+    ]);
 
     const res = await get();
     expect(res.status).toBe(200);
     const json = await res.json();
-    expect(json.totalRevenue).toBe(100);
-    // Only the agg query calls .where(); with nothing to filter on it should be undefined.
+
+    // Each record contributes receivable=125, payable=80, profit=45.
+    expect(json.totalRevenue).toBeCloseTo(375);
+    expect(json.totalCost).toBeCloseTo(240);
+    expect(json.totalProfit).toBeCloseTo(135);
+    expect(json.marginPct).toBeCloseTo(36); // 135 / 375 * 100
+
+    expect(json.clientCount).toBe(2); // distinct non-null client ids {1,2}
+    expect(json.platformCount).toBe(2); // distinct platform ids {1,2}
+    expect(json.transactionCount).toBe(3); // row count
+    expect(json.campaignCount).toBe(0); // kept for shape only
+
+    // Only one select() call (the current-window fetch); no ids/dates -> where(undefined).
     expect(capturedWheres).toEqual([undefined]);
+
     // No date range supplied -> deltas stay null (no prior-period query is issued).
     expect(json.revenueChange).toBeNull();
     expect(json.profitChange).toBeNull();
@@ -58,26 +96,29 @@ describe("GET /api/analytics/dashboard", () => {
   });
 
   it("returns non-null revenue/profit/cost deltas when a date range is supplied", async () => {
-    // 1st select(): current-period aggregate
-    selectQueue.push([{ totalRevenue: "200", totalCost: "120", totalProfit: "80", transactionCount: 4 }]);
-    // 2nd select(): client/platform/campaign counts (unrelated to deltas)
-    selectQueue.push([{ clientCount: 2, platformCount: 1, campaignCount: 3 }]);
-    // 3rd select(): prior-period aggregate (same shape as the current one)
-    selectQueue.push([{ totalRevenue: "100", totalCost: "60", totalProfit: "40", transactionCount: 2 }]);
+    // 1st select(): current-period rows (2 records -> revenue 250, cost 160, profit 90)
+    selectQueue.push([rec(), rec()]);
+    // 2nd select(): prior-period rows (1 record -> revenue 125, cost 80, profit 45)
+    selectQueue.push([rec()]);
 
     const res = await get("?dateFrom=2026-06-01&dateTo=2026-06-30");
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.revenueChange).toBeCloseTo(100);
+
+    expect(body.totalRevenue).toBeCloseTo(250);
+    expect(body.totalCost).toBeCloseTo(160);
+    expect(body.totalProfit).toBeCloseTo(90);
+
+    expect(body.revenueChange).not.toBeNull();
+    expect(body.revenueChange).toBeCloseTo(100); // (250-125)/125*100
     expect(body.profitChange).not.toBeNull();
-    expect(body.profitChange).toBeCloseTo(100);
+    expect(body.profitChange).toBeCloseTo(100); // (90-45)/45*100
     expect(body.costChange).not.toBeNull();
-    expect(body.costChange).toBeCloseTo(100);
+    expect(body.costChange).toBeCloseTo(100); // (160-80)/80*100
   });
 
-  it("threads clientIds into an inArray condition on campaigns.client_id (narrows the aggregation)", async () => {
-    selectQueue.push([{ totalRevenue: "10", totalCost: "4", totalProfit: "6", transactionCount: 1 }]);
-    selectQueue.push([{ clientCount: 1, platformCount: 1, campaignCount: 1 }]);
+  it("threads clientIds into an inArray condition on billing_records.client_id (narrows the aggregation)", async () => {
+    selectQueue.push([rec({ clientId: 5 })]);
 
     const res = await get("?clientIds=5,6");
     expect(res.status).toBe(200);
@@ -86,7 +127,7 @@ describe("GET /api/analytics/dashboard", () => {
     const whereClause = capturedWheres[0];
     expect(whereClause).toBeDefined();
     const { sql, params } = dialect.sqlToQuery(whereClause as Parameters<typeof dialect.sqlToQuery>[0]);
-    expect(sql).toContain("campaigns");
+    expect(sql).toContain("billing_records");
     expect(sql).toContain("client_id");
     expect(sql).toContain(" in (");
     expect(params).toEqual([5, 6]);
