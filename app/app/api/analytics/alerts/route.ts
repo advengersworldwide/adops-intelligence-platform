@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import {
-  db, transactionsTable, campaignsTable, clientsTable, partnersTable,
+  db, clientsTable, partnersTable,
   billingsTable, paymentBillingsTable, paymentsTable,
   partnerPurchaseOrdersTable, partnerBillsTable, billingRecordsTable,
 } from "@workspace/db";
@@ -9,6 +9,7 @@ import { GetAlertsResponse } from "@workspace/api-zod";
 import { billingNetReceivable } from "@/app/api/billings/route";
 import { buildFraudSeries } from "@/lib/analytics/fraud";
 import { formatMoney } from "@/lib/analytics/currency";
+import { aggregateTotals, type AggRecord } from "@/lib/analytics/billing-records-agg";
 
 export const runtime = "nodejs";
 
@@ -26,30 +27,44 @@ type AlertRow = {
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const LOW_MARGIN_THRESHOLD = 10;
 
 export async function GET(): Promise<Response> {
-  const rows = await db.select({
-    campaignId: campaignsTable.id, campaignName: campaignsTable.name,
-    clientName: clientsTable.name, platformName: partnersTable.name,
-    totalSpend: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
-    totalProfit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
-  }).from(campaignsTable)
-    .leftJoin(clientsTable, eq(clientsTable.id, campaignsTable.clientId))
-    .leftJoin(partnersTable, eq(partnersTable.id, campaignsTable.platformId))
-    .leftJoin(transactionsTable, eq(transactionsTable.campaignId, campaignsTable.id))
-    .groupBy(campaignsTable.id, campaignsTable.name, clientsTable.name, partnersTable.name)
-    .having(sql`count(${transactionsTable.id}) > 0`);
+  const recs = await db.select().from(billingRecordsTable);
+
+  const clientIds = [...new Set(recs.map((r) => r.clientId).filter((id): id is number => id != null))];
+  const platformIds = [...new Set(recs.map((r) => r.platformId))];
+
+  const [clientRows, partnerRows] = await Promise.all([
+    clientIds.length
+      ? db.select({ id: clientsTable.id, name: clientsTable.name }).from(clientsTable).where(inArray(clientsTable.id, clientIds))
+      : Promise.resolve([]),
+    platformIds.length
+      ? db.select({ id: partnersTable.id, name: partnersTable.name }).from(partnersTable).where(inArray(partnersTable.id, platformIds))
+      : Promise.resolve([]),
+  ]);
+  const clientNameMap = new Map(clientRows.map((c) => [c.id, c.name]));
+  const partnerNameMap = new Map(partnerRows.map((p) => [p.id, p.name]));
 
   const alerts: AlertRow[] = [];
 
-  for (const row of rows) {
-    const spend = parseFloat(row.totalSpend ?? "0");
-    const profit = parseFloat(row.totalProfit ?? "0");
-    const margin = spend > 0 ? (profit / spend) * 100 : 0;
-    if (profit < 0) {
-      alerts.push({ id: `neg-${row.campaignId}`, type: "negative_profit", severity: "critical", message: `Campaign "${row.campaignName}" has negative profit of $${Math.abs(profit).toFixed(2)}`, campaignId: row.campaignId, campaignName: row.campaignName, clientName: row.clientName ?? null, platformName: row.platformName ?? null, value: profit });
-    } else if (margin < 10) {
-      alerts.push({ id: `low-${row.campaignId}`, type: "low_margin", severity: "warning", message: `Campaign "${row.campaignName}" has low margin of ${margin.toFixed(1)}%`, campaignId: row.campaignId, campaignName: row.campaignName, clientName: row.clientName ?? null, platformName: row.platformName ?? null, value: margin });
+  for (const r of recs) {
+    const t = aggregateTotals([r as AggRecord]);
+    const clientName = r.clientId != null ? (clientNameMap.get(r.clientId) ?? null) : null;
+    const platformName = partnerNameMap.get(r.platformId) ?? null;
+    const label = `${clientName ?? "Unknown client"} / ${platformName ?? "Unknown partner"} / ${r.period}`;
+    if (t.profit < 0) {
+      alerts.push({
+        id: `neg-${r.id}`, type: "negative_profit", severity: "critical",
+        message: `${label} has negative profit of ${formatMoney(Math.abs(t.profit), "PKR")}`,
+        campaignId: null, campaignName: null, label, clientName, platformName, value: t.profit,
+      });
+    } else if (t.marginPct < LOW_MARGIN_THRESHOLD) {
+      alerts.push({
+        id: `low-${r.id}`, type: "low_margin", severity: "warning",
+        message: `${label} has low margin of ${t.marginPct.toFixed(1)}%`,
+        campaignId: null, campaignName: null, label, clientName, platformName, value: t.marginPct,
+      });
     }
   }
 

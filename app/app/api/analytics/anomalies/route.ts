@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, clientsTable } from "@workspace/db";
+import { and } from "drizzle-orm";
+import { db, billingRecordsTable } from "@workspace/db";
 import { GetAnomaliesQueryParams, GetAnomaliesResponse } from "@workspace/api-zod";
 import { parseIdList } from "@/lib/analytics/parse-params";
-import { buildTransactionConditions } from "@/lib/analytics/route-filters";
+import { buildRecordConditions } from "@/lib/analytics/record-filters";
+import { aggregateBy, type AggRecord } from "@/lib/analytics/billing-records-agg";
 import { detectAnomalies } from "@/lib/analytics/anomalies";
 
 export const runtime = "nodejs";
 
-const METRIC_COLUMNS = {
-  revenue: transactionsTable.spend,
-  cost: transactionsTable.cost,
-  profit: transactionsTable.profit,
-} as const;
-type Metric = keyof typeof METRIC_COLUMNS;
+const METRIC_KEYS = ["revenue", "cost", "profit"] as const;
+type Metric = (typeof METRIC_KEYS)[number];
 
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
@@ -25,7 +22,7 @@ export async function GET(req: Request): Promise<Response> {
     rawMetric === "revenue" || rawMetric === "cost" || rawMetric === "profit" ? rawMetric : "profit";
   const threshold = qp.data.threshold ?? 2.5;
 
-  const conditions = buildTransactionConditions({
+  const conditions = buildRecordConditions({
     dateFrom: qp.data.dateFrom,
     dateTo: qp.data.dateTo,
     clientIds: parseIdList(qp.data.clientIds),
@@ -34,21 +31,19 @@ export async function GET(req: Request): Promise<Response> {
   });
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const rows = await db.select({
-    date: transactionsTable.date,
-    value: sql<string>`sum(${METRIC_COLUMNS[metric]})`,
-  }).from(transactionsTable)
-    .leftJoin(campaignsTable, eq(campaignsTable.id, transactionsTable.campaignId))
-    .leftJoin(clientsTable, eq(clientsTable.id, campaignsTable.clientId))
-    .where(whereClause).groupBy(transactionsTable.date).orderBy(transactionsTable.date);
+  const recs = await db.select().from(billingRecordsTable).where(whereClause);
 
-  const series = rows.map((r) => ({ date: r.date, value: parseFloat(r.value ?? "0") }));
+  const byPeriod = aggregateBy(recs as AggRecord[], (r) => r.period);
+  const series = Array.from(byPeriod.entries())
+    .map(([period, t]) => ({ date: period, value: t[metric] }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
   const pts = detectAnomalies(series.map((r) => r.value), threshold);
   const result = series.map((r, i) => ({
     date: r.date,
-    value: pts[i].value,
-    z: pts[i].z,
-    isAnomaly: pts[i].isAnomaly,
+    value: pts[i]!.value,
+    z: pts[i]!.z,
+    isAnomaly: pts[i]!.isAnomaly,
   }));
 
   return NextResponse.json(GetAnomaliesResponse.parse(result));

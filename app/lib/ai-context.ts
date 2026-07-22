@@ -1,33 +1,25 @@
-import { eq, gte, sum } from "drizzle-orm";
-import { db, clientsTable, partnersTable, campaignsTable, transactionsTable } from "@workspace/db";
+import { db, clientsTable, partnersTable, billingRecordsTable } from "@workspace/db";
+import { aggregateTotals, aggregateBy, type AggRecord } from "@/lib/analytics/billing-records-agg";
 
 export async function buildContext(): Promise<string> {
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  const dateStr = thirtyDaysAgo.toISOString().split("T")[0];
-
-  const [clients, platforms, campaigns, txAgg, campaignPerf] = await Promise.all([
-    db.select({ name: clientsTable.name }).from(clientsTable),
+  const [clients, platforms, recs] = await Promise.all([
+    db.select({ id: clientsTable.id, name: clientsTable.name }).from(clientsTable),
     db.select({ name: partnersTable.name }).from(partnersTable),
-    db.select({ id: campaignsTable.id, name: campaignsTable.name, clientName: clientsTable.name, platformName: partnersTable.name })
-      .from(campaignsTable)
-      .leftJoin(clientsTable, eq(campaignsTable.clientId, clientsTable.id))
-      .leftJoin(partnersTable, eq(campaignsTable.platformId, partnersTable.id))
-      .limit(50),
-    db.select({ totalSpend: sum(transactionsTable.spend), totalCost: sum(transactionsTable.cost), totalProfit: sum(transactionsTable.profit) })
-      .from(transactionsTable).where(gte(transactionsTable.date, dateStr!)),
-    db.select({ campaignId: transactionsTable.campaignId, totalSpend: sum(transactionsTable.spend), totalProfit: sum(transactionsTable.profit) })
-      .from(transactionsTable).where(gte(transactionsTable.date, dateStr!)).groupBy(transactionsTable.campaignId),
+    db.select().from(billingRecordsTable),
   ]);
 
   const fmt = (n: number) => `$${n.toFixed(2)}`;
   const pct = (n: number) => `${n.toFixed(1)}%`;
-  const totalSpend = parseFloat(txAgg[0]?.totalSpend ?? "0");
-  const totalCost = parseFloat(txAgg[0]?.totalCost ?? "0");
-  const totalProfit = parseFloat(txAgg[0]?.totalProfit ?? "0");
-  const overallMargin = totalSpend > 0 ? (totalProfit / totalSpend) * 100 : 0;
-  const campaignNameMap = new Map(campaigns.map(c => [c.id, c.name]));
-  const perfWithMargin = campaignPerf.map(c => { const spend = parseFloat(c.totalSpend ?? "0"); const profit = parseFloat(c.totalProfit ?? "0"); const margin = spend > 0 ? (profit / spend) * 100 : 0; return { name: campaignNameMap.get(c.campaignId) ?? `Campaign ${c.campaignId}`, profit, margin }; });
+
+  const clientNameMap = new Map(clients.map(c => [c.id, c.name]));
+  const totals = aggregateTotals(recs as AggRecord[]);
+
+  const byClient = aggregateBy(recs as AggRecord[], (r) => r.clientId);
+  const clientIds = [...byClient.keys()].filter((id): id is number => id != null);
+  const perfWithMargin = clientIds.map((id) => {
+    const t = byClient.get(id)!;
+    return { name: clientNameMap.get(id) ?? `Client ${id}`, profit: t.profit, margin: t.marginPct };
+  });
   const top5 = [...perfWithMargin].sort((a, b) => b.profit - a.profit).slice(0, 5);
   const bottom5 = [...perfWithMargin].sort((a, b) => a.margin - b.margin).slice(0, 5);
   const alerts = perfWithMargin.filter(c => c.profit < 0 || c.margin < 10);
@@ -37,11 +29,10 @@ You have access to real-time advertising operations data. Today: ${new Date().to
 
 CLIENTS (${clients.length}): ${clients.length ? clients.map(c => c.name).join(", ") : "None"}
 PLATFORMS (${platforms.length}): ${platforms.length ? platforms.map(p => p.name).join(", ") : "None"}
-CAMPAIGNS (${campaigns.length} total): ${campaigns.length ? campaigns.map(c => `${c.name} [${c.clientName ?? "?"}/${c.platformName ?? "?"}]`).join(", ") + (campaigns.length === 50 ? " (showing first 50)" : "") : "None"}
-LAST 30 DAYS:
-  Spend: ${fmt(totalSpend)} | Cost: ${fmt(totalCost)} | Profit: ${fmt(totalProfit)} | Margin: ${pct(overallMargin)}
-TOP 5 CAMPAIGNS BY PROFIT: ${top5.length ? top5.map(c => `${c.name}: ${fmt(c.profit)}`).join(", ") : "No transaction data"}
-BOTTOM 5 CAMPAIGNS BY MARGIN: ${bottom5.length ? bottom5.map(c => `${c.name}: ${pct(c.margin)}`).join(", ") : "No transaction data"}
+BILLING RECORDS (${recs.length} total across ${clientIds.length} client${clientIds.length === 1 ? "" : "s"})
+TOTALS: Revenue: ${fmt(totals.revenue)} | Cost: ${fmt(totals.cost)} | Profit: ${fmt(totals.profit)} | Margin: ${pct(totals.marginPct)}
+TOP 5 CLIENTS BY PROFIT: ${top5.length ? top5.map(c => `${c.name}: ${fmt(c.profit)}`).join(", ") : "No billing data"}
+BOTTOM 5 CLIENTS BY MARGIN: ${bottom5.length ? bottom5.map(c => `${c.name}: ${pct(c.margin)}`).join(", ") : "No billing data"}
 ACTIVE ALERTS: ${alerts.length ? alerts.map(c => `${c.name} (profit: ${fmt(c.profit)}, margin: ${pct(c.margin)})`).join("; ") : "None"}
 
 Answer questions about this data concisely and accurately.
