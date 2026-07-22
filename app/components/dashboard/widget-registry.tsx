@@ -28,17 +28,17 @@ import { NeedsAttention } from "./widgets/NeedsAttention";
 const KPI = { w: 3, h: 3, minW: 2, minH: 2 };
 
 export const widgetRegistry: Record<string, WidgetDef> = {
-  "revenue-kpi": { id: "revenue-kpi", label: "Revenue", description: "Total client spend", category: "kpi", permission: null, defaultLayout: KPI, Component: KpiRevenue },
+  "revenue-kpi": { id: "revenue-kpi", label: "Revenue", description: "Total client revenue", category: "kpi", permission: null, defaultLayout: KPI, Component: KpiRevenue },
   "cost-kpi": { id: "cost-kpi", label: "Cost", description: "Platform cost", category: "kpi", permission: "View Cost", defaultLayout: KPI, Component: KpiCost },
   "profit-kpi": { id: "profit-kpi", label: "Profit", description: "Net profit", category: "kpi", permission: "View Cost", defaultLayout: KPI, Component: KpiProfit },
   "margin-kpi": { id: "margin-kpi", label: "Margin %", description: "Profit / revenue", category: "kpi", permission: "View Cost", defaultLayout: KPI, Component: KpiMargin },
-  "counts-row": { id: "counts-row", label: "Counts", description: "Clients / platforms / campaigns", category: "kpi", permission: null, defaultLayout: { w: 12, h: 3, minW: 6, minH: 2 }, Component: Counts },
+  "counts-row": { id: "counts-row", label: "Counts", description: "Clients / platforms / records", category: "kpi", permission: null, defaultLayout: { w: 12, h: 3, minW: 6, minH: 2 }, Component: Counts },
   "profit-chart": { id: "profit-chart", label: "Profit & Revenue", description: "Trend over time", category: "profitability", permission: null, defaultLayout: { w: 8, h: 9, minW: 4, minH: 6 }, Component: ProfitTrend },
   "alerts-panel": { id: "alerts-panel", label: "Alerts", description: "Risk alerts", category: "risk", permission: null, defaultLayout: { w: 4, h: 9, minW: 3, minH: 4 }, Component: Alerts },
   "working-capital": { id: "working-capital", label: "Working Capital", description: "AR / AP / cash", category: "financial-ops", permission: "View Payments", defaultLayout: { w: 4, h: 8, minW: 3, minH: 5 }, Component: WorkingCapital },
   "client-performance-chart": { id: "client-performance-chart", label: "Client Performance", description: "By client", category: "profitability", permission: "View Clients", defaultLayout: { w: 6, h: 8, minW: 4, minH: 5 }, Component: ClientPerformance },
   "platform-performance-chart": { id: "platform-performance-chart", label: "Platform Performance", description: "By platform", category: "profitability", permission: "View Partners", defaultLayout: { w: 6, h: 8, minW: 4, minH: 5 }, Component: PlatformPerformance },
-  "transactions-table": { id: "transactions-table", label: "Recent Transactions", description: "Latest transactions", category: "activity", permission: "View Transactions", defaultLayout: { w: 12, h: 8, minW: 6, minH: 5 }, Component: RecentTransactions },
+  "transactions-table": { id: "transactions-table", label: "Recent Billing Records", description: "Latest billing records", category: "activity", permission: "View Transactions", defaultLayout: { w: 12, h: 8, minW: 6, minH: 5 }, Component: RecentTransactions },
   "ai-insights": { id: "ai-insights", label: "AI: What changed", description: "Auto-generated insight cards", category: "risk", permission: "View Analytics", defaultLayout: { w: 12, h: 5, minW: 6, minH: 4 }, Component: AiInsights },
   "concentration": { id: "concentration", label: "Concentration", description: "Top-client Pareto + HHI", category: "relationships", permission: "View Analytics", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: Concentration },
   "forecast-trend": { id: "forecast-trend", label: "Forecast", description: "Trend + projection band", category: "profitability", permission: null, defaultLayout: { w: 8, h: 9, minW: 4, minH: 6 }, Component: ForecastTrend },
@@ -52,7 +52,7 @@ export const widgetRegistry: Record<string, WidgetDef> = {
   "margin-quadrant": { id: "margin-quadrant", label: "Revenue × margin", description: "Bubble quadrant", category: "profitability", permission: "View Cost", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: MarginQuadrantWidget },
   "profit-waterfall": { id: "profit-waterfall", label: "Profit leakage", description: "Gross → net waterfall", category: "profitability", permission: "View Cost", defaultLayout: { w: 8, h: 9, minW: 4, minH: 6 }, Component: ProfitWaterfall },
   "fraud-trend": { id: "fraud-trend", label: "Traffic quality", description: "Fraud-rate trend", category: "risk", permission: "View Analytics", defaultLayout: { w: 6, h: 8, minW: 4, minH: 5 }, Component: FraudTrend },
-  "needs-attention": { id: "needs-attention", label: "Needs attention", description: "Loss / low-margin transactions", category: "activity", permission: "View Transactions", defaultLayout: { w: 12, h: 8, minW: 6, minH: 5 }, Component: NeedsAttention },
+  "needs-attention": { id: "needs-attention", label: "Needs attention", description: "Loss / low-margin billing records", category: "activity", permission: "View Transactions", defaultLayout: { w: 12, h: 8, minW: 6, minH: 5 }, Component: NeedsAttention },
 };
 
 export const widgetList = Object.values(widgetRegistry);
