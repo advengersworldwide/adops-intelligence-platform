@@ -12,5 +12,5 @@ export function computePreset(key: string, now = new Date()): DashRange {
   return { dateFrom: iso(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))), dateTo: to }; // mtd
 }
 
-export const DashboardRangeContext = createContext<DashRange>(computePreset("mtd"));
+export const DashboardRangeContext = createContext<DashRange>(computePreset("ytd"));
 export function useDashboardRange(): DashRange { return useContext(DashboardRangeContext); }

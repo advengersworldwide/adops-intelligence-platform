@@ -33,8 +33,8 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 function DashboardContent() {
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const [rangeKey, setRangeKey] = useState("mtd");
-  const [range, setRange] = useState<DashRange>(() => computePreset("mtd"));
+  const [rangeKey, setRangeKey] = useState("ytd");
+  const [range, setRange] = useState<DashRange>(() => computePreset("ytd"));
   const { width, containerRef } = useContainerWidth();
   const perms = usePermissionSet();
   const dash = useDashboardLayout();
