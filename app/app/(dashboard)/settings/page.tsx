@@ -101,7 +101,7 @@ export default function SettingsPage() {
   );
 
   const [baseCurrency, setBaseCurrency] = useState<string>(
-    () => (typeof window !== "undefined" ? localStorage.getItem("adops-base-currency") : null) || "USD"
+    () => (typeof window !== "undefined" ? localStorage.getItem("adops-base-currency") : null) || "PKR"
   );
   const [rateMode, setRateMode] = useState<string>(
     () => (typeof window !== "undefined" ? localStorage.getItem("adops-rate-mode") : null) || "Automatic"
@@ -142,6 +142,10 @@ export default function SettingsPage() {
   const { data: paymentTerms } = useListPaymentTerms();
   const createPaymentTerm = useCreatePaymentTerm({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListPaymentTermsQueryKey() }); toast({ title: "Payment term added" }); } } });
   const deletePaymentTermM = useDeletePaymentTerm({ mutation: { onSuccess: () => { qc.invalidateQueries({ queryKey: getListPaymentTermsQueryKey() }); toast({ title: "Payment term deleted" }); } } });
+  const { data: taxSettingsForCurrency } = useGetTaxSettings();
+  const updateBaseCurrency = useUpdateTaxSettings({
+    mutation: { onSuccess: () => qc.invalidateQueries({ queryKey: getGetTaxSettingsQueryKey() }) },
+  });
 
   // Load roles and users from the API on mount
   useEffect(() => {
@@ -172,9 +176,19 @@ export default function SettingsPage() {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (taxSettingsForCurrency?.baseCurrency) {
+      setBaseCurrency(taxSettingsForCurrency.baseCurrency);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("adops-base-currency", taxSettingsForCurrency.baseCurrency);
+      }
+    }
+  }, [taxSettingsForCurrency?.baseCurrency]);
+
   const handleBaseCurrencyChange = (val: string) => {
     setBaseCurrency(val);
     localStorage.setItem("adops-base-currency", val);
+    updateBaseCurrency.mutate({ data: { baseCurrency: val } });
     if (rateMode === "Automatic") {
       fetchRates(val);
     } else {
