@@ -1,4 +1,4 @@
-import { pgTable, serial, numeric, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, numeric, timestamp, text } from "drizzle-orm/pg-core";
 
 // Global tax configuration. The app maintains exactly one row (id = 1).
 export const taxSettingsTable = pgTable("tax_settings", {
@@ -6,6 +6,7 @@ export const taxSettingsTable = pgTable("tax_settings", {
   remittanceTaxPct: numeric("remittance_tax_pct", { precision: 6, scale: 2 }).notNull(),
   salesTaxPct: numeric("sales_tax_pct", { precision: 6, scale: 2 }).notNull(),
   withholdingTaxPct: numeric("withholding_tax_pct", { precision: 6, scale: 2 }).notNull(),
+  baseCurrency: text("base_currency").notNull().default("PKR"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
