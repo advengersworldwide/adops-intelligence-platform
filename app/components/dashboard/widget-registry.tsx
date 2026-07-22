@@ -19,6 +19,11 @@ import { Aging } from "./widgets/Aging";
 import { InvoiceFunnel } from "./widgets/InvoiceFunnel";
 import { PoPacing } from "./widgets/PoPacing";
 import { KpiCashPosition } from "./widgets/KpiCashPosition";
+import { RevenueMix } from "./widgets/RevenueMix";
+import { MarginQuadrantWidget } from "./widgets/MarginQuadrantWidget";
+import { ProfitWaterfall } from "./widgets/ProfitWaterfall";
+import { FraudTrend } from "./widgets/FraudTrend";
+import { NeedsAttention } from "./widgets/NeedsAttention";
 
 const KPI = { w: 3, h: 3, minW: 2, minH: 2 };
 
@@ -43,6 +48,11 @@ export const widgetRegistry: Record<string, WidgetDef> = {
   "invoice-funnel": { id: "invoice-funnel", label: "Invoice status", description: "Invoice lifecycle funnel", category: "financial-ops", permission: "View Billings", defaultLayout: { w: 6, h: 8, minW: 4, minH: 5 }, Component: InvoiceFunnel },
   "po-pacing": { id: "po-pacing", label: "PO pacing", description: "PPO burn-down vs budget", category: "financial-ops", permission: "View Purchase Orders", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: PoPacing },
   "cash-position-kpi": { id: "cash-position-kpi", label: "Cash Position", description: "Receivables minus payables", category: "kpi", permission: "View Payments", defaultLayout: { w: 3, h: 3, minW: 2, minH: 2 }, Component: KpiCashPosition },
+  "revenue-mix": { id: "revenue-mix", label: "Revenue mix", description: "Client → partner treemap", category: "relationships", permission: "View Analytics", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: RevenueMix },
+  "margin-quadrant": { id: "margin-quadrant", label: "Revenue × margin", description: "Bubble quadrant", category: "profitability", permission: "View Cost", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: MarginQuadrantWidget },
+  "profit-waterfall": { id: "profit-waterfall", label: "Profit leakage", description: "Gross → net waterfall", category: "profitability", permission: "View Cost", defaultLayout: { w: 8, h: 9, minW: 4, minH: 6 }, Component: ProfitWaterfall },
+  "fraud-trend": { id: "fraud-trend", label: "Traffic quality", description: "Fraud-rate trend", category: "risk", permission: "View Analytics", defaultLayout: { w: 6, h: 8, minW: 4, minH: 5 }, Component: FraudTrend },
+  "needs-attention": { id: "needs-attention", label: "Needs attention", description: "Loss / low-margin transactions", category: "activity", permission: "View Transactions", defaultLayout: { w: 12, h: 8, minW: 6, minH: 5 }, Component: NeedsAttention },
 };
 
 export const widgetList = Object.values(widgetRegistry);
