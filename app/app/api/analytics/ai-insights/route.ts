@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { and, gte, lte, sql } from "drizzle-orm";
-import { db, transactionsTable } from "@workspace/db";
+import { and, gte, lte } from "drizzle-orm";
+import { db, billingRecordsTable } from "@workspace/db";
 import { GetAiInsightsResponse } from "@workspace/api-zod";
 import { requireAuth, isAuthError } from "@/lib/auth/require";
 import { percentDelta, marginPct } from "@/lib/analytics/metrics";
+import { aggregateTotals, type AggRecord } from "@/lib/analytics/billing-records-agg";
+import { monthOf } from "@/lib/analytics/record-filters";
 
 export const runtime = "nodejs";
 
@@ -37,18 +39,13 @@ function toIsoDate(d: Date): string {
 type PeriodTotals = { revenue: number; cost: number; profit: number };
 
 async function sumPeriod(dateFrom: string, dateTo: string): Promise<PeriodTotals> {
-  const [row] = await db.select({
-    revenue: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
-    cost: sql<string>`coalesce(sum(${transactionsTable.cost}), 0)`,
-    profit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
-  }).from(transactionsTable)
-    .where(and(gte(transactionsTable.date, dateFrom), lte(transactionsTable.date, dateTo)));
+  const periodFrom = monthOf(dateFrom)!;
+  const periodTo = monthOf(dateTo)!;
+  const recs = await db.select().from(billingRecordsTable)
+    .where(and(gte(billingRecordsTable.period, periodFrom), lte(billingRecordsTable.period, periodTo)));
 
-  return {
-    revenue: parseFloat(row?.revenue ?? "0"),
-    cost: parseFloat(row?.cost ?? "0"),
-    profit: parseFloat(row?.profit ?? "0"),
-  };
+  const totals = aggregateTotals(recs as AggRecord[]);
+  return { revenue: totals.revenue, cost: totals.cost, profit: totals.profit };
 }
 
 type RawInsight = { title: string; detail: string; sentiment: "positive" | "negative" | "neutral" };
