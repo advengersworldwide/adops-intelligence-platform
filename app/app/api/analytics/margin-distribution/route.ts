@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, clientsTable } from "@workspace/db";
+import { and } from "drizzle-orm";
+import { db, billingRecordsTable } from "@workspace/db";
 import { GetMarginDistributionQueryParams, GetMarginDistributionResponse } from "@workspace/api-zod";
 import { parseIdList } from "@/lib/analytics/parse-params";
-import { buildTransactionConditions } from "@/lib/analytics/route-filters";
+import { buildRecordConditions } from "@/lib/analytics/record-filters";
 import { bucketMargins } from "@/lib/analytics/distribution";
+import { computeRow } from "@/lib/compute-row";
+import type { AggRecord } from "@/lib/analytics/billing-records-agg";
 
 export const runtime = "nodejs";
 
@@ -13,7 +15,7 @@ export async function GET(req: Request): Promise<Response> {
   const qp = GetMarginDistributionQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });
 
-  const conditions = buildTransactionConditions({
+  const conditions = buildRecordConditions({
     dateFrom: qp.data.dateFrom,
     dateTo: qp.data.dateTo,
     clientIds: parseIdList(qp.data.clientIds),
@@ -22,22 +24,14 @@ export async function GET(req: Request): Promise<Response> {
   });
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const rows = await db.select({
-    campaignId: campaignsTable.id,
-    spend: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
-    profit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
-  }).from(clientsTable)
-    .leftJoin(campaignsTable, eq(campaignsTable.clientId, clientsTable.id))
-    .leftJoin(transactionsTable, and(eq(transactionsTable.campaignId, campaignsTable.id), whereClause))
-    .groupBy(campaignsTable.id);
+  const recs = await db.select().from(billingRecordsTable).where(whereClause);
 
-  const margins = rows
-    .filter(r => r.campaignId !== null)
-    .map(r => {
-      const spend = parseFloat(r.spend ?? "0");
-      const profit = parseFloat(r.profit ?? "0");
-      return spend > 0 ? (profit / spend) * 100 : 0;
-    });
+  const margins = (recs as AggRecord[])
+    .map((r) => {
+      const c = computeRow(r);
+      return c.receivablePkr > 0 ? (c.netMarginPkr / c.receivablePkr) * 100 : null;
+    })
+    .filter((m): m is number => m !== null);
 
   const buckets = bucketMargins(margins, 10);
 

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, clientsTable, partnersTable } from "@workspace/db";
+import { and, inArray } from "drizzle-orm";
+import { db, billingRecordsTable, clientsTable, partnersTable } from "@workspace/db";
 import { GetMarginMatrixQueryParams, GetMarginMatrixResponse } from "@workspace/api-zod";
 import { parseIdList } from "@/lib/analytics/parse-params";
-import { buildTransactionConditions } from "@/lib/analytics/route-filters";
+import { buildRecordConditions } from "@/lib/analytics/record-filters";
+import { aggregateBy, type AggRecord } from "@/lib/analytics/billing-records-agg";
 import { buildMatrix } from "@/lib/analytics/matrix";
 
 export const runtime = "nodejs";
@@ -15,7 +16,7 @@ export async function GET(req: Request): Promise<Response> {
   const qp = GetMarginMatrixQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });
 
-  const conditions = buildTransactionConditions({
+  const conditions = buildRecordConditions({
     dateFrom: qp.data.dateFrom,
     dateTo: qp.data.dateTo,
     clientIds: parseIdList(qp.data.clientIds),
@@ -24,24 +25,45 @@ export async function GET(req: Request): Promise<Response> {
   });
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const rows = await db.select({
-    client: clientsTable.name,
-    partner: partnersTable.name,
-    spend: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
-    profit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
-  }).from(transactionsTable)
-    .innerJoin(campaignsTable, eq(transactionsTable.campaignId, campaignsTable.id))
-    .innerJoin(clientsTable, eq(campaignsTable.clientId, clientsTable.id))
-    .innerJoin(partnersTable, eq(campaignsTable.platformId, partnersTable.id))
-    .where(whereClause)
-    .groupBy(clientsTable.name, partnersTable.name);
+  const recs = await db.select().from(billingRecordsTable).where(whereClause);
 
-  const grouped = rows.map(r => ({
-    client: r.client,
-    partner: r.partner,
-    spend: parseFloat(r.spend ?? "0"),
-    profit: parseFloat(r.profit ?? "0"),
-  }));
+  const byPair = aggregateBy(
+    (recs as AggRecord[]).filter((r) => r.clientId != null),
+    (r) => `${r.clientId}:${r.platformId}`,
+  );
+
+  const clientIds = new Set<number>();
+  const partnerIds = new Set<number>();
+  for (const key of byPair.keys()) {
+    const [clientId, platformId] = key.split(":").map(Number);
+    clientIds.add(clientId);
+    partnerIds.add(platformId);
+  }
+
+  const [clientRows, partnerRows] = await Promise.all([
+    clientIds.size
+      ? db.select({ id: clientsTable.id, name: clientsTable.name })
+          .from(clientsTable)
+          .where(inArray(clientsTable.id, [...clientIds]))
+      : Promise.resolve([]),
+    partnerIds.size
+      ? db.select({ id: partnersTable.id, name: partnersTable.name })
+          .from(partnersTable)
+          .where(inArray(partnersTable.id, [...partnerIds]))
+      : Promise.resolve([]),
+  ]);
+  const clientMap = new Map(clientRows.map((c) => [c.id, c.name]));
+  const partnerMap = new Map(partnerRows.map((p) => [p.id, p.name]));
+
+  const grouped = [...byPair.entries()].map(([key, t]) => {
+    const [clientId, platformId] = key.split(":").map(Number);
+    return {
+      client: clientMap.get(clientId) ?? `Client ${clientId}`,
+      partner: partnerMap.get(platformId) ?? `Partner ${platformId}`,
+      spend: t.revenue,
+      profit: t.profit,
+    };
+  });
 
   const clientRevenue = new Map<string, number>();
   const partnerRevenue = new Map<string, number>();
