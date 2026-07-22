@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, clientsTable } from "@workspace/db";
+import { and } from "drizzle-orm";
+import { db, billingRecordsTable } from "@workspace/db";
 import { GetProfitOverTimeQueryParams, GetProfitOverTimeResponse } from "@workspace/api-zod";
 import { parseIdList } from "@/lib/analytics/parse-params";
-import { buildTransactionConditions } from "@/lib/analytics/route-filters";
+import { buildRecordConditions } from "@/lib/analytics/record-filters";
+import { aggregateBy, type AggRecord } from "@/lib/analytics/billing-records-agg";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,7 @@ export async function GET(req: Request): Promise<Response> {
   const qp = GetProfitOverTimeQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });
 
-  const conditions = buildTransactionConditions({
+  const conditions = buildRecordConditions({
     dateFrom: qp.data.dateFrom,
     dateTo: qp.data.dateTo,
     clientIds: parseIdList(qp.data.clientIds),
@@ -21,17 +22,12 @@ export async function GET(req: Request): Promise<Response> {
   });
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const rows = await db.select({
-    date: transactionsTable.date,
-    revenue: sql<string>`sum(${transactionsTable.spend})`,
-    cost: sql<string>`sum(${transactionsTable.cost})`,
-    profit: sql<string>`sum(${transactionsTable.profit})`,
-  }).from(transactionsTable)
-    .leftJoin(campaignsTable, eq(campaignsTable.id, transactionsTable.campaignId))
-    .leftJoin(clientsTable, eq(clientsTable.id, campaignsTable.clientId))
-    .where(whereClause).groupBy(transactionsTable.date).orderBy(transactionsTable.date);
+  const recs = await db.select().from(billingRecordsTable).where(whereClause);
 
-  return NextResponse.json(GetProfitOverTimeResponse.parse(rows.map(r => ({
-    date: r.date, revenue: parseFloat(r.revenue ?? "0"), cost: parseFloat(r.cost ?? "0"), profit: parseFloat(r.profit ?? "0"),
-  }))));
+  const byPeriod = aggregateBy(recs as AggRecord[], (r) => r.period);
+  const points = Array.from(byPeriod.entries())
+    .map(([period, t]) => ({ date: period, revenue: t.revenue, cost: t.cost, profit: t.profit }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  return NextResponse.json(GetProfitOverTimeResponse.parse(points));
 }

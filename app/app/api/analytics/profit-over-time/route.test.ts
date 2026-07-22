@@ -9,9 +9,6 @@ const capturedWheres: unknown[] = [];
 function makeChain() {
   const chain: any = {
     from: () => chain,
-    leftJoin: () => chain,
-    groupBy: () => chain,
-    orderBy: () => chain,
     where: (w: unknown) => {
       capturedWheres.push(w);
       return chain;
@@ -37,21 +34,64 @@ async function get(qs = "") {
   return GET(new Request(`http://localhost/api/analytics/profit-over-time${qs}`));
 }
 
+// A billing_records row that, per computeRow, yields receivable=125, payable=80, profit=45
+// (100 pins, no fraud, payoutRate 1, marginPct 20, forex 1, all taxes/discounts 0).
+function rec(overrides: Record<string, unknown> = {}) {
+  return {
+    clientId: 1,
+    platformId: 1,
+    buyingHouseId: 1,
+    period: "2026-06",
+    appsflyerPins: 100,
+    fraudPins: 0,
+    payoutRate: "1",
+    marginPct: "20",
+    forexSellingRate: "1",
+    forexBuyingRate: "1",
+    salesTaxPct: "0",
+    remittanceTaxPct: "0",
+    withholdingTaxPct: "0",
+    bulkDiscountPct: "0",
+    platformBulkDiscountPct: "0",
+    ...overrides,
+  };
+}
+
 describe("GET /api/analytics/profit-over-time", () => {
   it("returns 400 for an invalid query param", async () => {
     const res = await get("?costModelId=not-a-number");
     expect(res.status).toBe(400);
   });
 
-  it("with no filters, queries with no where clause (unchanged from before filters existed)", async () => {
-    selectQueue.push([{ date: "2026-01-01", revenue: "100", cost: "40", profit: "60" }]);
+  it("with no filters, aggregates billing_records by period and returns points sorted ascending", async () => {
+    selectQueue.push([
+      rec({ period: "2026-06" }),
+      rec({ period: "2026-05" }),
+      rec({ period: "2026-06" }),
+    ]);
     const res = await get();
     expect(res.status).toBe(200);
+    const json = await res.json();
+
+    // Only one select() call (billing_records); no ids/dates -> where(undefined).
     expect(capturedWheres).toEqual([undefined]);
+
+    expect(json).toHaveLength(2);
+    expect(json[0].date).toBe("2026-05");
+    expect(json[1].date).toBe("2026-06");
+
+    // Each rec contributes receivable=125, payable=80, profit=45.
+    expect(json[0].revenue).toBeCloseTo(125);
+    expect(json[0].cost).toBeCloseTo(80);
+    expect(json[0].profit).toBeCloseTo(45);
+
+    expect(json[1].revenue).toBeCloseTo(250);
+    expect(json[1].cost).toBeCloseTo(160);
+    expect(json[1].profit).toBeCloseTo(90);
   });
 
-  it("threads clientIds into an inArray condition on campaigns.client_id (narrows the aggregation)", async () => {
-    selectQueue.push([{ date: "2026-01-01", revenue: "10", cost: "4", profit: "6" }]);
+  it("threads clientIds into an inArray condition on billing_records.client_id (narrows the aggregation)", async () => {
+    selectQueue.push([rec({ clientId: 5 })]);
     const res = await get("?clientIds=5,6");
     expect(res.status).toBe(200);
 
@@ -59,7 +99,7 @@ describe("GET /api/analytics/profit-over-time", () => {
     const whereClause = capturedWheres[0];
     expect(whereClause).toBeDefined();
     const { sql, params } = dialect.sqlToQuery(whereClause as Parameters<typeof dialect.sqlToQuery>[0]);
-    expect(sql).toContain("campaigns");
+    expect(sql).toContain("billing_records");
     expect(sql).toContain("client_id");
     expect(sql).toContain(" in (");
     expect(params).toEqual([5, 6]);

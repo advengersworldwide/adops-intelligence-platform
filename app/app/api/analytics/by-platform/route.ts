@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { and, eq, sql } from "drizzle-orm";
-import { db, transactionsTable, campaignsTable, partnersTable, clientsTable } from "@workspace/db";
+import { and, inArray } from "drizzle-orm";
+import { db, billingRecordsTable, partnersTable } from "@workspace/db";
 import { GetAnalyticsByPartnerQueryParams, GetAnalyticsByPartnerResponse } from "@workspace/api-zod";
 import { parseIdList } from "@/lib/analytics/parse-params";
-import { buildTransactionConditions } from "@/lib/analytics/route-filters";
+import { buildRecordConditions } from "@/lib/analytics/record-filters";
+import { aggregateBy, type AggRecord } from "@/lib/analytics/billing-records-agg";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,7 @@ export async function GET(req: Request): Promise<Response> {
   const qp = GetAnalyticsByPartnerQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });
 
-  const conditions = buildTransactionConditions({
+  const conditions = buildRecordConditions({
     dateFrom: qp.data.dateFrom,
     dateTo: qp.data.dateTo,
     clientIds: parseIdList(qp.data.clientIds),
@@ -21,22 +22,37 @@ export async function GET(req: Request): Promise<Response> {
   });
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-  const rows = await db.select({
-    platformId: partnersTable.id, platformName: partnersTable.name,
-    revenue: sql<string>`coalesce(sum(${transactionsTable.spend}), 0)`,
-    cost: sql<string>`coalesce(sum(${transactionsTable.cost}), 0)`,
-    profit: sql<string>`coalesce(sum(${transactionsTable.profit}), 0)`,
-    transactionCount: sql<number>`count(${transactionsTable.id})::int`,
-  }).from(partnersTable)
-    .leftJoin(campaignsTable, eq(campaignsTable.platformId, partnersTable.id))
-    .leftJoin(clientsTable, eq(clientsTable.id, campaignsTable.clientId))
-    .leftJoin(transactionsTable, and(eq(transactionsTable.campaignId, campaignsTable.id), whereClause))
-    .groupBy(partnersTable.id, partnersTable.name)
-    .orderBy(sql`sum(${transactionsTable.profit}) desc nulls last`);
+  const recs = await db.select().from(billingRecordsTable).where(whereClause);
 
-  return NextResponse.json(GetAnalyticsByPartnerResponse.parse(rows.map(r => {
-    const revenue = parseFloat(r.revenue ?? "0");
-    const profit = parseFloat(r.profit ?? "0");
-    return { platformId: r.platformId, platformName: r.platformName, revenue, cost: parseFloat(r.cost ?? "0"), profit, marginPct: revenue > 0 ? (profit / revenue) * 100 : 0, transactionCount: r.transactionCount ?? 0 };
-  })));
+  const byPlatform = aggregateBy(recs as AggRecord[], (r) => r.platformId);
+  const platformIds = [...byPlatform.keys()];
+
+  const counts = new Map<number, number>();
+  for (const r of recs as AggRecord[]) {
+    counts.set(r.platformId, (counts.get(r.platformId) ?? 0) + 1);
+  }
+
+  const partnerRows = platformIds.length
+    ? await db.select({ id: partnersTable.id, name: partnersTable.name })
+        .from(partnersTable)
+        .where(inArray(partnersTable.id, platformIds))
+    : [];
+  const partnerMap = new Map(partnerRows.map((p) => [p.id, p.name]));
+
+  const rows = platformIds
+    .map((id) => {
+      const t = byPlatform.get(id)!;
+      return {
+        platformId: id,
+        platformName: partnerMap.get(id) ?? `Platform ${id}`,
+        revenue: t.revenue,
+        cost: t.cost,
+        profit: t.profit,
+        marginPct: t.marginPct,
+        transactionCount: counts.get(id) ?? 0,
+      };
+    })
+    .sort((a, b) => b.profit - a.profit);
+
+  return NextResponse.json(GetAnalyticsByPartnerResponse.parse(rows));
 }
