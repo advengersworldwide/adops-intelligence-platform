@@ -1334,29 +1334,6 @@ buyingHouseId?: number | null;
 clientId?: number | null;
 };
 
-export type ListTransactionsParams = {
-/**
- * @nullable
- */
-clientId?: number | null;
-/**
- * @nullable
- */
-platformId?: number | null;
-/**
- * @nullable
- */
-campaignId?: number | null;
-/**
- * @nullable
- */
-dateFrom?: string | null;
-/**
- * @nullable
- */
-dateTo?: string | null;
-};
-
 export type GetDashboardSummaryParams = {
 /**
  * @nullable
@@ -1768,21 +1745,6 @@ clientId?: number | null;
  * @nullable
  */
 period?: string | null;
-};
-
-export type ListBillsParams = {
-/**
- * @nullable
- */
-clientId?: number | null;
-/**
- * @nullable
- */
-buyingHouseId?: number | null;
-/**
- * @nullable
- */
-status?: string | null;
 };
 
 export type ListCostResourcesParams = {
