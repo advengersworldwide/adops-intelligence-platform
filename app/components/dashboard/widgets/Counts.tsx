@@ -1,6 +1,6 @@
 "use client";
 
-import { Users, Monitor, Megaphone } from "lucide-react";
+import { Users, Monitor, FileText } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardWidget } from "@/components/dashboard/DashboardWidget";
 import { useAdjustedSummary } from "@/lib/dashboard/use-adjusted-summary";
@@ -26,10 +26,10 @@ export function Counts() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-orange-50 dark:bg-orange-950 p-2.5 text-orange-600"><Megaphone className="h-4 w-4" /></div>
+          <div className="rounded-xl bg-orange-50 dark:bg-orange-950 p-2.5 text-orange-600"><FileText className="h-4 w-4" /></div>
           <div>
-            <p className="text-xs text-muted-foreground">Campaigns</p>
-            {isLoading ? <Skeleton className="h-5 w-8 mt-1" /> : <p className="font-bold text-lg text-foreground">{adjustedSummary?.campaignCount ?? 0}</p>}
+            <p className="text-xs text-muted-foreground">Records</p>
+            {isLoading ? <Skeleton className="h-5 w-8 mt-1" /> : <p className="font-bold text-lg text-foreground">{adjustedSummary?.transactionCount ?? 0}</p>}
           </div>
         </div>
       </div>
