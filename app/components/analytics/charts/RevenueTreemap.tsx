@@ -64,6 +64,7 @@ export function RevenueTreemap({ cells, currency }: RevenueTreemapProps) {
   }
 
   return (
+    <>
     <ResponsiveChart width="100%" height={340}>
       <Treemap
         // recharts' TreemapDataType requires an index signature our plain
@@ -82,5 +83,10 @@ export function RevenueTreemap({ cells, currency }: RevenueTreemapProps) {
         />
       </Treemap>
     </ResponsiveChart>
+    <div className="mt-2 flex flex-wrap justify-center gap-3 text-[10px] text-muted-foreground">
+      <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "hsl(221,83%,53%)" }} /> Client</span>
+      <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "hsl(221,70%,66%)" }} /> Partner</span>
+    </div>
+    </>
   );
 }

@@ -32,6 +32,7 @@ export function AgingBars({ buckets, currency, title }: { buckets: AgingBuckets;
       {!hasData ? (
         <p className="py-12 text-center text-sm text-muted-foreground">No outstanding balances for selected period</p>
       ) : (
+        <>
         <ResponsiveChart width="100%" height={220}>
           <BarChart data={rows} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -58,6 +59,15 @@ export function AgingBars({ buckets, currency, title }: { buckets: AgingBuckets;
             </Bar>
           </BarChart>
         </ResponsiveChart>
+        <div className="mt-2 flex flex-wrap justify-center gap-3 text-[10px] text-muted-foreground">
+          {BUCKET_ORDER.map((b) => (
+            <span key={b} className="inline-flex items-center gap-1">
+              <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: BUCKET_COLOR[b] }} />
+              {b} days
+            </span>
+          ))}
+        </div>
+        </>
       )}
     </div>
   );

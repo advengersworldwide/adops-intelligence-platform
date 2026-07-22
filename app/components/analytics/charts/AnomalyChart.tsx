@@ -1,6 +1,6 @@
 "use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import { formatMoney } from "@/lib/analytics/currency";
 
@@ -73,6 +73,7 @@ export function AnomalyChart({ points, currency }: { points: AnomalyChartPoint[]
           tickFormatter={(v: number) => formatMoney(v, currency)}
         />
         <Tooltip content={<AnomalyTooltip currency={currency} />} />
+        <Legend wrapperStyle={{ fontSize: "12px" }} />
         <Line
           type="monotone"
           dataKey="value"

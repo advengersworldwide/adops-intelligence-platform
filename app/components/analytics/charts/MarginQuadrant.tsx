@@ -1,6 +1,6 @@
 "use client";
 
-import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
+import { ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend, ReferenceLine } from "recharts";
 import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
 import { formatMoney } from "@/lib/analytics/currency";
 
@@ -69,7 +69,8 @@ export function MarginQuadrant({ points }: { points: MarginQuadrantPoint[] }) {
         <Tooltip cursor={{ strokeDasharray: "3 3" }} content={<QuadrantTooltip />} />
         <ReferenceLine y={0} stroke="hsl(var(--border))" strokeWidth={1} />
         <ReferenceLine x={medianRevenue} stroke="hsl(var(--border))" strokeDasharray="3 3" />
-        <Scatter data={points} fill="hsl(221,83%,53%)" />
+        <Legend wrapperStyle={{ fontSize: "12px" }} />
+        <Scatter name="Clients (bubble size = revenue)" data={points} fill="hsl(221,83%,53%)" />
       </ScatterChart>
     </ResponsiveChart>
   );

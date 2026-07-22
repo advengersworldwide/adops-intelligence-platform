@@ -38,7 +38,8 @@ export function MarginHeatmap({ matrix, currency }: { matrix: MatrixResponse; cu
   const cellByKey = new Map(matrix.cells.map((c) => [`${c.client}${KEY_SEP}${c.partner}`, c]));
 
   return (
-    <div className="overflow-x-auto">
+    <div>
+      <div className="overflow-x-auto">
       <div
         className="grid w-fit min-w-full"
         style={{ gridTemplateColumns: `minmax(120px, 160px) repeat(${matrix.partners.length}, minmax(64px, 1fr))` }}
@@ -89,6 +90,13 @@ export function MarginHeatmap({ matrix, currency }: { matrix: MatrixResponse; cu
             })}
           </div>
         ))}
+      </div>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-[10px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-sm" style={{ backgroundColor: "hsl(0,84%,72%)" }} /> Negative</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-sm" style={{ backgroundColor: "hsl(45,96%,80%)" }} /> 0–15%</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-sm" style={{ backgroundColor: "hsl(140,60%,78%)" }} /> 15–30%</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-sm" style={{ backgroundColor: "hsl(160,84%,55%)" }} /> &gt;30%</span>
       </div>
     </div>
   );

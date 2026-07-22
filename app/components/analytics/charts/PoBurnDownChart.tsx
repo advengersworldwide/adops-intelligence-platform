@@ -10,7 +10,12 @@ export function PoBurnDownChart({ pos, currency }: { pos: PoPacing[]; currency?:
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h2 className="mb-4 text-sm font-semibold text-foreground">PO Burn-Down Pacing</h2>
+      <h2 className="mb-2 text-sm font-semibold text-foreground">PO Burn-Down Pacing</h2>
+      <div className="mb-4 flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "hsl(160,84%,39%)" }} /> On pace</span>
+        <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "hsl(0,84%,60%)" }} /> Overpacing</span>
+        <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-px bg-foreground/60" /> Ideal to date</span>
+      </div>
       <div className="space-y-5">
         {pos.map((po) => {
           const overpacing = po.overpacePct > 0;

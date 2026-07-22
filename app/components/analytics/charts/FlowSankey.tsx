@@ -51,6 +51,7 @@ export function FlowSankey({ nodes, links, currency }: FlowSankeyProps) {
   }
 
   return (
+    <>
     <ResponsiveChart width="100%" height={360}>
       <Sankey
         data={{ nodes, links }}
@@ -62,5 +63,9 @@ export function FlowSankey({ nodes, links, currency }: FlowSankeyProps) {
         <Tooltip contentStyle={tooltipStyle} formatter={(value: number) => formatMoney(value, currency)} />
       </Sankey>
     </ResponsiveChart>
+    <p className="mt-1 text-center text-[10px] text-muted-foreground">
+      Money flow: Client → Buying House → Partner (band width = amount).
+    </p>
+    </>
   );
 }

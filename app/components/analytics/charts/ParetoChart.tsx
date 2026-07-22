@@ -8,6 +8,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ReferenceLine,
 } from "recharts";
 import { ResponsiveChart } from "@/components/analytics/ResponsiveChart";
@@ -79,6 +80,7 @@ export function ParetoChart({
             }
           />
           <ReferenceLine yAxisId="right" y={80} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" />
+          <Legend wrapperStyle={{ fontSize: "12px" }} />
           <Bar yAxisId="left" dataKey="revenue" fill="hsl(221,83%,53%)" radius={[3, 3, 0, 0]} name="Revenue" />
           <Line
             yAxisId="right"

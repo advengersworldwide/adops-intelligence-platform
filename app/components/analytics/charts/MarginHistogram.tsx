@@ -17,6 +17,7 @@ export function MarginHistogram({ buckets }: { buckets: MarginBucket[] }) {
   }
 
   return (
+    <>
     <ResponsiveChart width="100%" height={220}>
       <BarChart data={buckets} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -30,5 +31,10 @@ export function MarginHistogram({ buckets }: { buckets: MarginBucket[] }) {
         </Bar>
       </BarChart>
     </ResponsiveChart>
+    <div className="mt-2 flex flex-wrap justify-center gap-3 text-[10px] text-muted-foreground">
+      <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "hsl(221,83%,53%)" }} /> Positive margin</span>
+      <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "hsl(0,84%,60%)" }} /> Negative margin</span>
+    </div>
+    </>
   );
 }
