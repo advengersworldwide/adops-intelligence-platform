@@ -1,42 +1,21 @@
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, rolesTable, usersTable, taxSettingsTable } from "@workspace/db";
+import { ALL_PERMISSIONS } from "../lib/rbac/catalog";
+
+// Operator: everything except role/user management and destructive deletes.
+const OPERATOR_PERMS = ALL_PERMISSIONS.filter(
+  (p) => p !== "settings.roles:manage" && p !== "settings.users:manage" && !p.endsWith(":delete"),
+);
+// Viewer: every :view (module + tab + sensitive-field views), no settings, no export.
+const VIEWER_PERMS = ALL_PERMISSIONS.filter(
+  (p) => p.endsWith(":view") && !p.startsWith("settings") && p !== "analytics:export",
+);
 
 const DEFAULT_ROLES = [
-  {
-    name: "System Admin",
-    permissions: [
-      "View Dashboard", "View Clients", "Edit Clients",
-      "View Partners", "Edit Partners",
-      "View Buying Houses", "Edit Buying Houses",
-      "View Transactions", "View Billings", "View Billing Detail", "View Payments", "View Cost", "Upload Data",
-      "View Analytics", "Manage Settings",
-      "View Purchase Orders", "Edit Purchase Orders",
-    ] as string[],
-    isSystem: true,
-  },
-  {
-    name: "Viewer",
-    permissions: [
-      "View Dashboard", "View Clients", "View Partners",
-      "View Buying Houses",
-      "View Transactions", "View Billings", "View Billing Detail", "View Payments", "View Cost", "View Analytics",
-      "View Purchase Orders",
-    ] as string[],
-    isSystem: true,
-  },
-  {
-    name: "Operator",
-    permissions: [
-      "View Dashboard", "View Clients", "Edit Clients",
-      "View Partners", "Edit Partners",
-      "View Buying Houses", "Edit Buying Houses",
-      "View Transactions", "View Billings", "View Billing Detail", "View Payments", "View Cost", "Upload Data",
-      "View Analytics",
-      "View Purchase Orders", "Edit Purchase Orders",
-    ] as string[],
-    isSystem: true,
-  },
+  { name: "System Admin", permissions: [...ALL_PERMISSIONS] as string[], isSystem: true },
+  { name: "Operator", permissions: OPERATOR_PERMS as string[], isSystem: true },
+  { name: "Viewer", permissions: VIEWER_PERMS as string[], isSystem: true },
 ];
 
 async function seedDefaults() {

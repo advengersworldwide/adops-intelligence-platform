@@ -9,7 +9,8 @@
     "start": "next start",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:migrate-rbac": "tsx scripts/migrate-rbac.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
