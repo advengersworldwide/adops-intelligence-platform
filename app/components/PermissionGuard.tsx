@@ -4,6 +4,7 @@ import { ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useHasPermission } from "@/lib/auth/user-context";
+import type { Permission } from "@/lib/rbac/catalog";
 
 function AccessDenied() {
   return (
@@ -28,7 +29,7 @@ export function PermissionGuard({
   permission,
   children,
 }: {
-  permission: string;
+  permission: Permission;
   children: React.ReactNode;
 }) {
   const allowed = useHasPermission(permission);

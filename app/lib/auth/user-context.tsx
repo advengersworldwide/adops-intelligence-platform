@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import type { Permission } from "@/lib/rbac/catalog";
 
 export interface SessionUser {
   id: number;
@@ -10,12 +11,7 @@ export interface SessionUser {
   email: string;
   role: string;
   isSystem: boolean;
-}
-
-interface Role {
-  name: string;
   permissions: string[];
-  isSystem?: boolean;
 }
 
 interface UserContextValue {
@@ -24,6 +20,11 @@ interface UserContextValue {
 }
 
 const UserContext = createContext<UserContextValue>({ user: null, isLoading: true });
+
+export function computeCan(permissions: string[] | null, permission: Permission): boolean {
+  if (!permissions) return false;
+  return permissions.includes(permission);
+}
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const { data: user = null, isLoading } = useQuery<SessionUser | null>({
@@ -37,52 +38,31 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     retry: false,
   });
 
-  return (
-    <UserContext.Provider value={{ user, isLoading }}>
-      {children}
-    </UserContext.Provider>
-  );
+  return <UserContext.Provider value={{ user, isLoading }}>{children}</UserContext.Provider>;
 }
 
 export function useUser(): SessionUser | null {
   return useContext(UserContext).user;
 }
 
-export function useHasPermission(permission: string): boolean | null {
+/** Returns true/false, or null while the session is still loading. */
+export function useHasPermission(permission: Permission): boolean | null {
   const { user, isLoading } = useContext(UserContext);
-
-  const { data: roles } = useQuery<Role[]>({
-    queryKey: ["roles"],
-    queryFn: () => fetch("/api/roles").then(r => r.json()),
-    staleTime: Infinity,
-    enabled: !!user && user.role !== "System Admin" && !user.isSystem,
-  });
-
   if (isLoading) return null;
   if (!user) return false;
-  if (user.role === "System Admin" || user.isSystem) return true;
-  if (!roles) return null; // roles still loading
-  const userRole = roles.find(r => r.name.toLowerCase() === user.role.toLowerCase());
-  return userRole?.permissions.includes(permission) ?? false;
+  return computeCan(user.permissions, permission);
 }
 
-export function usePermissionSet(): { has: (permission: string) => boolean; isLoading: boolean } {
-  const { user, isLoading } = useContext(UserContext);
-  const { data: roles } = useQuery<Role[]>({
-    queryKey: ["roles"],
-    queryFn: () => fetch("/api/roles").then((r) => r.json()),
-    staleTime: Infinity,
-    enabled: !!user && user.role !== "System Admin" && !user.isSystem,
-  });
+export function useCan(): (permission: Permission) => boolean {
+  const { user } = useContext(UserContext);
+  const set = useMemo(() => new Set(user?.permissions ?? []), [user?.permissions]);
+  return (permission: Permission) => set.has(permission);
+}
 
-  const isAdmin = !!user && (user.role === "System Admin" || user.isSystem);
-  const granted = new Set<string>(
-    isAdmin ? [] : (roles?.find((r) => r.name.toLowerCase() === user?.role.toLowerCase())?.permissions ?? []),
-  );
-  return {
-    has: (permission: string) => isAdmin || granted.has(permission),
-    isLoading: isLoading || (!!user && !isAdmin && !roles),
-  };
+export function usePermissionSet(): { has: (p: Permission) => boolean; isLoading: boolean } {
+  const { user, isLoading } = useContext(UserContext);
+  const set = useMemo(() => new Set(user?.permissions ?? []), [user?.permissions]);
+  return { has: (p: Permission) => set.has(p), isLoading };
 }
 
 export function useLogout() {
