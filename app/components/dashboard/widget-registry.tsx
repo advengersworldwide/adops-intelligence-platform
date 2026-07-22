@@ -10,6 +10,10 @@ import { WorkingCapital } from "./widgets/WorkingCapital";
 import { ClientPerformance } from "./widgets/ClientPerformance";
 import { PlatformPerformance } from "./widgets/PlatformPerformance";
 import { RecentTransactions } from "./widgets/RecentTransactions";
+import { AiInsights } from "./widgets/AiInsights";
+import { Concentration } from "./widgets/Concentration";
+import { ForecastTrend } from "./widgets/ForecastTrend";
+import { Anomalies } from "./widgets/Anomalies";
 
 const KPI = { w: 3, h: 3, minW: 2, minH: 2 };
 
@@ -25,6 +29,10 @@ export const widgetRegistry: Record<string, WidgetDef> = {
   "client-performance-chart": { id: "client-performance-chart", label: "Client Performance", description: "By client", category: "profitability", permission: "View Clients", defaultLayout: { w: 6, h: 8, minW: 4, minH: 5 }, Component: ClientPerformance },
   "platform-performance-chart": { id: "platform-performance-chart", label: "Platform Performance", description: "By platform", category: "profitability", permission: "View Partners", defaultLayout: { w: 6, h: 8, minW: 4, minH: 5 }, Component: PlatformPerformance },
   "transactions-table": { id: "transactions-table", label: "Recent Transactions", description: "Latest transactions", category: "activity", permission: "View Transactions", defaultLayout: { w: 12, h: 8, minW: 6, minH: 5 }, Component: RecentTransactions },
+  "ai-insights": { id: "ai-insights", label: "AI: What changed", description: "Auto-generated insight cards", category: "risk", permission: "View Analytics", defaultLayout: { w: 12, h: 5, minW: 6, minH: 4 }, Component: AiInsights },
+  "concentration": { id: "concentration", label: "Concentration", description: "Top-client Pareto + HHI", category: "relationships", permission: "View Analytics", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: Concentration },
+  "forecast-trend": { id: "forecast-trend", label: "Forecast", description: "Trend + projection band", category: "profitability", permission: null, defaultLayout: { w: 8, h: 9, minW: 4, minH: 6 }, Component: ForecastTrend },
+  "anomalies": { id: "anomalies", label: "Anomaly watch", description: "Outliers vs pattern", category: "risk", permission: "View Analytics", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: Anomalies },
 };
 
 export const widgetList = Object.values(widgetRegistry);
