@@ -3013,19 +3013,20 @@ components:
     # ── Tax Settings ──────────────────────────────────────────────────────────────
     TaxSettings:
       type: object
-      required: [id, remittanceTaxPct, salesTaxPct, withholdingTaxPct]
+      required: [id, remittanceTaxPct, salesTaxPct, withholdingTaxPct, baseCurrency]
       properties:
         id: { type: integer }
         remittanceTaxPct: { type: number }
         salesTaxPct: { type: number }
         withholdingTaxPct: { type: number }
+        baseCurrency: { type: string }
     TaxSettingsInput:
       type: object
-      required: [remittanceTaxPct, salesTaxPct, withholdingTaxPct]
       properties:
         remittanceTaxPct: { type: number }
         salesTaxPct: { type: number }
         withholdingTaxPct: { type: number }
+        baseCurrency: { type: string }
 
     # ── Billings ──────────────────────────────────────────────────────────────────
     BillingEventItemInput:

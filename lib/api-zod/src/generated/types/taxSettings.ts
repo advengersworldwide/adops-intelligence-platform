@@ -11,4 +11,5 @@ export interface TaxSettings {
   remittanceTaxPct: number;
   salesTaxPct: number;
   withholdingTaxPct: number;
+  baseCurrency: string;
 }

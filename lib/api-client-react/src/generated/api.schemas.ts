@@ -983,12 +983,14 @@ export interface TaxSettings {
   remittanceTaxPct: number;
   salesTaxPct: number;
   withholdingTaxPct: number;
+  baseCurrency: string;
 }
 
 export interface TaxSettingsInput {
-  remittanceTaxPct: number;
-  salesTaxPct: number;
-  withholdingTaxPct: number;
+  remittanceTaxPct?: number;
+  salesTaxPct?: number;
+  withholdingTaxPct?: number;
+  baseCurrency?: string;
 }
 
 export interface BillingEventItemInput {

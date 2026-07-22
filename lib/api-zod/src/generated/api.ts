@@ -1879,21 +1879,24 @@ export const GetTaxSettingsResponse = zod.object({
   "id": zod.number(),
   "remittanceTaxPct": zod.number(),
   "salesTaxPct": zod.number(),
-  "withholdingTaxPct": zod.number()
+  "withholdingTaxPct": zod.number(),
+  "baseCurrency": zod.string()
 })
 
 
 export const UpdateTaxSettingsBody = zod.object({
-  "remittanceTaxPct": zod.number(),
-  "salesTaxPct": zod.number(),
-  "withholdingTaxPct": zod.number()
+  "remittanceTaxPct": zod.number().optional(),
+  "salesTaxPct": zod.number().optional(),
+  "withholdingTaxPct": zod.number().optional(),
+  "baseCurrency": zod.string().optional()
 })
 
 export const UpdateTaxSettingsResponse = zod.object({
   "id": zod.number(),
   "remittanceTaxPct": zod.number(),
   "salesTaxPct": zod.number(),
-  "withholdingTaxPct": zod.number()
+  "withholdingTaxPct": zod.number(),
+  "baseCurrency": zod.string()
 })
 
 

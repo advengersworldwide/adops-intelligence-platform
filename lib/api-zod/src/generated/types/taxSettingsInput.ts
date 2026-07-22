@@ -7,7 +7,8 @@
  */
 
 export interface TaxSettingsInput {
-  remittanceTaxPct: number;
-  salesTaxPct: number;
-  withholdingTaxPct: number;
+  remittanceTaxPct?: number;
+  salesTaxPct?: number;
+  withholdingTaxPct?: number;
+  baseCurrency?: string;
 }
