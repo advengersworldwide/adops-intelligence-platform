@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, rolesTable } from "@workspace/db";
-import { requireAdmin, isAuthError } from "@/lib/auth/require";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+import { clearRolePermissionsCache } from "@/lib/rbac/role-permissions";
 
 export const runtime = "nodejs";
 
@@ -9,7 +10,7 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ name: string }> },
 ): Promise<Response> {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("settings.roles:manage");
   if (isAuthError(auth)) return auth;
   try {
     const { name } = await params;
@@ -17,6 +18,7 @@ export async function DELETE(
     if (!existing) return NextResponse.json({ error: "Role not found" }, { status: 404 });
     if (existing.isSystem) return NextResponse.json({ error: "Cannot delete system roles" }, { status: 400 });
     await db.delete(rolesTable).where(eq(rolesTable.name, name));
+    clearRolePermissionsCache();
     return new Response(null, { status: 204 });
   } catch {
     return NextResponse.json({ error: "Failed to delete role" }, { status: 500 });

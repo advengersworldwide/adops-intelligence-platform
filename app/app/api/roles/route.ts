@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, rolesTable } from "@workspace/db";
-import { requireAuth, requireAdmin, isAuthError } from "@/lib/auth/require";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+import { clearRolePermissionsCache } from "@/lib/rbac/role-permissions";
 
 export const runtime = "nodejs";
 
 export async function GET(): Promise<Response> {
-  const auth = await requireAuth();
+  const auth = await requirePermission("settings.roles:manage");
   if (isAuthError(auth)) return auth;
   try {
     const rows = await db.select().from(rolesTable).orderBy(rolesTable.id);
@@ -17,7 +18,7 @@ export async function GET(): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("settings.roles:manage");
   if (isAuthError(auth)) return auth;
   try {
     let body: unknown;
@@ -33,9 +34,11 @@ export async function POST(req: Request): Promise<Response> {
         .set({ permissions, updatedAt: new Date() })
         .where(eq(rolesTable.name, roleName))
         .returning();
+      clearRolePermissionsCache();
       return NextResponse.json({ name: updated.name, permissions: updated.permissions, isSystem: updated.isSystem });
     } else {
       const [inserted] = await db.insert(rolesTable).values({ name: roleName, permissions, isSystem: false }).returning();
+      clearRolePermissionsCache();
       return NextResponse.json({ name: inserted.name, permissions: inserted.permissions, isSystem: inserted.isSystem }, { status: 201 });
     }
   } catch {
