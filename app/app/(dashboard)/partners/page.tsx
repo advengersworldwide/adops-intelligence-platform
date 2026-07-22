@@ -5,7 +5,7 @@ import { Plus, Trash2, Search } from "lucide-react";
 import Link from "next/link";
 import {
   useListPartners, useCreatePartner, useDeletePartner,
-  getListPartnersQueryKey, useGetAnalyticsByPartner,
+  getListPartnersQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -17,7 +17,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { derivePrefix } from "@/lib/po-codes";
@@ -34,12 +33,6 @@ const createSchema = z.object({
 });
 type CreateForm = z.infer<typeof createSchema>;
 
-function fmt(n: number) {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toFixed(0)}`;
-}
-
 function PartnersPage() {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -48,8 +41,6 @@ function PartnersPage() {
   const canEdit = useHasPermission("partners:edit");
 
   const { data: platforms, isLoading } = useListPartners();
-  const { data: platformAnalytics } = useGetAnalyticsByPartner();
-  const analyticsMap = new Map((platformAnalytics ?? []).map(p => [p.platformId, p]));
 
   const createMutation = useCreatePartner({
     mutation: {
@@ -99,7 +90,7 @@ function PartnersPage() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Payment Terms", "Revenue", "Cost", "Profit", "Margin %", canEdit ? "Actions" : null]
+              {["Name", "Payment Terms", canEdit ? "Actions" : null]
                 .filter((h): h is string => h !== null)
                 .map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
@@ -110,44 +101,35 @@ function PartnersPage() {
             {isLoading ? (
               [...Array(3)].map((_, i) => (
                 <tr key={i} className="border-b border-border">
-                  {[...Array(8)].map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-20" /></td>)}
+                  {[...Array(3)].map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-20" /></td>)}
                 </tr>
               ))
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="px-5 py-10 text-center text-sm text-muted-foreground">No partners found</td></tr>
+              <tr><td colSpan={3} className="px-5 py-10 text-center text-sm text-muted-foreground">No partners found</td></tr>
             ) : (
-              filtered.map(p => {
-                const an = analyticsMap.get(p.id);
-                return (
-                  <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors" data-testid={`platform-row-${p.id}`}>
-                    <td className="px-5 py-3 text-sm font-medium">
-                      <Link href={`/partners/${p.id}`} className="text-foreground hover:text-primary hover:underline">
-                        {p.name}
-                      </Link>
+              filtered.map(p => (
+                <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors" data-testid={`platform-row-${p.id}`}>
+                  <td className="px-5 py-3 text-sm font-medium">
+                    <Link href={`/partners/${p.id}`} className="text-foreground hover:text-primary hover:underline">
+                      {p.name}
+                    </Link>
+                  </td>
+                  <td className="px-5 py-3 text-sm text-muted-foreground">
+                    {p.paymentTermName ?? "—"}
+                  </td>
+                  {canEdit && (
+                    <td className="px-5 py-3">
+                      <button
+                        onClick={() => deleteMutation.mutate({ id: p.id })}
+                        className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        data-testid={`delete-platform-${p.id}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </td>
-                    <td className="px-5 py-3 text-sm text-muted-foreground">
-                      {p.paymentTermName ?? "—"}
-                    </td>
-                    <td className="px-5 py-3 text-sm font-medium">{an ? fmt(an.revenue) : "—"}</td>
-                    <td className="px-5 py-3 text-sm text-muted-foreground">{an ? fmt(an.cost) : "—"}</td>
-                    <td className={cn("px-5 py-3 text-sm font-semibold", an && an.profit < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400")}>
-                      {an ? fmt(an.profit) : "—"}
-                    </td>
-                    <td className="px-5 py-3 text-sm text-muted-foreground">{an ? `${an.marginPct.toFixed(1)}%` : "—"}</td>
-                    {canEdit && (
-                      <td className="px-5 py-3">
-                        <button
-                          onClick={() => deleteMutation.mutate({ id: p.id })}
-                          className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          data-testid={`delete-platform-${p.id}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
-                    )}
-                  </tr>
-                );
-              })
+                  )}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
