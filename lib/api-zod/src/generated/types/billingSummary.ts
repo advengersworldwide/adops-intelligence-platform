@@ -38,6 +38,8 @@ export interface BillingSummary {
   /** @nullable */
   invoiceGeneratedAt?: string | null;
   /** @nullable */
+  settledAt?: string | null;
+  /** @nullable */
   paymentTerms?: string | null;
   /** @nullable */
   paymentTermDays?: number | null;

@@ -1931,6 +1931,7 @@ export const ListBillingsResponseItem = zod.object({
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
+  "settledAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
   "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
@@ -2003,6 +2004,7 @@ export const GetBillingResponse = zod.object({
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
+  "settledAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
   "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
@@ -2073,6 +2075,7 @@ export const UpdateBillingResponse = zod.object({
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
+  "settledAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
   "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
@@ -2130,6 +2133,7 @@ export const UpdateBillingStatusResponse = zod.object({
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
+  "settledAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
   "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
@@ -2178,6 +2182,7 @@ export const GenerateBillingInvoiceResponse = zod.object({
   "createdByName": zod.string().nullish(),
   "createdAt": zod.string(),
   "invoiceGeneratedAt": zod.string().nullish(),
+  "settledAt": zod.string().nullish(),
   "paymentTerms": zod.string().nullish(),
   "paymentTermDays": zod.number().nullish(),
   "lines": zod.array(zod.object({
@@ -2215,7 +2220,8 @@ export const ListPartnerBillsResponseItem = zod.object({
   "partnerTermDays": zod.number().nullish(),
   "notes": zod.string().nullish(),
   "createdByName": zod.string().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "settledAt": zod.string().nullish()
 })
 export const ListPartnerBillsResponse = zod.array(ListPartnerBillsResponseItem)
 
@@ -2267,7 +2273,8 @@ export const UpdatePartnerBillResponse = zod.object({
   "partnerTermDays": zod.number().nullish(),
   "notes": zod.string().nullish(),
   "createdByName": zod.string().nullish(),
-  "createdAt": zod.string()
+  "createdAt": zod.string(),
+  "settledAt": zod.string().nullish()
 })
 
 

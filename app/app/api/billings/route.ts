@@ -8,6 +8,7 @@ import {
 import { CreateBillingBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
 import { computeBilling } from "@/lib/compute-billing";
+import { settledDate } from "@/lib/settle";
 import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
@@ -67,11 +68,18 @@ export async function mapBilling(b: BillingRow) {
     });
   }
 
-  const paidRows = await db.select({ amt: paymentBillingsTable.amountApplied })
+  const paidRows = await db.select({
+      amt: paymentBillingsTable.amountApplied, payDate: paymentsTable.paymentDate, created: paymentsTable.createdAt,
+    })
     .from(paymentBillingsTable)
     .innerJoin(paymentsTable, eq(paymentBillingsTable.paymentId, paymentsTable.id))
     .where(and(eq(paymentBillingsTable.billingId, b.id), eq(paymentsTable.status, "received")));
   const amountPaid = paidRows.reduce((s, r) => s + Number(r.amt), 0);
+  // Date the cumulative received first covered the receivable (null until settled).
+  const settledAtDate = settledDate(
+    paidRows.map(r => ({ amt: Number(r.amt), when: r.payDate ? new Date(r.payDate) : r.created })),
+    netReceivable,
+  );
 
   return {
     id: b.id, clientId: b.clientId, clientName: client?.name ?? "—", buyingHouseName,
@@ -84,6 +92,7 @@ export async function mapBilling(b: BillingRow) {
     totalInvoice, netReceivable, amountPaid, netMargin,
     notes: b.notes ?? null, createdByName, createdAt: b.createdAt.toISOString(),
     invoiceGeneratedAt: b.invoiceGeneratedAt ? b.invoiceGeneratedAt.toISOString() : null,
+    settledAt: settledAtDate ? settledAtDate.toISOString() : null,
     paymentTerms, paymentTermDays, lines,
   };
 }

@@ -3119,6 +3119,7 @@ components:
         createdByName: { type: ["string", "null"] }
         createdAt: { type: string }
         invoiceGeneratedAt: { type: ["string", "null"] }
+        settledAt: { type: ["string", "null"] }
         paymentTerms: { type: ["string", "null"] }
         paymentTermDays: { type: ["integer", "null"] }
         lines:
@@ -3163,6 +3164,7 @@ components:
         notes: { type: ["string", "null"] }
         createdByName: { type: ["string", "null"] }
         createdAt: { type: string }
+        settledAt: { type: ["string", "null"] }
     PartnerPaymentInput:
       type: object
       required: [partnerBillId, amount, mode]

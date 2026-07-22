@@ -7,6 +7,7 @@ import {
 import { CreatePartnerBillBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
 import { formatPoCode } from "@/lib/po-codes";
+import { settledDate } from "@/lib/settle";
 import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
@@ -32,9 +33,15 @@ export async function mapPartnerBill(r: Row) {
     const [u] = await db.select({ name: usersTable.name }).from(usersTable).where(eq(usersTable.id, r.createdById));
     createdByName = u?.name ?? null;
   }
-  const paidRows = await db.select({ amt: partnerPaymentsTable.amount }).from(partnerPaymentsTable)
+  const paidRows = await db.select({
+      amt: partnerPaymentsTable.amount, payDate: partnerPaymentsTable.paymentDate, created: partnerPaymentsTable.createdAt,
+    }).from(partnerPaymentsTable)
     .where(and(eq(partnerPaymentsTable.partnerBillId, r.id), eq(partnerPaymentsTable.status, "settled")));
   const amountPaid = paidRows.reduce((s, x) => s + Number(x.amt), 0);
+  const settledAtDate = settledDate(
+    paidRows.map(x => ({ amt: Number(x.amt), when: x.payDate ? new Date(x.payDate) : x.created })),
+    Number(r.amount),
+  );
   return {
     id: r.id, code: r.code, partnerInvoiceNumber: r.partnerInvoiceNumber ?? null,
     partnerId: r.partnerId, partnerName: partner?.name ?? "—",
@@ -43,6 +50,7 @@ export async function mapPartnerBill(r: Row) {
     amount: Number(r.amount), amountPaid, attachmentUrl: r.attachmentUrl ?? null, attachmentName: r.attachmentName ?? null,
     dateReceived: r.dateReceived ?? null, partnerTermDays, notes: r.notes ?? null,
     createdByName, createdAt: r.createdAt.toISOString(),
+    settledAt: settledAtDate ? settledAtDate.toISOString() : null,
   };
 }
 

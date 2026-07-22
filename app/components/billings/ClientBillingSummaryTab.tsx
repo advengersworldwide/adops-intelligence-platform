@@ -141,7 +141,7 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
           </div>
         </td>
         <td className="px-3 py-2">
-          <AgingPill start={b.invoiceGeneratedAt ?? null} termDays={b.paymentTermDays ?? null} settled={settled} />
+          <AgingPill start={b.invoiceGeneratedAt ?? null} termDays={b.paymentTermDays ?? null} settled={settled} settledAt={b.settledAt} />
         </td>
         <td className="px-3 py-2"><StatusSelect billingId={b.id} status={b.status} /></td>
         <td className="px-3 py-2">

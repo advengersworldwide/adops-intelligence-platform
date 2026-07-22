@@ -5,8 +5,15 @@ const now = new Date("2026-02-01T00:00:00Z");
 const d = (s: string) => new Date(s + "T00:00:00Z");
 
 describe("computeAging", () => {
-  it("neutral when settled", () => {
-    expect(computeAging({ start: d("2026-01-01"), termDays: 30, now, settled: true }).color).toBe("neutral");
+  it("green with days-to-settle when settled", () => {
+    const r = computeAging({ start: d("2026-01-01"), termDays: 30, now, settled: true, settledAt: d("2026-01-13") });
+    expect(r.color).toBe("green");
+    expect(r.daysToSettle).toBe(12);
+  });
+  it("settled without settledAt has null daysToSettle", () => {
+    const r = computeAging({ start: d("2026-01-01"), termDays: 30, now, settled: true });
+    expect(r.color).toBe("green");
+    expect(r.daysToSettle).toBeNull();
   });
   it("neutral when no term days", () => {
     expect(computeAging({ start: d("2026-01-01"), termDays: null, now, settled: false }).color).toBe("neutral");

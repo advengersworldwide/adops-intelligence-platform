@@ -81,7 +81,7 @@ export function PartnerBillingTab() {
                   </div>
                 </td>
                 <td className="px-3 py-2">{b.dateReceived ? new Date(b.dateReceived).toLocaleDateString() : "—"}</td>
-                <td className="px-3 py-2"><AgingPill start={b.dateReceived ?? null} termDays={b.partnerTermDays ?? null} settled={b.amount > 0 && b.amountPaid >= b.amount - 0.01} /></td>
+                <td className="px-3 py-2"><AgingPill start={b.dateReceived ?? null} termDays={b.partnerTermDays ?? null} settled={b.amount > 0 && b.amountPaid >= b.amount - 0.01} settledAt={b.settledAt} /></td>
                 <td className="px-3 py-2">{b.attachmentUrl ? <a href={b.attachmentUrl} target="_blank" rel="noreferrer" className="text-primary underline text-[10px]">View</a> : "—"}</td>
                 <td className="px-3 py-2">
                   <div className="flex gap-1">

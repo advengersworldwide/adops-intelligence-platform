@@ -36,4 +36,6 @@ export interface PartnerBill {
   /** @nullable */
   createdByName?: string | null;
   createdAt: string;
+  /** @nullable */
+  settledAt?: string | null;
 }

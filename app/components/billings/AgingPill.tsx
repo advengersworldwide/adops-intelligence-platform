@@ -10,9 +10,9 @@ const PILL: Record<string, string> = {
   neutral: "bg-muted text-muted-foreground",
 };
 
-export function AgingPill({ start, termDays, settled }: { start: string | null; termDays: number | null; settled: boolean }) {
-  const a = computeAging({ start: start ? new Date(start) : null, termDays, now: new Date(), settled });
-  const label = settled ? "Settled"
+export function AgingPill({ start, termDays, settled, settledAt }: { start: string | null; termDays: number | null; settled: boolean; settledAt?: string | null }) {
+  const a = computeAging({ start: start ? new Date(start) : null, termDays, now: new Date(), settled, settledAt: settledAt ? new Date(settledAt) : null });
+  const label = settled ? (a.daysToSettle != null ? `Settled (${a.daysToSettle}d)` : "Settled")
     : a.color === "neutral" ? "—"
     : a.overdue ? `Overdue ${Math.abs(a.daysLeft ?? 0)}d`
     : `${a.daysLeft}d left`;
