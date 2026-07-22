@@ -44,7 +44,7 @@ describe("permission catalog", () => {
   });
 
   it("every tab/field key has a parent module :view or nested parent", () => {
-    const keys = new Set(PERMISSIONS.map((p) => p.key));
+    const keys = new Set<string>(PERMISSIONS.map((p) => p.key));
     for (const p of PERMISSIONS) {
       if (p.kind !== "tab" && p.kind !== "field") continue;
       // key form: "module.sub:view" or "module.parent.child:view"
@@ -56,7 +56,7 @@ describe("permission catalog", () => {
   });
 
   it("includes the settings split and nested billing tabs", () => {
-    const keys = new Set(PERMISSIONS.map((p) => p.key));
+    const keys = new Set<string>(PERMISSIONS.map((p) => p.key));
     for (const k of [
       "settings.roles:manage", "settings.users:manage",
       "settings.catalogs:manage", "settings.general:view",
