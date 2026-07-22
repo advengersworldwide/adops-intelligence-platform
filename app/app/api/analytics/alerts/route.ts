@@ -30,6 +30,7 @@ type AlertRow = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const LOW_MARGIN_THRESHOLD = 10;
+const STALE_ALERT_MS = 7 * DAY_MS; // margin/profit alerts from records older than a week are hidden
 
 export async function GET(): Promise<Response> {
   const auth = await requirePermission("analytics:view");
@@ -51,8 +52,12 @@ export async function GET(): Promise<Response> {
   const partnerNameMap = new Map(partnerRows.map((p) => [p.id, p.name]));
 
   const alerts: AlertRow[] = [];
+  const nowMs = Date.now();
 
   for (const r of recs) {
+    // Hide stale margin/profit alerts: only surface issues from records touched in the last 7 days.
+    // Overdue-invoice and PPO-overspend alerts below are kept regardless of age (they're the point).
+    if (nowMs - new Date(r.createdAt).getTime() > STALE_ALERT_MS) continue;
     const t = aggregateTotals([r as AggRecord]);
     const clientName = r.clientId != null ? (clientNameMap.get(r.clientId) ?? null) : null;
     const platformName = partnerNameMap.get(r.platformId) ?? null;
