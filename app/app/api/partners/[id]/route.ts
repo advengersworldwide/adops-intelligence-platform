@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, partnersTable, paymentTermsTable } from "@workspace/db";
 import { GetPartnerParams, UpdatePartnerBody, UpdatePartnerParams, DeletePartnerParams, GetPartnerResponse, UpdatePartnerResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,8 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("partners:view");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = GetPartnerParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -35,6 +38,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("partners:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = UpdatePartnerParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -51,6 +56,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("partners:delete");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = DeletePartnerParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });

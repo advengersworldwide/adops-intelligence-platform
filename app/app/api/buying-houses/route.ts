@@ -3,6 +3,7 @@ import { eq, count } from "drizzle-orm";
 import { db, buyingHousesTable, billingRecordsTable, clientsTable } from "@workspace/db";
 import { computeRow } from "@/lib/compute-row";
 import { CreateBuyingHouseBody, ListBuyingHousesResponse, GetBuyingHouseResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -24,6 +25,8 @@ function mapBH(bh: typeof buyingHousesTable.$inferSelect) {
 }
 
 export async function GET(): Promise<Response> {
+  const auth = await requirePermission("buying-houses:view");
+  if (isAuthError(auth)) return auth;
   const bhs = await db.select().from(buyingHousesTable).orderBy(buyingHousesTable.createdAt);
   const result = await Promise.all(bhs.map(async (bh) => {
     const [{ clientCount }] = await db.select({ clientCount: count() }).from(clientsTable).where(eq(clientsTable.buyingHouseId, bh.id));
@@ -34,6 +37,8 @@ export async function GET(): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("buying-houses:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreateBuyingHouseBody.safeParse(body);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, partnersTable, paymentTermsTable } from "@workspace/db";
 import { CreatePartnerBody, ListPartnersResponse, GetPartnerResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -20,12 +21,16 @@ async function mapRow(r: typeof partnersTable.$inferSelect) {
 }
 
 export async function GET(): Promise<Response> {
+  const auth = await requirePermission("partners:view");
+  if (isAuthError(auth)) return auth;
   const rows = await db.select().from(partnersTable).orderBy(partnersTable.createdAt);
   const mapped = await Promise.all(rows.map(mapRow));
   return NextResponse.json(ListPartnersResponse.parse(mapped));
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("partners:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreatePartnerBody.safeParse(body);

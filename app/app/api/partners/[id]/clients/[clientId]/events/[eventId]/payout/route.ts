@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db, clientEventsTable, costModelsTable, partnerEventPayoutsTable } from "@workspace/db";
 import { SetPartnerEventPayoutParams, SetPartnerEventPayoutBody, SetPartnerEventPayoutResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -9,6 +10,8 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string; clientId: string; eventId: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("payments:edit");
+  if (isAuthError(auth)) return auth;
   const { id, clientId, eventId } = await params;
   const p = SetPartnerEventPayoutParams.safeParse({ id: parseInt(id, 10), clientId: parseInt(clientId, 10), eventId: parseInt(eventId, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });

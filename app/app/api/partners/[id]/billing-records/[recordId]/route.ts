@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db, billingRecordsTable, buyingHousesTable, costModelsTable, clientsTable } from "@workspace/db";
 import { DeleteBillingRecordParams, CreateBillingRecordBody, ListBillingRecordsResponseItem } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string; recordId: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("billings:edit");
+  if (isAuthError(auth)) return auth;
   const { id, recordId } = await params;
   const p = DeleteBillingRecordParams.safeParse({ id: parseInt(id, 10), recordId: parseInt(recordId, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -68,6 +71,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string; recordId: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("billings:edit");
+  if (isAuthError(auth)) return auth;
   const { id, recordId } = await params;
   const p = DeleteBillingRecordParams.safeParse({ id: parseInt(id, 10), recordId: parseInt(recordId, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });

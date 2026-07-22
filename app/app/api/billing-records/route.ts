@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db, billingRecordsTable, buyingHousesTable, clientsTable, partnersTable, costModelsTable } from "@workspace/db";
 import { ListAllBillingRecordsQueryParams, ListAllBillingRecordsResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("billings:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const qp = ListAllBillingRecordsQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });

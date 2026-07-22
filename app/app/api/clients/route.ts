@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, clientsTable, buyingHousesTable, paymentTermsTable } from "@workspace/db";
 import { CreateClientBody, ListClientsResponse, GetClientResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -30,12 +31,16 @@ async function mapRow(r: typeof clientsTable.$inferSelect) {
 }
 
 export async function GET(): Promise<Response> {
+  const auth = await requirePermission("clients:view");
+  if (isAuthError(auth)) return auth;
   const rows = await db.select().from(clientsTable).orderBy(clientsTable.createdAt);
   const mapped = await Promise.all(rows.map(mapRow));
   return NextResponse.json(ListClientsResponse.parse(mapped));
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("clients:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreateClientBody.safeParse(body);

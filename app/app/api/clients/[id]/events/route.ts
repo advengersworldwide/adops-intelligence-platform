@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, clientEventsTable, costModelsTable } from "@workspace/db";
 import { ListClientEventsParams, CreateClientEventParams, CreateClientEventBody, ListClientEventsResponse, ListClientEventsResponseItem } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,8 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("clients:view");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = ListClientEventsParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -29,6 +32,8 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("clients:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = CreateClientEventParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });

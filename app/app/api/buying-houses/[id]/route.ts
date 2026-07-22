@@ -3,6 +3,7 @@ import { eq, count } from "drizzle-orm";
 import { db, buyingHousesTable, billingRecordsTable, clientsTable } from "@workspace/db";
 import { computeRow } from "@/lib/compute-row";
 import { GetBuyingHouseParams, UpdateBuyingHouseParams, DeleteBuyingHouseParams, CreateBuyingHouseBody, GetBuyingHouseResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -27,6 +28,8 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("buying-houses:view");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = GetBuyingHouseParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -41,6 +44,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("buying-houses:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = UpdateBuyingHouseParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -64,6 +69,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("buying-houses:delete");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = DeleteBuyingHouseParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });

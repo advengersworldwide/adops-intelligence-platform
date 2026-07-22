@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { and, eq } from "drizzle-orm";
 import { db, clientEventsTable, costModelsTable } from "@workspace/db";
 import { UpdateClientEventParams, UpdateClientEventBody, DeleteClientEventParams, UpdateClientEventResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string; eventId: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("clients:edit");
+  if (isAuthError(auth)) return auth;
   const { id, eventId } = await params;
   const p = UpdateClientEventParams.safeParse({ id: parseInt(id, 10), eventId: parseInt(eventId, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -40,6 +43,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string; eventId: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("clients:edit");
+  if (isAuthError(auth)) return auth;
   const { id, eventId } = await params;
   const p = DeleteClientEventParams.safeParse({ id: parseInt(id, 10), eventId: parseInt(eventId, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
