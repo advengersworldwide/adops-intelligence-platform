@@ -8,11 +8,12 @@ import {
   Zap, LogOut, ChevronDown, ChevronUp,
   FileText, CreditCard, DollarSign, Wallet,
   ClipboardList,
+  type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { useUser, useLogout } from "@/lib/auth/user-context";
-import { useQuery } from "@tanstack/react-query";
+import { useUser, useLogout, useCan } from "@/lib/auth/user-context";
+import type { Permission } from "@/lib/rbac/catalog";
 
 interface SidebarProps {
   open: boolean;
@@ -20,42 +21,32 @@ interface SidebarProps {
 }
 
 const topNavItems = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard, permission: "View Dashboard" },
-  { href: "/clients", label: "Clients", icon: Users, permission: "View Clients" },
-  { href: "/buying-houses", label: "Buying Houses", icon: Building2, permission: "View Buying Houses" },
-  { href: "/partners", label: "Partners", icon: Monitor, permission: "View Partners" },
-  { href: "/purchase-orders", label: "Purchase Orders", icon: ClipboardList, permission: "View Purchase Orders" },
-];
+  { href: "/", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard:view" },
+  { href: "/clients", label: "Clients", icon: Users, permission: "clients:view" },
+  { href: "/buying-houses", label: "Buying Houses", icon: Building2, permission: "buying-houses:view" },
+  { href: "/partners", label: "Partners", icon: Monitor, permission: "partners:view" },
+  { href: "/purchase-orders", label: "Purchase Orders", icon: ClipboardList, permission: "purchase-orders:view" },
+] as const;
 
 const financialsItems = [
-  { href: "/billings", label: "Billing", icon: FileText, permission: "View Billings" },
-  { href: "/payments", label: "Payments", icon: CreditCard, permission: "View Payments" },
-  { href: "/cost", label: "Cost", icon: DollarSign, permission: "View Cost" },
-];
+  { href: "/billings", label: "Billing", icon: FileText, permission: "billings:view" },
+  { href: "/payments", label: "Payments", icon: CreditCard, permission: "payments:view" },
+  { href: "/cost", label: "Cost", icon: DollarSign, permission: "cost:view" },
+] as const;
 
 const bottomNavItems = [
-  { href: "/upload", label: "Upload Data", icon: Upload, permission: "Upload Data" },
-  { href: "/analytics", label: "Analytics", icon: BarChart3, permission: "View Analytics" },
-  { href: "/settings", label: "Settings", icon: Settings, permission: "Manage Settings" },
-];
+  { href: "/upload", label: "Upload Data", icon: Upload, permission: "upload:data" },
+  { href: "/analytics", label: "Analytics", icon: BarChart3, permission: "analytics:view" },
+  { href: "/settings", label: "Settings", icon: Settings, permission: "settings:view" },
+] as const;
 
 export default function Sidebar({ open, onToggle }: SidebarProps) {
   const pathname = usePathname();
   const user = useUser();
   const logout = useLogout();
-  const { data: roles = [] } = useQuery({
-    queryKey: ["roles"],
-    queryFn: () => fetch("/api/roles").then(r => r.json()),
-    staleTime: Infinity,
-    enabled: !!user && user.role !== "System Admin" && !user.isSystem,
-  });
+  const can = useCan();
   function canAccess(permission: string): boolean {
-    if (!user) return false;
-    if (user.role === "System Admin" || user.isSystem) return true;
-    const userRole = roles.find((r: { name: string; permissions: string[] }) =>
-      r.name.toLowerCase() === user.role.toLowerCase()
-    );
-    return userRole?.permissions.includes(permission) ?? false;
+    return can(permission as Permission);
   }
 
   const [financialsOpen, setFinancialsOpen] = useState(
@@ -65,7 +56,7 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
     ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
 
-  const renderItem = ({ href, label, icon: Icon, permission }: typeof topNavItems[0]) => {
+  const renderItem = ({ href, label, icon: Icon, permission }: { href: string; label: string; icon: LucideIcon; permission: string }) => {
     if (!canAccess(permission)) return null;
     const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
     return (
