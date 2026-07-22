@@ -13,4 +13,12 @@ describe("currency", () => {
     expect(formatMoney(1500, "USD")).toBe("$1.5K");
     expect(formatMoney(-2_000_000, "USD")).toBe("-$2.0M");
   });
+  it("defaults to PKR (never $) when no currency is given", () => {
+    expect(formatMoney(1500)).toBe("PKR 1.5K");
+    expect(formatMoney(-2_000_000)).toBe("-PKR 2.0M");
+    expect(formatMoney(500)).toBe("PKR 500");
+  });
+  it("still renders $ when USD is explicitly requested", () => {
+    expect(formatMoney(1500, "USD")).toBe("$1.5K");
+  });
 });

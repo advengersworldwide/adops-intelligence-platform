@@ -15,7 +15,7 @@ export function convertTo(amount: number, from: string, rates: Rates): number {
   return rate && rate > 0 ? amount / rate : amount;
 }
 
-export function formatMoney(n: number, currency = "USD"): string {
+export function formatMoney(n: number, currency = "PKR"): string {
   const prefix = currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : `${currency} `;
   const neg = n < 0;
   const abs = Math.abs(n);
