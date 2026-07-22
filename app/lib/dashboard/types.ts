@@ -1,5 +1,6 @@
 import type * as React from "react";
 import type { DashboardLayoutItem } from "@workspace/db";
+import type { Permission } from "@/lib/rbac/catalog";
 
 export type { DashboardLayoutItem };
 
@@ -16,7 +17,7 @@ export interface WidgetDef {
   label: string;
   description: string;
   category: WidgetCategory;
-  permission: string | null; // null => only page-level "View Dashboard"
+  permission: Permission | null; // null => only page-level dashboard:view
   defaultLayout: { w: number; h: number; minW: number; minH: number };
   Component: React.ComponentType;
 }

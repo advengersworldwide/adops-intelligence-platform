@@ -52,7 +52,7 @@ export default function CostPage() {
   const totalForPeriod = (resources ?? []).reduce((s, r) => s + r.amount, 0);
 
   return (
-    <PermissionGuard permission="View Cost">
+    <PermissionGuard permission="cost:view">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>

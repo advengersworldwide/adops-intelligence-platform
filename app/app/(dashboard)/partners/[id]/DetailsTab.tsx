@@ -13,7 +13,7 @@ import { KycFields, kycFromRecord, kycToPayload, type KycState } from "@/compone
 export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Partners");
+  const canEdit = useHasPermission("partners:edit");
   const { data: paymentTerms } = useListPaymentTerms();
   const updatePartner = useUpdatePartner();
 

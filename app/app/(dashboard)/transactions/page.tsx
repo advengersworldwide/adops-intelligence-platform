@@ -75,7 +75,7 @@ export default function BillingPage() {
   const [editOpen, setEditOpen] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canAdd = useHasPermission("View Transactions");
+  const canAdd = useHasPermission("analytics:view");
 
   const params = {
     ...(periodFilter ? { period: periodFilter } : {}),
@@ -155,7 +155,7 @@ export default function BillingPage() {
   };
 
   return (
-    <PermissionGuard permission="View Transactions">
+    <PermissionGuard permission="analytics:view">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>

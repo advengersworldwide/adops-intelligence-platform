@@ -26,7 +26,7 @@ function PurchaseOrdersPage() {
 
 export default function PurchaseOrdersRoute() {
   return (
-    <PermissionGuard permission="View Purchase Orders">
+    <PermissionGuard permission="purchase-orders:view">
       <PurchaseOrdersPage />
     </PermissionGuard>
   );

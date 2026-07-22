@@ -126,7 +126,7 @@ export default function ImportPage() {
     s === "valid" ? "text-emerald-600" : s === "skip" ? "text-amber-600" : "text-red-600";
 
   return (
-    <PermissionGuard permission="Upload Data">
+    <PermissionGuard permission="upload:data">
       <div className="space-y-6">
         <div className="flex items-start justify-between">
           <div>

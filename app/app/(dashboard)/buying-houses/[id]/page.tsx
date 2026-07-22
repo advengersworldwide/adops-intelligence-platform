@@ -48,7 +48,7 @@ const TD = ({ children, bold, className }: { children?: React.ReactNode; bold?: 
 function BuyingHouseDetailPage({ id }: { id: number }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Buying Houses");
+  const canEdit = useHasPermission("buying-houses:edit");
 
   const { data: bh, isLoading: bhLoading } = useGetBuyingHouse(id);
   const { data: analytics, isLoading: analyticsLoading } = useGetBuyingHouseAnalytics(id);
@@ -273,7 +273,7 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
 export default function BuyingHouseDetailRoute() {
   const { id } = useParams<{ id: string }>();
   return (
-    <PermissionGuard permission="View Buying Houses">
+    <PermissionGuard permission="buying-houses:view">
       <BuyingHouseDetailPage id={parseInt(id, 10)} />
     </PermissionGuard>
   );

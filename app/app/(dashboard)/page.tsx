@@ -143,7 +143,7 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <PermissionGuard permission="View Dashboard">
+    <PermissionGuard permission="dashboard:view">
       <DashboardContent />
     </PermissionGuard>
   );

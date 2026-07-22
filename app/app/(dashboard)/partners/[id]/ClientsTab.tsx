@@ -17,7 +17,7 @@ import { useHasPermission } from "@/lib/auth/user-context";
 export default function PartnerClientsTab({ partnerId }: { partnerId: number }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Partners");
+  const canEdit = useHasPermission("partners:edit");
   const invalidate = () => qc.invalidateQueries({ queryKey: getListPartnerClientsQueryKey(partnerId) });
 
   const { data: partnerClients } = useListPartnerClients(partnerId);

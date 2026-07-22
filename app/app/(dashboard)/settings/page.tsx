@@ -311,7 +311,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <PermissionGuard permission="Manage Settings">
+    <PermissionGuard permission="settings:view">
       <div className="space-y-6">
         <div>
           <h1 className="text-xl font-bold text-foreground">Settings</h1>

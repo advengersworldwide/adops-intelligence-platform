@@ -21,7 +21,7 @@ export function ClientPOTab() {
   const [detail, setDetail] = useState<{ po: ClientPurchaseOrder; edit: boolean } | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Purchase Orders");
+  const canEdit = useHasPermission("purchase-orders:edit");
   const { data: rows, isLoading } = useListClientPurchaseOrders();
 
   const del = useDeleteClientPurchaseOrder({

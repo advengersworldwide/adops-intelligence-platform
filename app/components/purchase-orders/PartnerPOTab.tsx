@@ -26,7 +26,7 @@ export function PartnerPOTab() {
   const [expanded, setExpanded] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Purchase Orders") ?? false;
+  const canEdit = useHasPermission("purchase-orders:edit") ?? false;
   const { data: rows, isLoading } = useListPartnerPurchaseOrders();
 
   const del = useDeletePartnerPurchaseOrder({

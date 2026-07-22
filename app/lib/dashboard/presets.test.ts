@@ -8,7 +8,7 @@ describe("presets", () => {
       for (const id of p.activeWidgets) expect(widgetRegistry[id]).toBeDefined();
   });
   it("resolvePreset filters out widgets the user lacks permission for", () => {
-    const r = resolvePreset("exec", (perm) => perm !== "View Cost");
+    const r = resolvePreset("exec", (perm) => perm !== "cost:view");
     expect(r.activeWidgets).not.toContain("cost-kpi");
     expect(r.activeWidgets).not.toContain("profit-kpi");
   });

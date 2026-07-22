@@ -8,9 +8,9 @@ import { ClientBillingDetailTab } from "@/components/billings/ClientBillingDetai
 import { PartnerBillingTab } from "@/components/billings/PartnerBillingTab";
 
 export default function BillingPage() {
-  const canDetail = useHasPermission("View Billing Detail");
+  const canDetail = useHasPermission("billings.client.detail:view");
   return (
-    <PermissionGuard permission="View Billings">
+    <PermissionGuard permission="billings:view">
       <div className="space-y-4">
         <h1 className="text-xl font-bold">Billing</h1>
         <Tabs defaultValue="client">

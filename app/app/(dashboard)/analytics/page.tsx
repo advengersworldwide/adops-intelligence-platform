@@ -11,7 +11,7 @@ import { ForecastTab } from "@/components/analytics/tabs/ForecastTab";
 
 export default function AnalyticsPage() {
   return (
-    <PermissionGuard permission="View Analytics">
+    <PermissionGuard permission="analytics:view">
       <AnalyticsFilterProvider>
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

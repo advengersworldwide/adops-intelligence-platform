@@ -41,7 +41,7 @@ function ClientsContent() {
   const [createOpen, setCreateOpen] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Clients");
+  const canEdit = useHasPermission("clients:edit");
 
   const { data: clients, isLoading } = useListClients();
   const { data: buyingHouses } = useListBuyingHouses();
@@ -242,7 +242,7 @@ function ClientDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, ti
 
 export default function ClientsPage() {
   return (
-    <PermissionGuard permission="View Clients">
+    <PermissionGuard permission="clients:view">
       <ClientsContent />
     </PermissionGuard>
   );

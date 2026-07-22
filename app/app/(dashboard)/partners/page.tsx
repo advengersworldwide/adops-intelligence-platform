@@ -45,7 +45,7 @@ function PartnersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Partners");
+  const canEdit = useHasPermission("partners:edit");
 
   const { data: platforms, isLoading } = useListPartners();
   const { data: platformAnalytics } = useGetAnalyticsByPartner();
@@ -242,7 +242,7 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
 
 export default function PartnersRoute() {
   return (
-    <PermissionGuard permission="View Partners">
+    <PermissionGuard permission="partners:view">
       <PartnersPage />
     </PermissionGuard>
   );

@@ -7,7 +7,7 @@ import { PartnerPaymentsTab } from "@/components/payments/PartnerPaymentsTab";
 
 export default function PaymentsPage() {
   return (
-    <PermissionGuard permission="View Payments">
+    <PermissionGuard permission="payments:view">
       <div className="space-y-4">
         <h1 className="text-xl font-bold text-foreground">Payments</h1>
         <Tabs defaultValue="client">

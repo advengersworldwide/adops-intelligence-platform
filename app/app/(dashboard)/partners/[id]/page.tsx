@@ -63,7 +63,7 @@ function PartnerDetailPage({ id }: { id: number }) {
 export default function PartnerDetailRoute() {
   const { id } = useParams<{ id: string }>();
   return (
-    <PermissionGuard permission="View Partners">
+    <PermissionGuard permission="partners:view">
       <PartnerDetailPage id={parseInt(id, 10)} />
     </PermissionGuard>
   );

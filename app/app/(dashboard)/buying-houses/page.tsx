@@ -42,7 +42,7 @@ function BuyingHousesContent() {
   const [editBH, setEditBH] = useState<BHRow | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Buying Houses");
+  const canEdit = useHasPermission("buying-houses:edit");
 
   const { data: buyingHouses, isLoading } = useListBuyingHouses();
 
@@ -186,7 +186,7 @@ function BHDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, title 
 
 export default function BuyingHousesPage() {
   return (
-    <PermissionGuard permission="View Buying Houses">
+    <PermissionGuard permission="buying-houses:view">
       <BuyingHousesContent />
     </PermissionGuard>
   );

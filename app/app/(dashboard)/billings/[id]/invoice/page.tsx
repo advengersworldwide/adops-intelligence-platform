@@ -39,7 +39,7 @@ function InvoicePage({ id }: { id: number }) {
 export default function InvoiceRoute({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   return (
-    <PermissionGuard permission="View Billing Detail">
+    <PermissionGuard permission="billings.client.detail:view">
       <InvoicePage id={Number(id)} />
     </PermissionGuard>
   );

@@ -45,7 +45,7 @@ const TD = ({ children, bold, className }: { children?: React.ReactNode; bold?: 
 function DetailsTab({ clientId }: { clientId: number }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Clients");
+  const canEdit = useHasPermission("clients:edit");
   const { data: client } = useGetClient(clientId);
   const { data: paymentTerms } = useListPaymentTerms();
   const updateClient = useUpdateClient();
@@ -124,7 +124,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
 function EventsTab({ clientId }: { clientId: number }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const canEdit = useHasPermission("Edit Clients");
+  const canEdit = useHasPermission("clients:edit");
   const invalidate = () => qc.invalidateQueries({ queryKey: getListClientEventsQueryKey(clientId) });
 
   const { data: events, isLoading } = useListClientEvents(clientId);
@@ -414,7 +414,7 @@ function ClientDetailPage({ id }: { id: number }) {
 export default function ClientDetailRoute() {
   const { id } = useParams<{ id: string }>();
   return (
-    <PermissionGuard permission="View Clients">
+    <PermissionGuard permission="clients:view">
       <ClientDetailPage id={parseInt(id, 10)} />
     </PermissionGuard>
   );
