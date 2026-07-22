@@ -14,6 +14,11 @@ import { AiInsights } from "./widgets/AiInsights";
 import { Concentration } from "./widgets/Concentration";
 import { ForecastTrend } from "./widgets/ForecastTrend";
 import { Anomalies } from "./widgets/Anomalies";
+import { CashFlow } from "./widgets/CashFlow";
+import { Aging } from "./widgets/Aging";
+import { InvoiceFunnel } from "./widgets/InvoiceFunnel";
+import { PoPacing } from "./widgets/PoPacing";
+import { KpiCashPosition } from "./widgets/KpiCashPosition";
 
 const KPI = { w: 3, h: 3, minW: 2, minH: 2 };
 
@@ -33,6 +38,11 @@ export const widgetRegistry: Record<string, WidgetDef> = {
   "concentration": { id: "concentration", label: "Concentration", description: "Top-client Pareto + HHI", category: "relationships", permission: "View Analytics", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: Concentration },
   "forecast-trend": { id: "forecast-trend", label: "Forecast", description: "Trend + projection band", category: "profitability", permission: null, defaultLayout: { w: 8, h: 9, minW: 4, minH: 6 }, Component: ForecastTrend },
   "anomalies": { id: "anomalies", label: "Anomaly watch", description: "Outliers vs pattern", category: "risk", permission: "View Analytics", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: Anomalies },
+  "cashflow": { id: "cashflow", label: "Cash flow", description: "Collections vs payouts", category: "financial-ops", permission: "View Payments", defaultLayout: { w: 8, h: 9, minW: 4, minH: 6 }, Component: CashFlow },
+  "aging": { id: "aging", label: "AR / AP aging", description: "Receivables & payables by age", category: "financial-ops", permission: "View Payments", defaultLayout: { w: 6, h: 10, minW: 4, minH: 6 }, Component: Aging },
+  "invoice-funnel": { id: "invoice-funnel", label: "Invoice status", description: "Invoice lifecycle funnel", category: "financial-ops", permission: "View Billings", defaultLayout: { w: 6, h: 8, minW: 4, minH: 5 }, Component: InvoiceFunnel },
+  "po-pacing": { id: "po-pacing", label: "PO pacing", description: "PPO burn-down vs budget", category: "financial-ops", permission: "View Purchase Orders", defaultLayout: { w: 6, h: 9, minW: 4, minH: 6 }, Component: PoPacing },
+  "cash-position-kpi": { id: "cash-position-kpi", label: "Cash Position", description: "Receivables minus payables", category: "kpi", permission: "View Payments", defaultLayout: { w: 3, h: 3, minW: 2, minH: 2 }, Component: KpiCashPosition },
 };
 
 export const widgetList = Object.values(widgetRegistry);
