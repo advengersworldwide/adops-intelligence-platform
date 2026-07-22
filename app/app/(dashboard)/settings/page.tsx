@@ -924,7 +924,7 @@ function CatalogTab({
             ) : items.map(it => (
               <tr key={it.id} className="border-b border-border last:border-0 hover:bg-muted/30">
                 <td className="px-5 py-3 text-sm font-medium text-foreground">
-                  {withDays ? `${it.name} · Net ${it.days ?? "—"}` : it.name}
+                  {withDays ? `${it.name}${it.days != null ? ` · Net ${it.days} days` : ""}` : it.name}
                 </td>
                 <td className="px-5 py-3 text-right">
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10 text-destructive" onClick={() => onDelete(it.id)}>
