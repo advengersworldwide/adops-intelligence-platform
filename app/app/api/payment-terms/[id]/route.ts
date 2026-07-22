@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db, paymentTermsTable } from "@workspace/db";
 import { DeletePaymentTermParams } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -8,6 +9,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("settings.catalogs:manage");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = DeletePaymentTermParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return Response.json({ error: p.error.message }, { status: 400 });

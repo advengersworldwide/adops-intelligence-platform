@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, costResourcesTable } from "@workspace/db";
 import { ListCostResourcesQueryParams, ListCostResourcesResponse, CreateCostResourceBody, UpdateCostResourceResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -9,6 +10,8 @@ function mapCost(r: typeof costResourcesTable.$inferSelect) {
 }
 
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("cost:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const query = ListCostResourcesQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!query.success) return NextResponse.json({ error: query.error.message }, { status: 400 });
@@ -18,6 +21,8 @@ export async function GET(req: Request): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("cost:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreateCostResourceBody.safeParse(body);

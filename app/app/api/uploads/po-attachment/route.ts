@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,8 @@ function getSupabase() {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("upload:data");
+  if (isAuthError(auth)) return auth;
   let formData: FormData;
   try { formData = await req.formData(); } catch { return NextResponse.json({ error: "Invalid form data" }, { status: 400 }); }
   const file = formData.get("file");

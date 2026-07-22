@@ -5,6 +5,7 @@ import {
 } from "@workspace/db";
 import { CreatePartnerPaymentBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -66,11 +67,15 @@ export async function validateSource(sourceClientPaymentId: number | null | unde
 }
 
 export async function GET(): Promise<Response> {
+  const auth = await requirePermission("payments:view");
+  if (isAuthError(auth)) return auth;
   const rows = await db.select().from(partnerPaymentsTable).orderBy(partnerPaymentsTable.createdAt);
   return NextResponse.json(await Promise.all(rows.map(mapPartnerPayment)));
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("payments:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreatePartnerPaymentBody.safeParse(body);

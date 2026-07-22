@@ -3,6 +3,7 @@ import { eq, and, ne } from "drizzle-orm";
 import { db, paymentsTable, paymentBillingsTable, billingsTable } from "@workspace/db";
 import { UpdatePaymentParams, UpdatePaymentBody, DeletePaymentParams, UpdatePaymentResponse } from "@workspace/api-zod";
 import { billingNetReceivable } from "../../billings/route";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("payments:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = UpdatePaymentParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -52,6 +55,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("payments:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = DeletePaymentParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });

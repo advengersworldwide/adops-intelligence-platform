@@ -5,12 +5,16 @@ import { GetPoPacingQueryParams, GetPoPacingResponse } from "@workspace/api-zod"
 import { parseIdList } from "@/lib/analytics/parse-params";
 import { pace } from "@/lib/analytics/pacing";
 
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+
 export const runtime = "nodejs";
 
 // Burn-down pacing per partner purchase order: consumed (Σ partner bills against the PO) vs
 // an ideal-to-date linear spend across the PO's start/end window. All amounts USD — no
 // currency conversion needed (see pacing.ts for the pure calculation).
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("analytics:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const qp = GetPoPacingQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });

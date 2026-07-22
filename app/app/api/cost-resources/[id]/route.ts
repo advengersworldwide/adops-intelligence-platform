@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, costResourcesTable } from "@workspace/db";
 import { UpdateCostResourceParams, UpdateCostResourceBody, DeleteCostResourceParams, UpdateCostResourceResponse } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("cost:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = UpdateCostResourceParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
@@ -29,6 +32,8 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("cost:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const p = DeleteCostResourceParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });

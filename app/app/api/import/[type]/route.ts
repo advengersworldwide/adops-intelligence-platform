@@ -4,6 +4,7 @@ import { RunImportBody, RunImportParams } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
 import { getDescriptor } from "@/lib/import/registry";
 import { runImport } from "@/lib/import/run-import";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,8 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ type: string }> },
 ): Promise<Response> {
+  const auth = await requirePermission("upload:data");
+  if (isAuthError(auth)) return auth;
   const { type } = await params;
   const p = RunImportParams.safeParse({ type });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });

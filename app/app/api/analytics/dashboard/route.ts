@@ -8,9 +8,13 @@ import { aggregateTotals, type AggRecord } from "@/lib/analytics/billing-records
 import { priorRange } from "@/lib/analytics/date-range";
 import { percentDelta } from "@/lib/analytics/metrics";
 
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+
 export const runtime = "nodejs";
 
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("analytics:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const qp = GetDashboardSummaryQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });

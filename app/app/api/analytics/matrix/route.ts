@@ -7,11 +7,15 @@ import { buildRecordConditions } from "@/lib/analytics/record-filters";
 import { aggregateBy, type AggRecord } from "@/lib/analytics/billing-records-agg";
 import { buildMatrix } from "@/lib/analytics/matrix";
 
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+
 export const runtime = "nodejs";
 
 const TOP_N = 10;
 
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("analytics:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const qp = GetMarginMatrixQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, taxSettingsTable } from "@workspace/db";
 import { UpdateTaxSettingsBody } from "@workspace/api-zod";
+import { requireAuth, requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -23,11 +24,16 @@ function map(r: typeof taxSettingsTable.$inferSelect) {
   };
 }
 
+// Read is broad: tax rates feed billing math surfaces; edited only from Settings › General.
 export async function GET(): Promise<Response> {
+  const auth = await requireAuth();
+  if (isAuthError(auth)) return auth;
   return NextResponse.json(map(await getOrCreate()));
 }
 
 export async function PUT(req: Request): Promise<Response> {
+  const auth = await requirePermission("settings.general:view");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = UpdateTaxSettingsBody.safeParse(body);

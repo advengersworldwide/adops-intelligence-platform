@@ -8,6 +8,7 @@ import { CreatePartnerPurchaseOrderBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
 import { formatPoCode } from "@/lib/po-codes";
 import { lineBudget, totalBudget } from "@/lib/po-totals";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -76,6 +77,8 @@ async function nextPpoCode(partnerId: number): Promise<string> {
 }
 
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:view");
+  if (isAuthError(auth)) return auth;
   const cpoId = new URL(req.url).searchParams.get("clientPurchaseOrderId");
   const rows = await db.select().from(partnerPurchaseOrdersTable)
     .where(cpoId ? eq(partnerPurchaseOrdersTable.clientPurchaseOrderId, Number(cpoId)) : undefined)
@@ -84,6 +87,8 @@ export async function GET(req: Request): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreatePartnerPurchaseOrderBody.safeParse(body);

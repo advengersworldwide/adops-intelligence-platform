@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, paymentsTable, paymentBillingsTable, billingsTable } from "@workspace/db";
 import { UpdatePaymentStatusBody } from "@workspace/api-zod";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,8 @@ async function mapPayment(p: typeof paymentsTable.$inferSelect) {
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("payments:change-status");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }

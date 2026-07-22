@@ -3,10 +3,13 @@ import { eq, and, isNotNull, count, sql } from "drizzle-orm";
 import { db, billingsTable, clientsTable } from "@workspace/db";
 import { formatPoCode } from "@/lib/po-codes";
 import { mapBilling } from "../../route";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("billings:generate-invoice");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const [b] = await db.select().from(billingsTable).where(eq(billingsTable.id, Number(id)));
   if (!b) return NextResponse.json({ error: "Billing not found" }, { status: 404 });

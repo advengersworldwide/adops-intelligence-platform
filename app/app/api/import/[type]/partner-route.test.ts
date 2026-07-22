@@ -1,6 +1,15 @@
 // app/app/api/import/[type]/partner-route.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// RBAC: routes now enforce permissions; bypass the guard in unit tests.
+vi.mock("@/lib/auth/require", () => ({
+  requirePermission: async () => ({ user: { sub: 1, name: "Test", email: "test@x.com", role: "System Admin", isSystem: true } }),
+  requireAuth: async () => ({ user: { sub: 1, name: "Test", email: "test@x.com", role: "System Admin", isSystem: true } }),
+  requireAdmin: async () => ({ user: { sub: 1, name: "Test", email: "test@x.com", role: "System Admin", isSystem: true } }),
+  isAuthError: (r: unknown) => r instanceof Response,
+}));
+
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const insertValues = vi.fn((..._args: any[]) => ({ returning: async () => [{ id: 99 }] }));
 const transaction = vi.fn(async (cb: (tx: unknown) => Promise<void>) =>

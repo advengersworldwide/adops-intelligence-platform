@@ -7,12 +7,16 @@ import { buildRecordConditions } from "@/lib/analytics/record-filters";
 import { aggregateBy, type AggRecord } from "@/lib/analytics/billing-records-agg";
 import { detectAnomalies } from "@/lib/analytics/anomalies";
 
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+
 export const runtime = "nodejs";
 
 const METRIC_KEYS = ["revenue", "cost", "profit"] as const;
 type Metric = (typeof METRIC_KEYS)[number];
 
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("analytics:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const qp = GetAnomaliesQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });

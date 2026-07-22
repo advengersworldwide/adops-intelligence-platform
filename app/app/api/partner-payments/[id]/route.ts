@@ -3,10 +3,13 @@ import { eq } from "drizzle-orm";
 import { db, partnerPaymentsTable, partnerBillsTable } from "@workspace/db";
 import { UpdatePartnerPaymentBody } from "@workspace/api-zod";
 import { mapPartnerPayment, billRemaining, validateSource } from "../route";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("payments:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const paymentId = Number(id);
   let body: unknown;
@@ -41,6 +44,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("payments:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const [row] = await db.delete(partnerPaymentsTable).where(eq(partnerPaymentsTable.id, Number(id))).returning();
   if (!row) return NextResponse.json({ error: "Partner payment not found" }, { status: 404 });

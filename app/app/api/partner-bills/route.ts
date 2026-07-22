@@ -7,6 +7,7 @@ import {
 import { CreatePartnerBillBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
 import { formatPoCode } from "@/lib/po-codes";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -58,11 +59,15 @@ async function nextPbillCode(partnerId: number): Promise<string> {
 }
 
 export async function GET(): Promise<Response> {
+  const auth = await requirePermission("billings:view");
+  if (isAuthError(auth)) return auth;
   const rows = await db.select().from(partnerBillsTable).orderBy(partnerBillsTable.createdAt);
   return NextResponse.json(await Promise.all(rows.map(mapPartnerBill)));
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("billings:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreatePartnerBillBody.safeParse(body);

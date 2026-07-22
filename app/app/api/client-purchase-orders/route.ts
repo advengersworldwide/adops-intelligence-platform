@@ -6,6 +6,7 @@ import {
 import { CreateClientPurchaseOrderBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
 import { formatPoCode } from "@/lib/po-codes";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -54,11 +55,15 @@ async function nextCpoCode(clientId: number): Promise<string> {
 }
 
 export async function GET(): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:view");
+  if (isAuthError(auth)) return auth;
   const rows = await db.select().from(clientPurchaseOrdersTable).orderBy(clientPurchaseOrdersTable.createdAt);
   return NextResponse.json(await Promise.all(rows.map(mapCpoRow)));
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreateClientPurchaseOrderBody.safeParse(body);

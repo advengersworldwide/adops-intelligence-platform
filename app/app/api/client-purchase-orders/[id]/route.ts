@@ -3,10 +3,13 @@ import { eq, count } from "drizzle-orm";
 import { db, clientPurchaseOrdersTable, partnerPurchaseOrdersTable } from "@workspace/db";
 import { UpdateClientPurchaseOrderBody } from "@workspace/api-zod";
 import { mapCpoRow } from "../route";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:view");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const [row] = await db.select().from(clientPurchaseOrdersTable).where(eq(clientPurchaseOrdersTable.id, Number(id)));
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -14,6 +17,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
@@ -34,6 +39,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const [{ value }] = await db.select({ value: count() }).from(partnerPurchaseOrdersTable)
     .where(eq(partnerPurchaseOrdersTable.clientPurchaseOrderId, Number(id)));

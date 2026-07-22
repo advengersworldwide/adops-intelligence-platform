@@ -7,12 +7,16 @@ import { GetCashFlowQueryParams, GetCashFlowResponse } from "@workspace/api-zod"
 import type { CashFlowBucket } from "@workspace/api-client-react";
 import { parseIdList } from "@/lib/analytics/parse-params";
 
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+
 export const runtime = "nodejs";
 
 // Money IN is PKR (client collections — payments with status "received"), money OUT is USD
 // (partner payouts with status "settled"). No currency unification here — the chart converts
 // both to the user's base currency before computing the running balance.
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("analytics:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const qp = GetCashFlowQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });

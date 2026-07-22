@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db, usersTable } from "@workspace/db";
-import { requireAdmin, isAuthError } from "@/lib/auth/require";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
 export async function GET(): Promise<Response> {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("settings.users:manage");
   if (isAuthError(auth)) return auth;
   try {
     const rows = await db.select().from(usersTable).orderBy(usersTable.id);
@@ -18,7 +18,7 @@ export async function GET(): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("settings.users:manage");
   if (isAuthError(auth)) return auth;
   try {
     let body: unknown;

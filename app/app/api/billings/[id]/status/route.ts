@@ -3,10 +3,13 @@ import { eq } from "drizzle-orm";
 import { db, billingsTable } from "@workspace/db";
 import { UpdateBillingStatusBody } from "@workspace/api-zod";
 import { mapBilling } from "../../route";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("billings:change-status");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }

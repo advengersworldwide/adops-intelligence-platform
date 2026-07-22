@@ -5,7 +5,7 @@ import { Redis } from "@upstash/redis";
 import { and, gte, lte } from "drizzle-orm";
 import { db, billingRecordsTable } from "@workspace/db";
 import { GetAiInsightsResponse } from "@workspace/api-zod";
-import { requireAuth, isAuthError } from "@/lib/auth/require";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 import { percentDelta, marginPct } from "@/lib/analytics/metrics";
 import { aggregateTotals, type AggRecord } from "@/lib/analytics/billing-records-agg";
 import { monthOf } from "@/lib/analytics/record-filters";
@@ -76,7 +76,7 @@ function parseCompletion(text: string): RawInsight[] {
 }
 
 export async function GET(): Promise<Response> {
-  const auth = await requireAuth();
+  const auth = await requirePermission("analytics:view");
   if (isAuthError(auth)) return auth;
 
   const groqKey = process.env["GROQ"];

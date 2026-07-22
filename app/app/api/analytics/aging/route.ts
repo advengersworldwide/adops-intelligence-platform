@@ -9,11 +9,15 @@ import { parseIdList } from "@/lib/analytics/parse-params";
 import { bucketByAge, type AgingItem } from "@/lib/analytics/aging";
 import { billingNetReceivable } from "@/app/api/billings/route";
 
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+
 export const runtime = "nodejs";
 
 // AR outstanding is in PKR (billingNetReceivable applies forex). AP outstanding is in USD
 // (partnerBillsTable.amount). Returned as separate ar/ap bucket sets — no currency unification here.
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("analytics:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const qp = GetAgingQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });

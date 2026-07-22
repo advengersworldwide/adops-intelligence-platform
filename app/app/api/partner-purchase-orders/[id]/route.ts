@@ -4,10 +4,13 @@ import { db, partnerPurchaseOrdersTable, partnerPurchaseOrderItemsTable } from "
 import { UpdatePartnerPurchaseOrderBody } from "@workspace/api-zod";
 import { mapPpoRow } from "../route";
 import { lineBudget, totalBudget } from "@/lib/po-totals";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:view");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const [row] = await db.select().from(partnerPurchaseOrdersTable).where(eq(partnerPurchaseOrdersTable.id, Number(id)));
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -15,6 +18,8 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const ppoId = Number(id);
   let body: unknown;
@@ -46,6 +51,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("purchase-orders:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   await db.delete(partnerPurchaseOrdersTable).where(eq(partnerPurchaseOrdersTable.id, Number(id)));
   return new NextResponse(null, { status: 204 });

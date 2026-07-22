@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, usersTable } from "@workspace/db";
-import { requireAdmin, isAuthError } from "@/lib/auth/require";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -9,7 +9,7 @@ export async function DELETE(
   _req: Request,
   { params }: { params: Promise<{ email: string }> },
 ): Promise<Response> {
-  const auth = await requireAdmin();
+  const auth = await requirePermission("settings.users:manage");
   if (isAuthError(auth)) return auth;
   try {
     const { email: rawEmail } = await params;

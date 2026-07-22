@@ -8,6 +8,7 @@ import {
 import { CreateBillingBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
 import { computeBilling } from "@/lib/compute-billing";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
@@ -106,6 +107,8 @@ export async function billingNetReceivable(billingId: number): Promise<number> {
 }
 
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("billings:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const clientId = url.searchParams.get("clientId");
   const period = url.searchParams.get("period");
@@ -120,6 +123,8 @@ export async function GET(req: Request): Promise<Response> {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  const auth = await requirePermission("billings:edit");
+  if (isAuthError(auth)) return auth;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreateBillingBody.safeParse(body);

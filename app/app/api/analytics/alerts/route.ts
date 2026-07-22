@@ -11,6 +11,8 @@ import { buildFraudSeries } from "@/lib/analytics/fraud";
 import { formatMoney } from "@/lib/analytics/currency";
 import { aggregateTotals, type AggRecord } from "@/lib/analytics/billing-records-agg";
 
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+
 export const runtime = "nodejs";
 
 type AlertRow = {
@@ -30,6 +32,8 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const LOW_MARGIN_THRESHOLD = 10;
 
 export async function GET(): Promise<Response> {
+  const auth = await requirePermission("analytics:view");
+  if (isAuthError(auth)) return auth;
   const recs = await db.select().from(billingRecordsTable);
 
   const clientIds = [...new Set(recs.map((r) => r.clientId).filter((id): id is number => id != null))];

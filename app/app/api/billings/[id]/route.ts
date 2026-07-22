@@ -3,10 +3,13 @@ import { eq } from "drizzle-orm";
 import { db, billingsTable, billingLinesTable, billingEventItemsTable } from "@workspace/db";
 import { UpdateBillingBody } from "@workspace/api-zod";
 import { mapBilling } from "../route";
+import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("billings:view");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const [b] = await db.select().from(billingsTable).where(eq(billingsTable.id, Number(id)));
   if (!b) return NextResponse.json({ error: "Billing not found" }, { status: 404 });
@@ -31,6 +34,8 @@ async function replaceLines(billingId: number, lines: { partnerId: number; partn
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("billings:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
@@ -52,6 +57,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
+  const auth = await requirePermission("billings:edit");
+  if (isAuthError(auth)) return auth;
   const { id } = await params;
   const [row] = await db.delete(billingsTable).where(eq(billingsTable.id, Number(id))).returning();
   if (!row) return NextResponse.json({ error: "Billing not found" }, { status: 404 });

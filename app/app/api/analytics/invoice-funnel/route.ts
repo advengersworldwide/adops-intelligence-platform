@@ -6,6 +6,8 @@ import { parseIdList } from "@/lib/analytics/parse-params";
 import { collectionState, type CollectionState } from "@/lib/analytics/collection-state";
 import { billingNetReceivable } from "@/app/api/billings/route";
 
+import { requirePermission, isAuthError } from "@/lib/auth/require";
+
 export const runtime = "nodejs";
 
 const STATUS_LABELS = ["pending", "approved", "dispute"] as const;
@@ -14,6 +16,8 @@ const COLLECTION_LABELS = ["outstanding", "partial", "paid"] as const satisfies 
 // Amounts are PKR net receivable (billingNetReceivable applies forex) — same basis as the
 // aging/cashflow AR figures. No currency unification with AP here.
 export async function GET(req: Request): Promise<Response> {
+  const auth = await requirePermission("analytics:view");
+  if (isAuthError(auth)) return auth;
   const url = new URL(req.url);
   const qp = GetInvoiceFunnelQueryParams.safeParse(Object.fromEntries(url.searchParams));
   if (!qp.success) return NextResponse.json({ error: qp.error.message }, { status: 400 });
