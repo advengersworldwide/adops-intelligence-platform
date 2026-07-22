@@ -887,7 +887,7 @@ const financialsItems = [
 const bottomNavItems = [
   { href: "/upload", label: "Upload Data", icon: Upload, permission: "upload:data" },
   { href: "/analytics", label: "Analytics", icon: BarChart3, permission: "analytics:view" },
-  { href: "/settings", label: "Settings", icon: Settings, permission: "settings.general:view" },
+  { href: "/settings", label: "Settings", icon: Settings, permission: "settings:view" },
 ] as const;
 ```
 
@@ -904,7 +904,7 @@ function canAccess(permission: string): boolean {
 }
 ```
 
-> Settings shows if the user can see *any* settings tab; `settings.general:view` is the coarsest, so use it as the nav gate. Roles/users/catalog-only admins still reach `/settings` because the page itself renders only their permitted tabs (Phase 3, Task 15).
+> Settings nav gates on `settings:view` ("can open the Settings area at all"). The four `settings.*` sub-perms gate individual tabs inside the page (Task 16), so a user with `settings:view` + only `settings.catalogs:manage` reaches `/settings` and sees only the catalog tabs.
 
 - [ ] **Step 2: Typecheck**
 
@@ -1386,7 +1386,7 @@ git commit -m "feat(rbac): nested billing tab gating + PO tabs + migrate legacy 
 
 - [ ] **Step 1: Replace the page guard and tab bar**
 
-- Change `<PermissionGuard permission="Manage Settings">` to gate on the coarsest settings perm: wrap the page in `<PermissionGuard permission="settings.general:view">` **only if** general is guaranteed; instead, gate each tab. Simplest correct approach: keep a light auth guard and filter the tab bar with `visibleTabs(SETTINGS_TABS, can)`.
+- Change the page's outer guard from `<PermissionGuard permission="Manage Settings">` to `<PermissionGuard permission="settings:view">` (denies anyone who can't open Settings at all), then filter the tab bar with `visibleTabs(SETTINGS_TABS, can)` so each tab is independently gated by its `settings.*` sub-permission.
 
 ```tsx
 import { useCan } from "@/lib/auth/user-context";
@@ -1398,7 +1398,7 @@ const tabs = visibleTabs(SETTINGS_TABS, can);
 const [activeTab, setActiveTab] = useState(() => pickDefaultTab(tabs) ?? "general");
 ```
 
-Render the tab buttons from `tabs` instead of the hardcoded array (lines ~322-342). If `tabs` is empty, render an "Access Denied" via the existing `PermissionGuard` fallback (wrap the whole return in `<PermissionGuard permission={tabs[0]?.permission ?? "settings.general:view"}>`), so a user with no settings perms is denied.
+Render the tab buttons from `tabs` instead of the hardcoded array (lines ~322-342). Keep the outer `<PermissionGuard permission="settings:view">` wrapping the whole return so a user without settings access is denied; a user with `settings:view` but no sub-tab perms will see the "No accessible sections." style empty state (render it when `tabs.length === 0`).
 
 - [ ] **Step 2: Guard the Roles/Users mutating handlers behind their perms**
 
@@ -1602,10 +1602,10 @@ describe("migratePermissions", () => {
     expect(out).not.toContain("clients:delete"); // delete stays off
   });
 
-  it("splits Manage Settings into the four settings perms", () => {
+  it("splits Manage Settings into settings:view + the four sub-perms", () => {
     const out = migratePermissions(["Manage Settings"]);
     expect(out).toEqual(expect.arrayContaining([
-      "settings.general:view", "settings.roles:manage",
+      "settings:view", "settings.general:view", "settings.roles:manage",
       "settings.users:manage", "settings.catalogs:manage",
     ]));
   });
@@ -1669,7 +1669,7 @@ const MAP: Record<string, Permission[]> = {
   "View Analytics": ["analytics:view"],
   "Upload Data": ["upload:data"],
   "Manage Settings": [
-    "settings.general:view", "settings.roles:manage",
+    "settings:view", "settings.general:view", "settings.roles:manage",
     "settings.users:manage", "settings.catalogs:manage",
   ],
   "View Transactions": [], // legacy media model retired
@@ -1768,7 +1768,7 @@ const OPERATOR_PERMS = ALL_PERMISSIONS.filter(
 
 const VIEWER_PERMS = ALL_PERMISSIONS.filter(
   (p) => p.endsWith(":view")
-    && !p.startsWith("settings.")
+    && !p.startsWith("settings") // excludes settings:view AND settings.* (viewers get no settings access)
     && p !== "analytics:export",
 );
 
