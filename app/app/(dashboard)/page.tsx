@@ -21,6 +21,16 @@ import type { DashboardLayoutItem } from "@/lib/dashboard/types";
 
 const RGL = ResponsiveGridLayout as React.ComponentType<ResponsiveGridLayoutProps & { draggableHandle?: string }>;
 
+const CATEGORY_ORDER = ["kpi", "profitability", "financial-ops", "relationships", "risk", "activity"] as const;
+const CATEGORY_LABEL: Record<string, string> = {
+  kpi: "KPIs",
+  profitability: "Profitability",
+  "financial-ops": "Financial Ops",
+  relationships: "Relationships",
+  risk: "Risk & Quality",
+  activity: "Activity",
+};
+
 function DashboardContent() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [rangeKey, setRangeKey] = useState("mtd");
@@ -103,17 +113,26 @@ function DashboardContent() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Add Widget</DialogTitle></DialogHeader>
           <div className="max-h-[60vh] space-y-2 overflow-y-auto py-2">
-            {widgetList.filter((w) => w.permission === null || perms.has(w.permission)).map((w) => (
-              <div key={w.id} onClick={() => toggleWidget(w.id)} data-testid={`widget-option-${w.id}`}
-                className={cn("flex cursor-pointer items-center justify-between rounded-xl border p-3.5 transition-all",
-                  dash.activeWidgets.includes(w.id) ? "border-primary/50 bg-primary/5" : "border-border hover:bg-muted/50")}>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{w.label}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">{w.description}</p>
+            {CATEGORY_ORDER.map((cat) => {
+              const items = widgetList.filter((w) => w.category === cat && (w.permission === null || perms.has(w.permission)));
+              if (items.length === 0) return null;
+              return (
+                <div key={cat} className="space-y-2">
+                  <p className="px-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{CATEGORY_LABEL[cat]}</p>
+                  {items.map((w) => (
+                    <div key={w.id} onClick={() => toggleWidget(w.id)} data-testid={`widget-option-${w.id}`}
+                      className={cn("flex cursor-pointer items-center justify-between rounded-xl border p-3.5 transition-all",
+                        dash.activeWidgets.includes(w.id) ? "border-primary/50 bg-primary/5" : "border-border hover:bg-muted/50")}>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{w.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{w.description}</p>
+                      </div>
+                      {dash.activeWidgets.includes(w.id) && <div className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Active</div>}
+                    </div>
+                  ))}
                 </div>
-                {dash.activeWidgets.includes(w.id) && <div className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground">Active</div>}
-              </div>
-            ))}
+              );
+            })}
           </div>
           <div className="flex justify-end pt-2"><Button variant="outline" onClick={() => setPaletteOpen(false)}>Close</Button></div>
         </DialogContent>
