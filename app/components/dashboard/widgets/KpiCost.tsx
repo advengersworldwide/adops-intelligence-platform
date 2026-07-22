@@ -12,7 +12,7 @@ export function KpiCost() {
   return (
     <DashboardWidget fill={false}>
       <KpiCard
-        title="Total Cost"
+        title="Total Partner Payout"
         value={adjustedSummary ? formatMoney(adjustedSummary.totalCost, baseCurrency) : formatMoney(0, baseCurrency)}
         delta={adjustedSummary?.costChange}
         positive={(adjustedSummary?.costChange ?? 0) <= 0}

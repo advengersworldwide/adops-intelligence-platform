@@ -51,7 +51,7 @@ export function ProfitabilityTab() {
             loading={summaryLoading}
           />
           <KpiCard
-            title="Total Cost"
+            title="Total Partner Payout"
             value={summary ? formatMoney(summary.totalCost) : "—"}
             delta={summary?.costChange}
             positive={(summary?.costChange ?? 0) <= 0}

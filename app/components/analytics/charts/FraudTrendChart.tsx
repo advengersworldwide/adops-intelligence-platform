@@ -33,6 +33,7 @@ export function FraudTrendChart({
   }
 
   return (
+    <>
     <ResponsiveChart width="100%" height={320}>
       <ComposedChart data={points} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -84,5 +85,9 @@ export function FraudTrendChart({
         />
       </ComposedChart>
     </ResponsiveChart>
+    <p className="mt-1 text-center text-[10px] text-muted-foreground">
+      Pins are monthly totals summed across all billing records in each period.
+    </p>
+    </>
   );
 }

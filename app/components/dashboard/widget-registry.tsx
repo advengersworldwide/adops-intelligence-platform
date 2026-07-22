@@ -29,7 +29,7 @@ const KPI = { w: 3, h: 3, minW: 2, minH: 2 };
 
 export const widgetRegistry: Record<string, WidgetDef> = {
   "revenue-kpi": { id: "revenue-kpi", label: "Revenue", description: "Total client revenue", category: "kpi", permission: null, defaultLayout: KPI, Component: KpiRevenue },
-  "cost-kpi": { id: "cost-kpi", label: "Cost", description: "Platform cost", category: "kpi", permission: "cost:view", defaultLayout: KPI, Component: KpiCost },
+  "cost-kpi": { id: "cost-kpi", label: "Partner Payout", description: "Partner payout (COGS)", category: "kpi", permission: "cost:view", defaultLayout: KPI, Component: KpiCost },
   "profit-kpi": { id: "profit-kpi", label: "Profit", description: "Net profit", category: "kpi", permission: "cost:view", defaultLayout: KPI, Component: KpiProfit },
   "margin-kpi": { id: "margin-kpi", label: "Margin %", description: "Profit / revenue", category: "kpi", permission: "cost:view", defaultLayout: KPI, Component: KpiMargin },
   "counts-row": { id: "counts-row", label: "Counts", description: "Clients / platforms / records", category: "kpi", permission: null, defaultLayout: { w: 12, h: 3, minW: 6, minH: 2 }, Component: Counts },
