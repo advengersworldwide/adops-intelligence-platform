@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { CreateClientPODialog } from "./CreateClientPODialog";
 import { ClientPODetailDialog } from "./ClientPODetailDialog";
+import { useTableControls, TableSearch, TableFilter, SortableTh, distinctOptions } from "@/components/ui/table-controls";
 
 function fmtDate(s: string) { return new Date(s).toLocaleDateString(); }
 
@@ -23,6 +24,24 @@ export function ClientPOTab() {
   const { toast } = useToast();
   const canEdit = useHasPermission("purchase-orders:edit");
   const { data: rows, isLoading } = useListClientPurchaseOrders();
+  const { search, setSearch, sort, toggleSort, filterValues, setFilter, rows: filtered } = useTableControls({
+    rows,
+    searchAccessor: r => [r.code, r.clientName, r.buyingHouseName, r.createdByName],
+    sortAccessors: {
+      code: r => r.code,
+      client: r => r.clientName,
+      house: r => r.buyingHouseName,
+      received: r => r.receiveDate,
+      created: r => r.createdAt,
+    },
+    filters: [
+      { key: "client", label: "Client", options: [], predicate: (r, v) => r.clientName === v },
+      { key: "house", label: "Buying House", options: [], predicate: (r, v) => r.buyingHouseName === v },
+    ],
+    initialSort: { key: "created", dir: "desc" },
+  });
+  const clientOptions = distinctOptions(rows, r => r.clientName);
+  const houseOptions = distinctOptions(rows, r => r.buyingHouseName);
 
   const del = useDeleteClientPurchaseOrder({
     mutation: {
@@ -37,7 +56,7 @@ export function ClientPOTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{rows?.length ?? 0} client purchase orders</p>
+        <p className="text-sm text-muted-foreground">{filtered.length} client purchase orders</p>
         {canEdit && (
           <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-cpo-btn">
             <Plus className="h-3.5 w-3.5" /> Create Purchase Order
@@ -45,11 +64,25 @@ export function ClientPOTab() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <TableSearch value={search} onChange={setSearch} placeholder="Search CPO, client, buying house…" />
+        <TableFilter label="Client" value={filterValues.client} options={clientOptions} onChange={v => setFilter("client", v)} />
+        <TableFilter label="Buying House" value={filterValues.house} options={houseOptions} onChange={v => setFilter("house", v)} />
+      </div>
+
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-x-auto">
         <table className="w-full min-w-max">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {headers.map(h => <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>)}
+              <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Sr.</th>
+              <SortableTh label="CPO ID" sortKey="code" sort={sort} onSort={toggleSort} className="px-5 py-3 text-xs" />
+              <SortableTh label="Client" sortKey="client" sort={sort} onSort={toggleSort} className="px-5 py-3 text-xs" />
+              <SortableTh label="Buying House" sortKey="house" sort={sort} onSort={toggleSort} className="px-5 py-3 text-xs" />
+              <SortableTh label="Received" sortKey="received" sort={sort} onSort={toggleSort} className="px-5 py-3 text-xs" />
+              <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Duration</th>
+              <SortableTh label="Created" sortKey="created" sort={sort} onSort={toggleSort} className="px-5 py-3 text-xs" />
+              <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Created By</th>
+              {canEdit && <th className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -59,10 +92,10 @@ export function ClientPOTab() {
                   {headers.map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-20" /></td>)}
                 </tr>
               ))
-            ) : (rows?.length ?? 0) === 0 ? (
-              <tr><td colSpan={headers.length} className="px-5 py-10 text-center text-sm text-muted-foreground">No purchase orders yet</td></tr>
+            ) : filtered.length === 0 ? (
+              <tr><td colSpan={headers.length} className="px-5 py-10 text-center text-sm text-muted-foreground">No purchase orders found</td></tr>
             ) : (
-              rows!.map((r, i) => (
+              filtered.map((r, i) => (
                 <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30" data-testid={`cpo-row-${r.id}`}>
                   <td className="px-5 py-3 text-sm text-muted-foreground">{i + 1}</td>
                   <td className="px-5 py-3 text-sm font-medium">{r.code}</td>

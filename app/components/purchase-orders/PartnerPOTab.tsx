@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { CreatePartnerPODialog } from "./CreatePartnerPODialog";
+import { useTableControls, TableSearch, TableFilter, SortableTh, distinctOptions } from "@/components/ui/table-controls";
 
 const money = (n: number) =>
   `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -28,6 +29,25 @@ export function PartnerPOTab() {
   const { toast } = useToast();
   const canEdit = useHasPermission("purchase-orders:edit") ?? false;
   const { data: rows, isLoading } = useListPartnerPurchaseOrders();
+  const { search, setSearch, sort, toggleSort, filterValues, setFilter, rows: filtered } = useTableControls({
+    rows,
+    searchAccessor: r => [r.code, r.partnerName, r.buyingHouseName, r.clientName, r.createdByName],
+    sortAccessors: {
+      code: r => r.code,
+      partner: r => r.partnerName,
+      house: r => r.buyingHouseName,
+      client: r => r.clientName,
+      budget: r => r.totalBudget,
+      created: r => r.createdAt,
+    },
+    filters: [
+      { key: "partner", label: "Partner", options: [], predicate: (r, v) => r.partnerName === v },
+      { key: "client", label: "Client", options: [], predicate: (r, v) => r.clientName === v },
+    ],
+    initialSort: { key: "created", dir: "desc" },
+  });
+  const partnerOptions = distinctOptions(rows, r => r.partnerName);
+  const clientOptions = distinctOptions(rows, r => r.clientName);
 
   const del = useDeletePartnerPurchaseOrder({
     mutation: {
@@ -44,7 +64,7 @@ export function PartnerPOTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{rows?.length ?? 0} partner purchase orders</p>
+        <p className="text-sm text-muted-foreground">{filtered.length} partner purchase orders</p>
         {canEdit && (
           <Button
             size="sm"
@@ -57,26 +77,26 @@ export function PartnerPOTab() {
         )}
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <TableSearch value={search} onChange={setSearch} placeholder="Search PPO, partner, client, buying house…" />
+        <TableFilter label="Partner" value={filterValues.partner} options={partnerOptions} onChange={v => setFilter("partner", v)} />
+        <TableFilter label="Client" value={filterValues.client} options={clientOptions} onChange={v => setFilter("client", v)} />
+      </div>
+
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {[
-                "",
-                "Sr.",
-                "PPO ID",
-                "Partner",
-                "Buying House",
-                "Client",
-                "Total Budget",
-                "Created",
-                "Created By",
-                ...(canEdit ? ["Actions"] : []),
-              ].map((h, i) => (
-                <th key={i} className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">
-                  {h}
-                </th>
-              ))}
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground"></th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Sr.</th>
+              <SortableTh label="PPO ID" sortKey="code" sort={sort} onSort={toggleSort} className="px-4 py-3 text-xs" />
+              <SortableTh label="Partner" sortKey="partner" sort={sort} onSort={toggleSort} className="px-4 py-3 text-xs" />
+              <SortableTh label="Buying House" sortKey="house" sort={sort} onSort={toggleSort} className="px-4 py-3 text-xs" />
+              <SortableTh label="Client" sortKey="client" sort={sort} onSort={toggleSort} className="px-4 py-3 text-xs" />
+              <SortableTh label="Total Budget" sortKey="budget" sort={sort} onSort={toggleSort} className="px-4 py-3 text-xs" />
+              <SortableTh label="Created" sortKey="created" sort={sort} onSort={toggleSort} className="px-4 py-3 text-xs" />
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Created By</th>
+              {canEdit && <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -90,14 +110,14 @@ export function PartnerPOTab() {
                   ))}
                 </tr>
               ))
-            ) : (rows?.length ?? 0) === 0 ? (
+            ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={colCount} className="px-4 py-10 text-center text-sm text-muted-foreground">
-                  No partner purchase orders yet
+                  No partner purchase orders found
                 </td>
               </tr>
             ) : (
-              rows!.map((r, i) => (
+              filtered.map((r, i) => (
                 <PpoRow
                   key={r.id}
                   r={r}

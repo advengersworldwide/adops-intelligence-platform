@@ -22,6 +22,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { PaymentStatusSelect } from "@/components/payments/PaymentStatusSelect";
+import { useTableControls, TableSearch, TableFilter, SortableTh } from "@/components/ui/table-controls";
 
 function fmtNum(n: number | null | undefined, d = 2) {
   if (n == null || isNaN(n)) return "—";
@@ -59,6 +60,22 @@ export function ClientPaymentsTab() {
   const { toast } = useToast();
 
   const { data: payments, isLoading } = useListPayments();
+  const { search, setSearch, sort, toggleSort, filterValues, setFilter, rows } = useTableControls({
+    rows: payments,
+    searchAccessor: p => [p.mode, p.notes, ...p.allocations.map(a => a.billingLabel)],
+    sortAccessors: {
+      mode: p => p.mode,
+      total: p => p.totalAmount,
+      date: p => p.paymentDate,
+      status: p => p.status ?? "pending",
+      created: p => p.createdAt,
+    },
+    filters: [
+      { key: "status", label: "Status", options: [], predicate: (p, v) => (p.status ?? "pending") === v },
+      { key: "mode", label: "Mode", options: [], predicate: (p, v) => p.mode === v },
+    ],
+    initialSort: { key: "created", dir: "desc" },
+  });
   const deleteMutation = useDeletePayment({
     mutation: {
       onSuccess: () => { qc.invalidateQueries({ queryKey: getListPaymentsQueryKey() }); toast({ title: "Payment deleted" }); },
@@ -69,19 +86,32 @@ export function ClientPaymentsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{payments?.length ?? 0} payments</p>
+        <p className="text-sm text-muted-foreground">{rows.length} payments</p>
         <Button size="sm" className="gap-1.5 text-xs" onClick={() => setAddOpen(true)}>
           <Plus className="h-3.5 w-3.5" /> Record Payment
         </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <TableSearch value={search} onChange={setSearch} placeholder="Search mode, notes, billing…" />
+        <TableFilter label="Status" value={filterValues.status} options={[{ value: "pending", label: "Pending" }, { value: "received", label: "Received" }]} onChange={v => setFilter("status", v)} />
+        <TableFilter label="Mode" value={filterValues.mode} options={[{ value: "cash", label: "Cash" }, { value: "cheque", label: "Cheque" }, { value: "online", label: "Online" }]} onChange={v => setFilter("mode", v)} />
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-x-auto">
         <table className="w-full min-w-max">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["#", "Mode", "Total (PKR)", "Billings", "Notes", "Date Received", "Status", "Created", "Attachments", "Actions"].map(h => (
-                <th key={h} className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{h}</th>
-              ))}
+              <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">#</th>
+              <SortableTh label="Mode" sortKey="mode" sort={sort} onSort={toggleSort} />
+              <SortableTh label="Total (PKR)" sortKey="total" sort={sort} onSort={toggleSort} />
+              <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">Billings</th>
+              <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">Notes</th>
+              <SortableTh label="Date Received" sortKey="date" sort={sort} onSort={toggleSort} />
+              <SortableTh label="Status" sortKey="status" sort={sort} onSort={toggleSort} />
+              <SortableTh label="Created" sortKey="created" sort={sort} onSort={toggleSort} />
+              <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">Attachments</th>
+              <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -91,9 +121,9 @@ export function ClientPaymentsTab() {
                   {[...Array(10)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
                 </tr>
               ))
-            ) : !payments?.length ? (
-              <tr><td colSpan={10} className="px-5 py-10 text-center text-sm text-muted-foreground">No payments yet</td></tr>
-            ) : payments.map((p, i) => (
+            ) : !rows.length ? (
+              <tr><td colSpan={10} className="px-5 py-10 text-center text-sm text-muted-foreground">No payments found</td></tr>
+            ) : rows.map((p, i) => (
               <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20">
                 <td className="px-3 py-2 text-xs text-muted-foreground">{i + 1}</td>
                 <td className="px-3 py-2 text-xs font-semibold capitalize">{p.mode}</td>

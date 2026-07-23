@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { computeBilling } from "@/lib/compute-billing";
 import { cn } from "@/lib/utils";
 import { StatusSelect } from "@/components/billings/StatusSelect";
+import { useTableControls, TableSearch, TableFilter, SortableTh, distinctOptions } from "@/components/ui/table-controls";
 
 function fmt(n: number) { return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
@@ -21,6 +22,19 @@ export function ClientBillingDetailTab() {
   const { toast } = useToast();
   const router = useRouter();
   const { data: billings, isLoading } = useListBillings({});
+  const { search, setSearch, sort, toggleSort, filterValues, setFilter, rows } = useTableControls({
+    rows: billings,
+    searchAccessor: b => [b.clientName, b.invoiceCode, ...b.lines.map(l => l.partnerName)],
+    sortAccessors: { client: b => b.clientName, month: b => b.period, status: b => b.status },
+    filters: [
+      { key: "status", label: "Status", options: [], predicate: (b, v) => b.status === v },
+      { key: "client", label: "Client", options: [], predicate: (b, v) => b.clientName === v },
+      { key: "period", label: "Month", options: [], predicate: (b, v) => b.period === v },
+    ],
+    initialSort: { key: "month", dir: "desc" },
+  });
+  const clientOptions = distinctOptions(billings, b => b.clientName);
+  const periodOptions = distinctOptions(billings, b => b.period);
 
   const gen = useGenerateBillingInvoice({ mutation: {
     onSuccess: (data) => {
@@ -33,16 +47,27 @@ export function ClientBillingDetailTab() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{billings?.length ?? 0} billings</p>
+      <p className="text-sm text-muted-foreground">{rows.length} billings</p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <TableSearch value={search} onChange={setSearch} placeholder="Search client, invoice, partner…" />
+        <TableFilter label="Status" value={filterValues.status} options={[{ value: "pending", label: "Pending" }, { value: "approved", label: "Approved" }, { value: "dispute", label: "Dispute" }]} onChange={v => setFilter("status", v)} />
+        <TableFilter label="Client" value={filterValues.client} options={clientOptions} onChange={v => setFilter("client", v)} />
+        <TableFilter label="Month" value={filterValues.period} options={periodOptions} onChange={v => setFilter("period", v)} />
+      </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-x-auto">
         <table className="w-full min-w-max">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Client", "Partner", "Month", "Total Invoice", "Less WHT", "Less SST", "Less BD", "Net Receivable",
-                "Net Payable (PKR)", "Net Margin", "Status", "Invoice"].map(h => (
+              <SortableTh label="Client" sortKey="client" sort={sort} onSort={toggleSort} />
+              <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">Partner</th>
+              <SortableTh label="Month" sortKey="month" sort={sort} onSort={toggleSort} />
+              {["Total Invoice", "Less WHT", "Less SST", "Less BD", "Net Receivable", "Net Payable (PKR)", "Net Margin"].map(h => (
                 <th key={h} className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{h}</th>
               ))}
+              <SortableTh label="Status" sortKey="status" sort={sort} onSort={toggleSort} />
+              <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">Invoice</th>
             </tr>
           </thead>
           <tbody>
@@ -50,9 +75,9 @@ export function ClientBillingDetailTab() {
               [...Array(3)].map((_, i) => (
                 <tr key={i} className="border-b border-border">{[...Array(12)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>
               ))
-            ) : !billings?.length ? (
-              <tr><td colSpan={12} className="px-5 py-10 text-center text-sm text-muted-foreground">No billings yet</td></tr>
-            ) : billings.map(b => <DetailRows key={b.id} b={b}
+            ) : !rows.length ? (
+              <tr><td colSpan={12} className="px-5 py-10 text-center text-sm text-muted-foreground">No billings found</td></tr>
+            ) : rows.map(b => <DetailRows key={b.id} b={b}
               onInvoice={() => gen.mutate({ id: b.id })} />)}
           </tbody>
         </table>
