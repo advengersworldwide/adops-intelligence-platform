@@ -5,10 +5,8 @@ import { useCallback, useMemo, useState } from "react";
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle, Download } from "lucide-react";
 import {
   useRunImport,
-  getListClientPurchaseOrdersQueryKey,
-  getListPartnerPurchaseOrdersQueryKey,
-  getListPartnerBillsQueryKey,
-  getListPartnerPaymentsQueryKey,
+  useListClients,
+  useListPartners,
 } from "@workspace/api-client-react";
 import type { ImportResult } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -22,14 +20,6 @@ import { parseDelimited } from "@/lib/import/parse";
 import { autoMapColumns } from "@/lib/import/map-columns";
 import { importCatalog, getCatalogEntry } from "@/lib/import/catalog";
 
-// Which list query to refresh after a successful import, per type.
-const listKeyByType: Record<string, () => readonly unknown[]> = {
-  "client-purchase-orders": getListClientPurchaseOrdersQueryKey,
-  "partner-purchase-orders": getListPartnerPurchaseOrdersQueryKey,
-  "partner-bills": getListPartnerBillsQueryKey,
-  "partner-payments": getListPartnerPaymentsQueryKey,
-};
-
 export default function ImportPage() {
   const [importType, setImportType] = useState(importCatalog[0].type);
   const [dragging, setDragging] = useState(false);
@@ -39,11 +29,16 @@ export default function ImportPage() {
   const [mapping, setMapping] = useState<Record<string, number>>({});
   const [preview, setPreview] = useState<ImportResult | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [scopeClientId, setScopeClientId] = useState<number | null>(null);
+  const [scopePartnerId, setScopePartnerId] = useState<number | null>(null);
   const qc = useQueryClient();
   const { toast } = useToast();
+  const { data: clients } = useListClients();
+  const { data: partners } = useListPartners();
 
   const entry = getCatalogEntry(importType)!;
   const columns = entry.columns;
+  const scopeReady = entry.scope === "client" ? scopeClientId != null : scopePartnerId != null;
 
   const missingRequired = useMemo(
     () => columns.filter((c) => c.required && mapping[c.key] == null).map((c) => c.label),
@@ -84,7 +79,7 @@ export default function ImportPage() {
 
   const runDryRun = () => {
     runImportMutation.mutate(
-      { type: importType, data: { mapping, rows, dryRun: true } },
+      { type: importType, data: { mapping, rows, dryRun: true, scopeClientId, scopePartnerId } },
       { onSuccess: (data: ImportResult) => {
           setPreview(data);
           if (data.fileErrors.length) toast({ title: data.fileErrors.join("; "), variant: "destructive" });
@@ -94,11 +89,10 @@ export default function ImportPage() {
 
   const runCommit = () => {
     runImportMutation.mutate(
-      { type: importType, data: { mapping, rows, dryRun: false } },
+      { type: importType, data: { mapping, rows, dryRun: false, scopeClientId, scopePartnerId } },
       { onSuccess: (data: ImportResult) => {
           setResult(data);
-          const keyFn = listKeyByType[importType];
-          if (keyFn) qc.invalidateQueries({ queryKey: keyFn() });
+          qc.invalidateQueries();
         } },
     );
   };
@@ -138,17 +132,40 @@ export default function ImportPage() {
           </Button>
         </div>
 
-        {/* Type selector */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-          <label className="text-sm font-semibold text-foreground">Data type</label>
-          <Select value={importType} onValueChange={(v) => { setImportType(v); reset(); }}>
-            <SelectTrigger className="mt-2 w-72 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {importCatalog.map((d) => (
-                <SelectItem key={d.type} value={d.type}>{d.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Type + scope selector */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <div>
+            <label className="text-sm font-semibold text-foreground">Data type</label>
+            <Select value={importType} onValueChange={(v) => { setImportType(v); reset(); setScopeClientId(null); setScopePartnerId(null); }}>
+              <SelectTrigger className="mt-2 w-72 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {importCatalog.map((d) => (
+                  <SelectItem key={d.type} value={d.type}>{d.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-foreground">
+              {entry.scope === "client" ? "Client" : "Partner"} <span className="text-red-500">*</span>
+            </label>
+            <p className="text-xs text-muted-foreground">Upload is scoped to this {entry.scope}; rows whose {entry.scope} doesn&apos;t match are rejected.</p>
+            {entry.scope === "client" ? (
+              <Select value={scopeClientId != null ? String(scopeClientId) : ""} onValueChange={(v) => setScopeClientId(Number(v))}>
+                <SelectTrigger className="mt-2 w-72 text-sm"><SelectValue placeholder="Select a client" /></SelectTrigger>
+                <SelectContent>
+                  {(clients ?? []).map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Select value={scopePartnerId != null ? String(scopePartnerId) : ""} onValueChange={(v) => setScopePartnerId(Number(v))}>
+                <SelectTrigger className="mt-2 w-72 text-sm"><SelectValue placeholder="Select a partner" /></SelectTrigger>
+                <SelectContent>
+                  {(partners ?? []).map((p) => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
 
         {/* Expected columns */}
@@ -236,11 +253,13 @@ export default function ImportPage() {
               ))}
             </div>
             <div className="border-t border-border px-5 py-4 flex items-center justify-end gap-3">
-              {missingRequired.length > 0 && (
+              {!scopeReady ? (
+                <span className="mr-auto text-xs text-red-600">Select a {entry.scope} above first</span>
+              ) : missingRequired.length > 0 && (
                 <span className="mr-auto text-xs text-red-600">Map required column(s): {missingRequired.join(", ")}</span>
               )}
               <Button variant="outline" size="sm" onClick={reset}>Clear</Button>
-              <Button size="sm" disabled={missingRequired.length > 0 || runImportMutation.isPending} onClick={runDryRun} data-testid="preview-btn">
+              <Button size="sm" disabled={!scopeReady || missingRequired.length > 0 || runImportMutation.isPending} onClick={runDryRun} data-testid="preview-btn">
                 {runImportMutation.isPending ? "Checking…" : "Preview"}
               </Button>
             </div>

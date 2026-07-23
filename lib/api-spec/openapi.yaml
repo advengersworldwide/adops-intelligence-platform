@@ -2127,6 +2127,8 @@ components:
           type: ["integer", "null"]
         paymentTermName:
           type: ["string", "null"]
+        platformBulkDiscountPct:
+          type: ["number", "null"]
         createdAt:
           type: string
 
@@ -2170,6 +2172,8 @@ components:
           type: ["string", "null"]
         paymentTermsId:
           type: ["integer", "null"]
+        platformBulkDiscountPct:
+          type: ["number", "null"]
 
     PartnerUpdate:
       type: object
@@ -2588,6 +2592,10 @@ components:
               type: string
         dryRun:
           type: boolean
+        scopeClientId:
+          type: ["integer", "null"]
+        scopePartnerId:
+          type: ["integer", "null"]
     ImportRowResult:
       type: object
       required: [rowNumber, status, messages]

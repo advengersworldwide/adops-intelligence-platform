@@ -13,7 +13,7 @@ export const partnerBillsColumns: ColumnSpec[] = [
 
 export const partnerBillsMeta = {
   type: "partner-bills",
-  label: "Partner Bills",
+  label: "Partner Billing",
   columns: partnerBillsColumns,
   sampleRows: [
     ["Acme Media", "1500.00", "INV-2026-014", "Beta LLC", "PPO-ACME-0126-0001", "2026-01-20", "January services"],

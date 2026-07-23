@@ -11,4 +11,8 @@ export interface ImportRequest {
   mapping: ImportRequestMapping;
   rows: string[][];
   dryRun: boolean;
+  /** @nullable */
+  scopeClientId?: number | null;
+  /** @nullable */
+  scopePartnerId?: number | null;
 }

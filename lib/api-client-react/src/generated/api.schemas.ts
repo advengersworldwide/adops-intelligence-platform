@@ -301,6 +301,8 @@ export interface Partner {
   paymentTermsId?: number | null;
   /** @nullable */
   paymentTermName?: string | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
   createdAt: string;
 }
 
@@ -341,6 +343,8 @@ export interface PartnerInput {
   ntnNumber?: string | null;
   /** @nullable */
   paymentTermsId?: number | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
 }
 
 export interface PartnerUpdate {
@@ -662,6 +666,10 @@ export interface ImportRequest {
   mapping: ImportRequestMapping;
   rows: string[][];
   dryRun: boolean;
+  /** @nullable */
+  scopeClientId?: number | null;
+  /** @nullable */
+  scopePartnerId?: number | null;
 }
 
 export type ImportRowResultStatus = typeof ImportRowResultStatus[keyof typeof ImportRowResultStatus];

@@ -16,6 +16,7 @@ function ctx(over: Partial<PbillContext> = {}): PbillContext {
     ppoByCode: new Map([["PPO-ACME-0126-0001", { id: 11 }]]),
     existingKeys: new Set<string>(),
     maxSeqByGroup: new Map<string, number>(),
+    scopePartnerId: null,
     ...over,
   };
 }

@@ -30,6 +30,7 @@ const createSchema = z.object({
   pocEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   companyEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   companyNumber: z.string().regex(/^[+\d\s()\-]*$/, "Invalid phone number").optional().or(z.literal("")),
+  platformBulkDiscountPct: z.string().optional(),
 });
 type CreateForm = z.infer<typeof createSchema>;
 
@@ -138,7 +139,10 @@ function PartnersPage() {
       <CreatePlatformDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        onSubmit={(data) => createMutation.mutate({ data })}
+        onSubmit={(data) => {
+          const { platformBulkDiscountPct, ...rest } = data;
+          createMutation.mutate({ data: { ...rest, platformBulkDiscountPct: platformBulkDiscountPct && platformBulkDiscountPct.trim() !== "" ? Number(platformBulkDiscountPct) : null } });
+        }}
         isSubmitting={createMutation.isPending}
       />
     </div>
@@ -151,7 +155,7 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
 }) {
   const form = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
-    defaultValues: { name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" },
+    defaultValues: { name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "", platformBulkDiscountPct: "" },
   });
 
   const nameValue = form.watch("name");
@@ -162,7 +166,7 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
   }, [nameValue, form]);
 
   useEffect(() => {
-    if (open) form.reset({ name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" });
+    if (open) form.reset({ name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "", platformBulkDiscountPct: "" });
   }, [open, form]);
 
   return (
@@ -184,6 +188,14 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
                     data-testid="partner-prefix-input" />
                 </FormControl>
                 <p className="text-xs text-muted-foreground">2–4 letters/numbers. Used to generate partner PO codes (e.g. SB-0126-0001).</p>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="platformBulkDiscountPct" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Platform Bulk Discount %</FormLabel>
+                <FormControl><Input type="number" step="0.01" placeholder="0" {...field} /></FormControl>
+                <p className="text-xs text-muted-foreground">The partner&apos;s platform discount, applied to billing records on upload.</p>
                 <FormMessage />
               </FormItem>
             )} />

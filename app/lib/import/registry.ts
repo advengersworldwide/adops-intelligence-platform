@@ -4,13 +4,17 @@ import { clientPurchaseOrdersDescriptor } from "./descriptors/client-purchase-or
 import { partnerPurchaseOrdersDescriptor } from "./descriptors/partner-purchase-orders";
 import { partnerBillsDescriptor } from "./descriptors/partner-bills";
 import { partnerPaymentsDescriptor } from "./descriptors/partner-payments";
+import { clientBillingSummaryDescriptor } from "./descriptors/client-billing-summary";
 
 // Heterogeneous descriptors — ctx/payload types differ per entry.
+// The UI only offers the two in catalog.ts; the others stay registered so their
+// routes/tests keep working, but they aren't shown in the bulk-upload picker.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const registry: Record<string, ImportDescriptor<any, any>> = {
+  [clientBillingSummaryDescriptor.type]: clientBillingSummaryDescriptor,
+  [partnerBillsDescriptor.type]: partnerBillsDescriptor,
   [clientPurchaseOrdersDescriptor.type]: clientPurchaseOrdersDescriptor,
   [partnerPurchaseOrdersDescriptor.type]: partnerPurchaseOrdersDescriptor,
-  [partnerBillsDescriptor.type]: partnerBillsDescriptor,
   [partnerPaymentsDescriptor.type]: partnerPaymentsDescriptor,
 };
 

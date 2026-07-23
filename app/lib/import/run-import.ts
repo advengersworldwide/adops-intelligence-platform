@@ -1,9 +1,10 @@
 // app/lib/import/run-import.ts
-import type { EngineResult, ImportDescriptor, ImportSession, RowResult } from "./types";
+import type { EngineResult, ImportDescriptor, ImportScope, ImportSession, RowResult } from "./types";
 
 export interface RunOptions {
   dryRun: boolean;
   session: ImportSession;
+  scope: ImportScope;
 }
 
 const MAX_ROWS = 5000;
@@ -38,7 +39,7 @@ export async function runImport<TCtx, TPayload>(
     return cells;
   };
 
-  const ctx = await descriptor.loadContext();
+  const ctx = await descriptor.loadContext(opts.scope);
   const seen = new Set<string>();
   const results: RowResult<TPayload>[] = [];
 

@@ -21,14 +21,14 @@ function fakeDescriptor(commitSpy: (n: number) => void): ImportDescriptor<{ ok: 
 
 describe("runImport", () => {
   it("reports a file error when a required column is unmapped", async () => {
-    const res = await runImport(fakeDescriptor(() => {}), [["x"]], {}, { dryRun: true, session: { userId: null } });
+    const res = await runImport(fakeDescriptor(() => {}), [["x"]], {}, { dryRun: true, session: { userId: null }, scope: {} });
     expect(res.fileErrors[0]).toContain("V");
     expect(res.rows).toEqual([]);
   });
 
   it("dry-run annotates rows and never commits", async () => {
     const spy = vi.fn();
-    const res = await runImport(fakeDescriptor(spy), [["good"], ["bad"]], { v: 0 }, { dryRun: true, session: { userId: null } });
+    const res = await runImport(fakeDescriptor(spy), [["good"], ["bad"]], { v: 0 }, { dryRun: true, session: { userId: null }, scope: {} });
     expect(res.total).toBe(2);
     expect(res.valid).toBe(1);
     expect(res.errored).toBe(1);
@@ -37,7 +37,7 @@ describe("runImport", () => {
 
   it("commit inserts only the valid payloads", async () => {
     const spy = vi.fn();
-    const res = await runImport(fakeDescriptor(spy), [["good"], ["bad"], ["good2"]], { v: 0 }, { dryRun: false, session: { userId: 1 } });
+    const res = await runImport(fakeDescriptor(spy), [["good"], ["bad"], ["good2"]], { v: 0 }, { dryRun: false, session: { userId: 1 }, scope: {} });
     expect(res.valid).toBe(2);
     expect(spy).toHaveBeenCalledWith(2);
   });
@@ -69,7 +69,7 @@ describe("runImport (grouped)", () => {
       fakeGrouped(() => {}),
       [["A", "x"], ["A", "y"], ["B", "z"]],
       { ref: 0, v: 1 },
-      { dryRun: true, session: { userId: null } },
+      { dryRun: true, session: { userId: null }, scope: {} },
     );
     expect(res.total).toBe(2);
     expect(res.valid).toBe(2);
@@ -80,7 +80,7 @@ describe("runImport (grouped)", () => {
       fakeGrouped(() => {}),
       [["", "x"], ["A", "y"]],
       { ref: 0, v: 1 },
-      { dryRun: true, session: { userId: null } },
+      { dryRun: true, session: { userId: null }, scope: {} },
     );
     expect(res.errored).toBe(1);
     expect(res.valid).toBe(1);
@@ -93,7 +93,7 @@ describe("runImport (grouped)", () => {
       fakeGrouped(spy),
       [["A", "x"], ["A", "y"], ["bad", "z"]],
       { ref: 0, v: 1 },
-      { dryRun: false, session: { userId: 1 } },
+      { dryRun: false, session: { userId: 1 }, scope: {} },
     );
     expect(spy).toHaveBeenCalledWith(1);
   });

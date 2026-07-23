@@ -1,5 +1,5 @@
 // app/lib/import/descriptors/partner-bills.ts
-import type { FlatImportDescriptor, RowResult } from "../types";
+import type { FlatImportDescriptor, ImportScope, RowResult } from "../types";
 import { normalizeName, parseDateCell } from "./cpo-helpers";
 import { partnerBillsColumns } from "./partner-bills.columns";
 import { db, partnerBillsTable, partnersTable, clientsTable, partnerPurchaseOrdersTable } from "@workspace/db";
@@ -14,6 +14,7 @@ export interface PbillContext {
   ppoByCode: Map<string, { id: number }>;
   existingKeys: Set<string>;      // `${partnerId}|${normalizedInvoiceNumber}`
   maxSeqByGroup: Map<string, number>;
+  scopePartnerId: number | null;  // when set, every row's partner must match this
 }
 
 export interface PbillPayload {
@@ -44,6 +45,9 @@ function resolveRow(
   const partner = pm[0];
   const prefix = partner.codePrefix.trim();
   if (!prefix) return error(`Partner "${partnerName}" has no code prefix — set one first`);
+  if (ctx.scopePartnerId != null && partner.id !== ctx.scopePartnerId) {
+    return error(`Row partner "${partnerName}" does not match the selected partner`);
+  }
 
   const amountStr = cells.amount.trim();
   const amount = Number(amountStr);
@@ -92,9 +96,9 @@ function resolveRow(
 
 export const partnerBillsDescriptor: FlatImportDescriptor<PbillContext, PbillPayload> = {
   type: "partner-bills",
-  label: "Partner Bills",
+  label: "Partner Billing",
   columns: partnerBillsColumns,
-  async loadContext(): Promise<PbillContext> {
+  async loadContext(scope: ImportScope): Promise<PbillContext> {
     const partners = await db
       .select({ id: partnersTable.id, name: partnersTable.name, codePrefix: partnersTable.codePrefix })
       .from(partnersTable);
@@ -128,7 +132,7 @@ export const partnerBillsDescriptor: FlatImportDescriptor<PbillContext, PbillPay
     }
     const maxSeqByGroup = seedMaxSeq(existing.map((r) => r.code), "PBILL");
 
-    return { partnersByName, clientsByName, ppoByCode, existingKeys, maxSeqByGroup };
+    return { partnersByName, clientsByName, ppoByCode, existingKeys, maxSeqByGroup, scopePartnerId: scope.partnerId ?? null };
   },
   resolveRow,
   async commit(payloads: PbillPayload[], ctx: PbillContext, session: ImportSession): Promise<void> {

@@ -32,12 +32,18 @@ export interface ImportSession {
   userId: number | null;
 }
 
+/** Optional client/partner scope the upload is restricted to (selected in the UI). */
+export interface ImportScope {
+  clientId?: number | null;
+  partnerId?: number | null;
+}
+
 /** A flat importer: one file row -> one record. */
 export interface FlatImportDescriptor<TCtx, TPayload> {
   type: string;
   label: string;
   columns: ColumnSpec[];
-  loadContext(): Promise<TCtx>;
+  loadContext(scope: ImportScope): Promise<TCtx>;
   resolveRow(
     cells: Record<string, string>,
     rowNumber: number,
@@ -53,7 +59,7 @@ export interface GroupedImportDescriptor<TCtx, TPayload> {
   label: string;
   columns: ColumnSpec[];
   groupBy: string;   // a required column key; rows are grouped by this cell's value
-  loadContext(): Promise<TCtx>;
+  loadContext(scope: ImportScope): Promise<TCtx>;
   resolveGroup(
     groupRows: Array<{ cells: Record<string, string>; rowNumber: number }>,
     ctx: TCtx,

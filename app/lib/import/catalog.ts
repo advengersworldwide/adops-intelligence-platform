@@ -1,18 +1,22 @@
 // app/lib/import/catalog.ts  — client-safe: no DB imports
 import type { ColumnSpec } from "./types";
-import { clientPurchaseOrdersMeta } from "./descriptors/client-purchase-orders.columns";
-import { partnerPurchaseOrdersMeta } from "./descriptors/partner-purchase-orders.columns";
+import { clientBillingSummaryMeta } from "./descriptors/client-billing-summary.columns";
 import { partnerBillsMeta } from "./descriptors/partner-bills.columns";
-import { partnerPaymentsMeta } from "./descriptors/partner-payments.columns";
 
 export interface CatalogEntry {
   type: string;
   label: string;
   columns: ColumnSpec[];
   sampleRows: string[][];
+  /** Which entity must be picked before uploading: gates the file drop-zone. */
+  scope: "client" | "partner";
 }
 
-export const importCatalog: CatalogEntry[] = [clientPurchaseOrdersMeta, partnerPurchaseOrdersMeta, partnerBillsMeta, partnerPaymentsMeta];
+// Bulk upload offers exactly two sheets (client-scoped and partner-scoped).
+export const importCatalog: CatalogEntry[] = [
+  { ...clientBillingSummaryMeta, scope: "client" },
+  { ...partnerBillsMeta, scope: "partner" },
+];
 
 export function getCatalogEntry(type: string): CatalogEntry | undefined {
   return importCatalog.find((e) => e.type === type);

@@ -40,5 +40,7 @@ export interface Partner {
   paymentTermsId?: number | null;
   /** @nullable */
   paymentTermName?: string | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
   createdAt: string;
 }

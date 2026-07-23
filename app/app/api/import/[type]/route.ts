@@ -30,6 +30,7 @@ export async function POST(
   const result = await runImport(descriptor, parsed.data.rows, parsed.data.mapping, {
     dryRun: parsed.data.dryRun,
     session: { userId: session?.sub ?? null },
+    scope: { clientId: parsed.data.scopeClientId ?? null, partnerId: parsed.data.scopePartnerId ?? null },
   });
   return NextResponse.json(result);
 }

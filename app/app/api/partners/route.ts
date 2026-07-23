@@ -16,6 +16,7 @@ async function mapRow(r: typeof partnersTable.$inferSelect) {
     bankAccountNumber: r.bankAccountNumber, bankAddress: r.bankAddress, swiftCode: r.swiftCode, iban: r.iban,
     salesTaxNumber: r.salesTaxNumber, ntnNumber: r.ntnNumber,
     paymentTermsId: r.paymentTermsId ?? null, paymentTermName: pt?.name ?? null,
+    platformBulkDiscountPct: r.platformBulkDiscountPct != null ? Number(r.platformBulkDiscountPct) : null,
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -35,6 +36,10 @@ export async function POST(req: Request): Promise<Response> {
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = CreatePartnerBody.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
-  const [row] = await db.insert(partnersTable).values(parsed.data).returning();
+  const { platformBulkDiscountPct, ...rest } = parsed.data;
+  const [row] = await db.insert(partnersTable).values({
+    ...rest,
+    platformBulkDiscountPct: platformBulkDiscountPct != null ? String(platformBulkDiscountPct) : null,
+  }).returning();
   return NextResponse.json(GetPartnerResponse.parse(await mapRow(row)), { status: 201 });
 }

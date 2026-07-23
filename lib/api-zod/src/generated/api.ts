@@ -326,6 +326,7 @@ export const ListPartnersResponseItem = zod.object({
   "ntnNumber": zod.string().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 export const ListPartnersResponse = zod.array(ListPartnersResponseItem)
@@ -358,7 +359,8 @@ export const CreatePartnerBody = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "paymentTermsId": zod.number().nullish()
+  "paymentTermsId": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish()
 })
 
 
@@ -388,6 +390,7 @@ export const GetPartnerResponse = zod.object({
   "ntnNumber": zod.string().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 
@@ -444,6 +447,7 @@ export const UpdatePartnerResponse = zod.object({
   "ntnNumber": zod.string().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 
@@ -668,7 +672,9 @@ export const RunImportParams = zod.object({
 export const RunImportBody = zod.object({
   "mapping": zod.record(zod.string(), zod.number()),
   "rows": zod.array(zod.array(zod.string())),
-  "dryRun": zod.boolean()
+  "dryRun": zod.boolean(),
+  "scopeClientId": zod.number().nullish(),
+  "scopePartnerId": zod.number().nullish()
 })
 
 export const RunImportResponse = zod.object({
@@ -1705,6 +1711,7 @@ export const ListPartnerPurchaseOrdersResponseItem = zod.object({
   "ntnNumber": zod.string().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 }).optional(),
   "items": zod.array(zod.object({
@@ -1785,6 +1792,7 @@ export const GetPartnerPurchaseOrderResponse = zod.object({
   "ntnNumber": zod.string().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 }).optional(),
   "items": zod.array(zod.object({
@@ -1857,6 +1865,7 @@ export const UpdatePartnerPurchaseOrderResponse = zod.object({
   "ntnNumber": zod.string().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 }).optional(),
   "items": zod.array(zod.object({
