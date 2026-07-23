@@ -34,6 +34,8 @@ export function CreatePartnerPaymentDialog({ open, editPayment, onClose, onSucce
   const [uploading, setUploading] = useState(false);
 
   const [partnerBillId, setPartnerBillId] = useState<number | null>(null);
+  const [filterPartnerId, setFilterPartnerId] = useState<number | null>(null);
+  const [filterMonth, setFilterMonth] = useState<string>("");
   const [sourceClientPaymentId, setSourceId] = useState<number | null>(null);
   const [amount, setAmount] = useState("");
   const [mode, setMode] = useState("online");
@@ -45,10 +47,12 @@ export function CreatePartnerPaymentDialog({ open, editPayment, onClose, onSucce
   useEffect(() => {
     if (open && editPayment) {
       setPartnerBillId(editPayment.partnerBillId); setSourceId(editPayment.sourceClientPaymentId ?? null);
+      setFilterPartnerId(editPayment.partnerId); setFilterMonth("");
       setAmount(String(editPayment.amount)); setMode(editPayment.mode ?? "online"); setStatus(editPayment.status);
       setPaymentDate(editPayment.paymentDate ?? ""); setAttachmentUrl(editPayment.attachmentUrl ?? ""); setNotes(editPayment.notes ?? "");
     } else if (open) {
-      setPartnerBillId(null); setSourceId(null); setAmount(""); setMode("online"); setStatus("pending");
+      setPartnerBillId(null); setSourceId(null); setFilterPartnerId(null); setFilterMonth("");
+      setAmount(""); setMode("online"); setStatus("pending");
       setPaymentDate(""); setAttachmentUrl(""); setNotes("");
     }
   }, [open, editPayment]);
@@ -66,6 +70,16 @@ export function CreatePartnerPaymentDialog({ open, editPayment, onClose, onSucce
   }, [bills, partnerPayments, editPayment]);
 
   const receivedClientPayments = (clientPayments ?? []).filter(p => p.status === "received");
+
+  const partnerOptions = Array.from(new Map((bills ?? []).map(b => [b.partnerId, b.partnerName])).entries())
+    .map(([id, name]) => ({ id, name }));
+  const billMonth = (b: { dateReceived?: string | null }) => (b.dateReceived ? b.dateReceived.slice(0, 7) : "");
+  const monthOptions = Array.from(new Set(
+    (bills ?? []).filter(b => filterPartnerId == null || b.partnerId === filterPartnerId).map(billMonth).filter(Boolean),
+  )).sort().reverse();
+  const visibleBills = (bills ?? []).filter(b =>
+    (filterPartnerId == null || b.partnerId === filterPartnerId) && (filterMonth === "" || billMonth(b) === filterMonth),
+  );
   const selectedRemaining = partnerBillId != null ? (remainingByBill.get(partnerBillId) ?? 0) : 0;
   const overAmount = amount.trim() !== "" && parseFloat(amount) > selectedRemaining + 0.01;
 
@@ -92,8 +106,8 @@ export function CreatePartnerPaymentDialog({ open, editPayment, onClose, onSucce
   }});
 
   const submit = () => {
-    if (!partnerBillId || !sourceClientPaymentId || amount.trim() === "") {
-      toast({ title: "Partner bill, funding payment, and amount are required", variant: "destructive" }); return;
+    if (!partnerBillId || amount.trim() === "") {
+      toast({ title: "Partner bill and amount are required", variant: "destructive" }); return;
     }
     if (overAmount) { toast({ title: "Amount exceeds the bill's remaining", variant: "destructive" }); return; }
     const data = {
@@ -108,20 +122,41 @@ export function CreatePartnerPaymentDialog({ open, editPayment, onClose, onSucce
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>{editPayment ? "Edit Partner Payment" : "Record Partner Payment"}</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <label className="text-xs space-y-1 block"><span className="text-muted-foreground">Partner Bill</span>
-            <Select value={partnerBillId ? String(partnerBillId) : ""} onValueChange={v => pickBill(Number(v))}>
-              <SelectTrigger><SelectValue placeholder="Select a partner bill" /></SelectTrigger>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="text-xs space-y-1 block"><span className="text-muted-foreground">Partner</span>
+              <Select value={filterPartnerId != null ? String(filterPartnerId) : ""} onValueChange={v => { setFilterPartnerId(Number(v)); setFilterMonth(""); setPartnerBillId(null); }}>
+                <SelectTrigger><SelectValue placeholder="Select a partner" /></SelectTrigger>
+                <SelectContent>
+                  {partnerOptions.map(p => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </label>
+            <label className="text-xs space-y-1 block"><span className="text-muted-foreground">Month</span>
+              <Select value={filterMonth || "all"} onValueChange={v => { setFilterMonth(v === "all" ? "" : v); setPartnerBillId(null); }} disabled={filterPartnerId == null}>
+                <SelectTrigger><SelectValue placeholder="All months" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All months</SelectItem>
+                  {monthOptions.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </label>
+          </div>
+          <label className="text-xs space-y-1 block"><span className="text-muted-foreground">Partner Bill (PBILL)</span>
+            <Select value={partnerBillId ? String(partnerBillId) : ""} onValueChange={v => pickBill(Number(v))} disabled={filterPartnerId == null}>
+              <SelectTrigger><SelectValue placeholder={filterPartnerId == null ? "Select a partner first" : "Select a PBILL"} /></SelectTrigger>
               <SelectContent>
-                {(bills ?? []).map(b => {
-                  const rem = remainingByBill.get(b.id) ?? 0;
-                  return <SelectItem key={b.id} value={String(b.id)} disabled={rem <= 0.01 && b.id !== editPayment?.partnerBillId}>
-                    {b.code} · {b.partnerName} · rem ${fmt(rem)}
-                  </SelectItem>;
-                })}
+                {visibleBills.length === 0
+                  ? <SelectItem value="none" disabled>No bills for this selection</SelectItem>
+                  : visibleBills.map(b => {
+                    const rem = remainingByBill.get(b.id) ?? 0;
+                    return <SelectItem key={b.id} value={String(b.id)} disabled={rem <= 0.01 && b.id !== editPayment?.partnerBillId}>
+                      {b.code} · rem ${fmt(rem)}
+                    </SelectItem>;
+                  })}
               </SelectContent>
             </Select>
           </label>
-          <label className="text-xs space-y-1 block"><span className="text-muted-foreground">Funding Client Payment (received)</span>
+          <label className="text-xs space-y-1 block"><span className="text-muted-foreground">Funding Client Payment (optional)</span>
             <Select value={sourceClientPaymentId ? String(sourceClientPaymentId) : ""} onValueChange={v => setSourceId(Number(v))}>
               <SelectTrigger><SelectValue placeholder="Select a received client payment" /></SelectTrigger>
               <SelectContent>

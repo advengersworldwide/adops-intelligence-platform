@@ -62,8 +62,9 @@ export function ClientPaymentsTab() {
   const { data: payments, isLoading } = useListPayments();
   const { search, setSearch, sort, toggleSort, filterValues, setFilter, rows } = useTableControls({
     rows: payments,
-    searchAccessor: p => [p.mode, p.notes, ...p.allocations.map(a => a.billingLabel)],
+    searchAccessor: p => [p.referenceCode, p.mode, p.notes, ...p.allocations.map(a => a.billingLabel)],
     sortAccessors: {
+      ref: p => p.referenceCode,
       mode: p => p.mode,
       total: p => p.totalAmount,
       date: p => p.paymentDate,
@@ -103,6 +104,7 @@ export function ClientPaymentsTab() {
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">#</th>
+              <SortableTh label="Ref" sortKey="ref" sort={sort} onSort={toggleSort} />
               <SortableTh label="Mode" sortKey="mode" sort={sort} onSort={toggleSort} />
               <SortableTh label="Total (PKR)" sortKey="total" sort={sort} onSort={toggleSort} />
               <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">Billings</th>
@@ -118,14 +120,15 @@ export function ClientPaymentsTab() {
             {isLoading ? (
               [...Array(3)].map((_, i) => (
                 <tr key={i} className="border-b border-border">
-                  {[...Array(10)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
+                  {[...Array(11)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}
                 </tr>
               ))
             ) : !rows.length ? (
-              <tr><td colSpan={10} className="px-5 py-10 text-center text-sm text-muted-foreground">No payments found</td></tr>
+              <tr><td colSpan={11} className="px-5 py-10 text-center text-sm text-muted-foreground">No payments found</td></tr>
             ) : rows.map((p, i) => (
               <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20">
                 <td className="px-3 py-2 text-xs text-muted-foreground">{i + 1}</td>
+                <td className="px-3 py-2 text-[10px] font-mono text-muted-foreground whitespace-nowrap">{p.referenceCode ?? "—"}</td>
                 <td className="px-3 py-2 text-xs font-semibold capitalize">{p.mode}</td>
                 <td className="px-3 py-2 text-xs font-semibold">{fmtNum(p.totalAmount)}</td>
                 <td className="px-3 py-2 text-xs">
@@ -183,6 +186,8 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
   const chequeRef = useRef<HTMLInputElement>(null);
   const receiptRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [filterClientId, setFilterClientId] = useState<number | null>(null);
+  const [filterPeriod, setFilterPeriod] = useState<string>("");
 
   const isEdit = editPayment != null;
   const form = useForm<PaymentForm>({
@@ -219,6 +224,15 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
   for (const billing of settleableBillings) {
     pendingByBilling.set(billing.id, billing.netReceivable - (allocatedElsewhereByBilling.get(billing.id) ?? 0));
   }
+
+  const clientOptions = Array.from(new Map(settleableBillings.map(b => [b.clientId, b.clientName])).entries())
+    .map(([id, name]) => ({ id, name }));
+  const monthOptions = Array.from(new Set(
+    settleableBillings.filter(b => filterClientId == null || b.clientId === filterClientId).map(b => b.period),
+  )).sort().reverse();
+  const visibleBillings = settleableBillings.filter(b =>
+    (filterClientId == null || b.clientId === filterClientId) && (filterPeriod === "" || b.period === filterPeriod),
+  );
 
   const toggleBilling = (billingId: number, pending: number) => {
     if (pending <= 0.01) return; // fully paid, can't be added
@@ -353,15 +367,42 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
               </FormItem>
             )} />
 
-            <div>
-              <p className="text-sm font-medium mb-2">Billings to settle</p>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="text-xs space-y-1 block"><span className="text-muted-foreground">Client</span>
+                  <Select value={filterClientId != null ? String(filterClientId) : ""} onValueChange={v => { setFilterClientId(Number(v)); setFilterPeriod(""); }}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="Select a client" /></SelectTrigger>
+                    <SelectContent>
+                      {clientOptions.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </label>
+                <label className="text-xs space-y-1 block"><span className="text-muted-foreground">Month</span>
+                  <Select value={filterPeriod || "all"} onValueChange={v => setFilterPeriod(v === "all" ? "" : v)} disabled={filterClientId == null}>
+                    <SelectTrigger className="h-9"><SelectValue placeholder="All months" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All months</SelectItem>
+                      {monthOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </label>
+              </div>
+
+              <p className="text-sm font-medium">Bills to settle</p>
+              {filterClientId == null ? (
+                <p className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-xs text-muted-foreground">Select a client to see their approved bills.</p>
+              ) : (
               <div className="border border-border rounded-lg divide-y divide-border max-h-56 overflow-y-auto">
-                {settleableBillings.map(billing => {
+                {visibleBillings.length === 0 ? (
+                  <p className="px-3 py-6 text-center text-xs text-muted-foreground">No approved bills for this selection.</p>
+                ) : visibleBillings.map(billing => {
                   const alloc = allocations.find(a => a.billingId === billing.id);
                   const pending = pendingByBilling.get(billing.id) ?? 0;
                   const fullyPaid = pending <= 0.01;
                   const label = billing.invoiceCode ?? `Billing #${billing.id}`;
                   const isOverpaid = !!alloc && alloc.amountApplied > pending + 0.01;
+                  const partners = [...new Set(billing.lines.map(l => l.partnerName))].join(", ");
+                  const eventSummary = billing.lines.flatMap(l => l.items.map(it => `${it.eventName} ×${it.eventCount} @ $${it.billableRate}`)).join(" · ");
                   return (
                     <div key={billing.id} className="px-3 py-2">
                       <div className="flex items-center justify-between gap-3">
@@ -389,6 +430,9 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
                           />
                         )}
                       </div>
+                      <p className="ml-6 mt-1 text-[10px] text-muted-foreground">
+                        {partners || "—"}{eventSummary ? ` · ${eventSummary}` : ""}
+                      </p>
                       {isOverpaid && (
                         <p className="text-[10px] text-red-600 mt-1">Amount exceeds pending for {label}</p>
                       )}
@@ -396,6 +440,7 @@ function PaymentDialog({ open, editPayment, onClose, onSuccess }: {
                   );
                 })}
               </div>
+              )}
               {form.formState.errors.allocations && (
                 <p className="text-xs text-red-600 mt-1">{(form.formState.errors.allocations as any).message}</p>
               )}

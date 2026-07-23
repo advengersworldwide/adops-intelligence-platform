@@ -25,8 +25,9 @@ export function PartnerPaymentsTab() {
   const [editPayment, setEditPayment] = useState<PartnerPayment | null>(null);
   const { search, setSearch, sort, toggleSort, filterValues, setFilter, rows } = useTableControls({
     rows: payments,
-    searchAccessor: p => [p.partnerName, p.clientName, p.partnerBillCode, p.sourceClientPaymentLabel],
+    searchAccessor: p => [p.referenceCode, p.partnerName, p.clientName, p.partnerBillCode, p.sourceClientPaymentLabel],
     sortAccessors: {
+      ref: p => p.referenceCode,
       partner: p => p.partnerName,
       client: p => p.clientName,
       bill: p => p.partnerBillCode,
@@ -69,6 +70,7 @@ export function PartnerPaymentsTab() {
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">#</th>
+              <SortableTh label="Ref" sortKey="ref" sort={sort} onSort={toggleSort} />
               <SortableTh label="Partner" sortKey="partner" sort={sort} onSort={toggleSort} />
               <SortableTh label="Client" sortKey="client" sort={sort} onSort={toggleSort} />
               <SortableTh label="Partner Bill" sortKey="bill" sort={sort} onSort={toggleSort} />
@@ -83,12 +85,13 @@ export function PartnerPaymentsTab() {
           </thead>
           <tbody>
             {isLoading ? (
-              [...Array(3)].map((_, i) => <tr key={i} className="border-b border-border">{[...Array(11)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>)
+              [...Array(3)].map((_, i) => <tr key={i} className="border-b border-border">{[...Array(12)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>)
             ) : !rows.length ? (
-              <tr><td colSpan={11} className="px-5 py-10 text-center text-sm text-muted-foreground">No partner payments found</td></tr>
+              <tr><td colSpan={12} className="px-5 py-10 text-center text-sm text-muted-foreground">No partner payments found</td></tr>
             ) : rows.map((p, i) => (
               <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20 text-xs">
                 <td className="px-3 py-2 text-muted-foreground">{i + 1}</td>
+                <td className="px-3 py-2 font-mono text-[10px] text-muted-foreground whitespace-nowrap">{p.referenceCode ?? "—"}</td>
                 <td className="px-3 py-2">{p.partnerName}</td>
                 <td className="px-3 py-2">{p.clientName ?? "—"}</td>
                 <td className="px-3 py-2 font-semibold">{p.partnerBillCode}</td>
