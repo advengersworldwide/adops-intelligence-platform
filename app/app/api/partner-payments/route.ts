@@ -33,9 +33,9 @@ export async function mapPartnerPayment(r: Row) {
     : null;
   let sourceClientPaymentLabel: string | null = null;
   if (r.sourceClientPaymentId != null) {
-    const [src] = await db.select({ id: paymentsTable.id, total: paymentsTable.totalAmount, date: paymentsTable.paymentDate })
+    const [src] = await db.select({ id: paymentsTable.id, code: paymentsTable.referenceCode, total: paymentsTable.totalAmount, date: paymentsTable.paymentDate })
       .from(paymentsTable).where(eq(paymentsTable.id, r.sourceClientPaymentId));
-    if (src) sourceClientPaymentLabel = `#${src.id} · PKR ${fmtUsd(Number(src.total))}${src.date ? " · " + src.date : ""}`;
+    if (src) sourceClientPaymentLabel = `${src.code ?? "#" + src.id} · PKR ${fmtUsd(Number(src.total))}${src.date ? " · " + src.date : ""}`;
   }
   let createdByName: string | null = null;
   if (r.createdById != null) {

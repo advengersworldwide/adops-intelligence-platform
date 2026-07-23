@@ -164,7 +164,7 @@ export function CreatePartnerPaymentDialog({ open, editPayment, onClose, onSucce
                   ? <SelectItem value="none" disabled>No received client payments</SelectItem>
                   : receivedClientPayments.map(p => (
                     <SelectItem key={p.id} value={String(p.id)}>
-                      #{p.id} · PKR {fmt(p.totalAmount)}{p.paymentDate ? " · " + new Date(p.paymentDate).toLocaleDateString() : ""}
+                      {p.referenceCode ?? `#${p.id}`} · PKR {fmt(p.totalAmount)}{p.paymentDate ? " · " + new Date(p.paymentDate).toLocaleDateString() : ""}
                     </SelectItem>
                   ))}
               </SelectContent>
