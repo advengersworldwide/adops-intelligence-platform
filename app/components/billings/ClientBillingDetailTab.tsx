@@ -112,14 +112,17 @@ function DetailRows({ b, onInvoice }: { b: BillingSummary; onInvoice: () => void
               <>
                 <td className="px-3 py-2" rowSpan={b.lines.length}><StatusSelect billingId={b.id} status={b.status} /></td>
                 <td className="px-3 py-2" rowSpan={b.lines.length}>
-                  {b.invoiceCode ? (
-                    <a href={`/billings/${b.id}/invoice`} className="text-primary underline text-[11px]">{b.invoiceCode}</a>
-                  ) : (
-                    <Button variant="outline" size="sm" className="h-7 gap-1 text-[11px]"
-                      disabled={b.status !== "approved"} onClick={onInvoice}>
-                      <FileText className="h-3 w-3" /> Generate
-                    </Button>
-                  )}
+                  <div className="flex flex-col gap-1">
+                    {b.invoiceCode && <span className="font-mono text-[11px] text-muted-foreground">{b.invoiceCode}</span>}
+                    {b.invoiceGeneratedAt ? (
+                      <a href={`/billings/${b.id}/invoice`} className="text-primary underline text-[11px]">View invoice</a>
+                    ) : (
+                      <Button variant="outline" size="sm" className="h-7 gap-1 text-[11px]"
+                        disabled={b.status !== "approved"} onClick={onInvoice}>
+                        <FileText className="h-3 w-3" /> Generate
+                      </Button>
+                    )}
+                  </div>
                 </td>
               </>
             )}

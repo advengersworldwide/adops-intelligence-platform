@@ -60,6 +60,7 @@ export function ClientBillingSummaryTab() {
     searchAccessor: b => [b.clientName, b.cpoCode, b.invoiceCode, b.buyingHouseName, ...b.lines.map(l => l.partnerName)],
     sortAccessors: {
       client: b => b.clientName,
+      cbill: b => b.invoiceCode,
       agency: b => b.buyingHouseName,
       month: b => b.period,
       cpo: b => b.cpoCode,
@@ -111,6 +112,7 @@ export function ClientBillingSummaryTab() {
             <tr className="border-b border-border bg-muted/30">
               <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap"></th>
               <SortableTh label="Client" sortKey="client" sort={sort} onSort={toggleSort} />
+              <SortableTh label="CBILL" sortKey="cbill" sort={sort} onSort={toggleSort} />
               <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">Partner(s)</th>
               <SortableTh label="Agency" sortKey="agency" sort={sort} onSort={toggleSort} />
               <SortableTh label="Month" sortKey="month" sort={sort} onSort={toggleSort} />
@@ -127,10 +129,10 @@ export function ClientBillingSummaryTab() {
           <tbody>
             {isLoading ? (
               [...Array(3)].map((_, i) => (
-                <tr key={i} className="border-b border-border">{[...Array(13)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>
+                <tr key={i} className="border-b border-border">{[...Array(14)].map((_, j) => <td key={j} className="px-3 py-2"><Skeleton className="h-3 w-16" /></td>)}</tr>
               ))
             ) : !rows.length ? (
-              <tr><td colSpan={13} className="px-5 py-10 text-center text-sm text-muted-foreground">No billings found</td></tr>
+              <tr><td colSpan={14} className="px-5 py-10 text-center text-sm text-muted-foreground">No billings found</td></tr>
             ) : rows.map(b => (
               <BillingGroup key={b.id} b={b} expanded={expanded === b.id}
                 onToggle={() => setExpanded(expanded === b.id ? null : b.id)}
@@ -161,6 +163,7 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
           <button onClick={onToggle}><ChevronRight className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")} /></button>
         </td>
         <td className="px-3 py-2 text-xs font-semibold">{b.clientName}</td>
+        <td className="px-3 py-2 text-[10px] font-mono whitespace-nowrap">{b.invoiceCode ?? "—"}</td>
         <td className="px-3 py-2 text-xs">
           {[...new Set(b.lines.map(l => l.partnerName))].join(", ") || "—"}
         </td>
@@ -202,7 +205,7 @@ function BillingGroup({ b, expanded, onToggle, onEdit, onDelete }: {
             </td>
             <td className="px-3 py-2" colSpan={2}>USD {fmt(c.netTotalUsd)} · Forex {b.forexSellingRate} · PKR {fmt(c.netTotalPkr)}</td>
             <td className="px-3 py-2">Gross {fmt(c.grossTotalPkr)} · Tax {fmt(c.salesTax)} · <b>Inv {fmt(c.totalInvoice)}</b></td>
-            <td colSpan={7}></td>
+            <td colSpan={8}></td>
           </tr>
         );
       })}

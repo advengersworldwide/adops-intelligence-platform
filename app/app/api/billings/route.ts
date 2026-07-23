@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import {
   db, billingsTable, billingLinesTable, billingEventItemsTable,
   clientsTable, buyingHousesTable, clientPurchaseOrdersTable, partnersTable,
@@ -9,9 +9,19 @@ import { CreateBillingBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
 import { computeBilling } from "@/lib/compute-billing";
 import { settledDate } from "@/lib/settle";
+import { formatPoCode } from "@/lib/po-codes";
 import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
+
+// Auto client-bill code CBILL-<clientPrefix>-MMYY-NNNN, sequential per client, assigned at creation.
+async function nextCbillCode(clientId: number): Promise<string> {
+  const [client] = await db.select({ codePrefix: clientsTable.codePrefix }).from(clientsTable).where(eq(clientsTable.id, clientId));
+  const prefix = client?.codePrefix?.trim();
+  if (!prefix) throw new Error("Set a code prefix on the client first");
+  const [{ value }] = await db.select({ value: count() }).from(billingsTable).where(eq(billingsTable.clientId, clientId));
+  return "CBILL-" + formatPoCode(prefix, new Date(), Number(value) + 1);
+}
 
 type BillingRow = typeof billingsTable.$inferSelect;
 
@@ -143,8 +153,13 @@ export async function POST(req: Request): Promise<Response> {
   const [tax] = await db.select().from(taxSettingsTable).limit(1);
   if (!tax) return NextResponse.json({ error: "Tax settings not configured" }, { status: 400 });
 
+  let invoiceCode: string;
+  try { invoiceCode = await nextCbillCode(parsed.data.clientId); }
+  catch (e) { return NextResponse.json({ error: e instanceof Error ? e.message : "Failed to generate CBILL code" }, { status: 400 }); }
+
   const [billing] = await db.insert(billingsTable).values({
     clientId: parsed.data.clientId,
+    invoiceCode,
     clientPurchaseOrderId: parsed.data.clientPurchaseOrderId,
     period: parsed.data.period,
     forexSellingRate: String(parsed.data.forexSellingRate),
