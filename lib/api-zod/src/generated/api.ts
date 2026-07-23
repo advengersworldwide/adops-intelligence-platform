@@ -1324,6 +1324,7 @@ export const listPaymentsResponseAllocationsItemAmountAppliedMin = 0;
 
 export const ListPaymentsResponseItem = zod.object({
   "id": zod.number(),
+  "referenceCode": zod.string().nullish(),
   "mode": zod.string(),
   "status": zod.string().optional(),
   "totalAmount": zod.number(),
@@ -1387,6 +1388,7 @@ export const updatePaymentResponseAllocationsItemAmountAppliedMin = 0;
 
 export const UpdatePaymentResponse = zod.object({
   "id": zod.number(),
+  "referenceCode": zod.string().nullish(),
   "mode": zod.string(),
   "status": zod.string().optional(),
   "totalAmount": zod.number(),
@@ -1423,6 +1425,7 @@ export const updatePaymentStatusResponseAllocationsItemAmountAppliedMin = 0;
 
 export const UpdatePaymentStatusResponse = zod.object({
   "id": zod.number(),
+  "referenceCode": zod.string().nullish(),
   "mode": zod.string(),
   "status": zod.string().optional(),
   "totalAmount": zod.number(),
@@ -2285,6 +2288,7 @@ export const DeletePartnerBillParams = zod.object({
 
 export const ListPartnerPaymentsResponseItem = zod.object({
   "id": zod.number(),
+  "referenceCode": zod.string().nullish(),
   "partnerId": zod.number(),
   "partnerName": zod.string(),
   "partnerBillId": zod.number(),
@@ -2342,6 +2346,7 @@ export const UpdatePartnerPaymentBody = zod.object({
 
 export const UpdatePartnerPaymentResponse = zod.object({
   "id": zod.number(),
+  "referenceCode": zod.string().nullish(),
   "partnerId": zod.number(),
   "partnerName": zod.string(),
   "partnerBillId": zod.number(),
@@ -2376,6 +2381,7 @@ export const UpdatePartnerPaymentStatusBody = zod.object({
 
 export const UpdatePartnerPaymentStatusResponse = zod.object({
   "id": zod.number(),
+  "referenceCode": zod.string().nullish(),
   "partnerId": zod.number(),
   "partnerName": zod.string(),
   "partnerBillId": zod.number(),

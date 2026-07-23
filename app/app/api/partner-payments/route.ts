@@ -1,13 +1,24 @@
 import { NextResponse } from "next/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, gte, lt, count } from "drizzle-orm";
 import {
   db, partnerPaymentsTable, partnerBillsTable, partnersTable, clientsTable, paymentsTable, usersTable,
 } from "@workspace/db";
 import { CreatePartnerPaymentBody } from "@workspace/api-zod";
 import { getSession } from "@/lib/auth/session";
+import { formatPoCode } from "@/lib/po-codes";
 import { requirePermission, isAuthError } from "@/lib/auth/require";
 
 export const runtime = "nodejs";
+
+// Auto reference code PPMT-MMYY-NNNN, sequential within the current month.
+async function nextPpmtCode(): Promise<string> {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const [{ value }] = await db.select({ value: count() }).from(partnerPaymentsTable)
+    .where(and(gte(partnerPaymentsTable.createdAt, monthStart), lt(partnerPaymentsTable.createdAt, monthEnd)));
+  return formatPoCode("PPMT", now, Number(value) + 1);
+}
 
 type Row = typeof partnerPaymentsTable.$inferSelect;
 
@@ -32,7 +43,7 @@ export async function mapPartnerPayment(r: Row) {
     createdByName = u?.name ?? null;
   }
   return {
-    id: r.id, partnerId: r.partnerId, partnerName: partner?.name ?? "—",
+    id: r.id, referenceCode: r.referenceCode ?? null, partnerId: r.partnerId, partnerName: partner?.name ?? "—",
     partnerBillId: r.partnerBillId, partnerBillCode: bill?.code ?? "—",
     clientId: bill?.clientId ?? null, clientName: client?.name ?? null,
     sourceClientPaymentId: r.sourceClientPaymentId ?? null, sourceClientPaymentLabel,
@@ -95,6 +106,7 @@ export async function POST(req: Request): Promise<Response> {
 
   const user = await getSession();
   const [row] = await db.insert(partnerPaymentsTable).values({
+    referenceCode: await nextPpmtCode(),
     partnerId: bill.partnerId,
     partnerBillId: parsed.data.partnerBillId,
     sourceClientPaymentId: parsed.data.sourceClientPaymentId ?? null,

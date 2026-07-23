@@ -925,6 +925,8 @@ export type PaymentDetailAllocationsItem = {
 
 export interface PaymentDetail {
   id: number;
+  /** @nullable */
+  referenceCode?: string | null;
   mode: string;
   status?: string;
   totalAmount: number;
@@ -1164,6 +1166,8 @@ export interface PartnerPaymentInput {
 
 export interface PartnerPayment {
   id: number;
+  /** @nullable */
+  referenceCode?: string | null;
   partnerId: number;
   partnerName: string;
   partnerBillId: number;

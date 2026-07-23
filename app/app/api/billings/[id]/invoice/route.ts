@@ -26,7 +26,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     isNotNull(billingsTable.invoiceCode),
     sql`extract(year from ${billingsTable.invoiceGeneratedAt}) = ${now.getFullYear()}`,
   ));
-  const invoiceCode = "INV-" + formatPoCode(prefix, now, Number(value) + 1);
+  const invoiceCode = "CBILL-" + formatPoCode(prefix, now, Number(value) + 1);
   const [updated] = await db.update(billingsTable)
     .set({ invoiceCode, invoiceGeneratedAt: now }).where(eq(billingsTable.id, b.id)).returning();
   return NextResponse.json(await mapBilling(updated));

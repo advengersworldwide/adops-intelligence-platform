@@ -2935,6 +2935,8 @@ components:
       properties:
         id:
           type: integer
+        referenceCode:
+          type: ["string", "null"]
         mode:
           type: string
         status:
@@ -3182,6 +3184,7 @@ components:
       required: [id, partnerId, partnerName, partnerBillId, partnerBillCode, amount, status, createdAt]
       properties:
         id: { type: integer }
+        referenceCode: { type: ["string", "null"] }
         partnerId: { type: integer }
         partnerName: { type: string }
         partnerBillId: { type: integer }

@@ -8,6 +8,8 @@
 
 export interface PartnerPayment {
   id: number;
+  /** @nullable */
+  referenceCode?: string | null;
   partnerId: number;
   partnerName: string;
   partnerBillId: number;

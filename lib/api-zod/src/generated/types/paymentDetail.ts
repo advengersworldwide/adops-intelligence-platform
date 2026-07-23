@@ -9,6 +9,8 @@ import type { PaymentDetailAllocationsItem } from './paymentDetailAllocationsIte
 
 export interface PaymentDetail {
   id: number;
+  /** @nullable */
+  referenceCode?: string | null;
   mode: string;
   status?: string;
   totalAmount: number;

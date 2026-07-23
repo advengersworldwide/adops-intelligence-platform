@@ -6,6 +6,7 @@ import { usersTable } from "./auth";
 
 export const partnerPaymentsTable = pgTable("partner_payments", {
   id: serial("id").primaryKey(),
+  referenceCode: text("reference_code").unique(), // PPMT-MMYY-NNNN, auto-generated
   partnerId: integer("partner_id").notNull().references(() => partnersTable.id, { onDelete: "restrict" }),
   partnerBillId: integer("partner_bill_id").notNull().references(() => partnerBillsTable.id, { onDelete: "cascade" }),
   sourceClientPaymentId: integer("source_client_payment_id").references(() => paymentsTable.id, { onDelete: "set null" }),
