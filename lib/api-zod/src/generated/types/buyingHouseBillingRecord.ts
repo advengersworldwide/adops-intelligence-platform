@@ -12,7 +12,7 @@ export interface BuyingHouseBillingRecord {
   platformId: number;
   /** @nullable */
   platformName?: string | null;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   actualPins: number;
   netMarginPkr: number;

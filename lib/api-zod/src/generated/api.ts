@@ -556,7 +556,7 @@ export const ListBillingRecordsResponseItem = zod.object({
   "costModelPayoutRate": zod.number().nullish(),
   "costModelMarginPct": zod.number().nullish(),
   "period": zod.string(),
-  "appsflyerPins": zod.number(),
+  "pins": zod.number(),
   "fraudPins": zod.number(),
   "payoutRate": zod.number(),
   "marginPct": zod.number(),
@@ -585,7 +585,7 @@ export const CreateBillingRecordBody = zod.object({
   "clientId": zod.number().nullish(),
   "costModelId": zod.number(),
   "period": zod.string(),
-  "appsflyerPins": zod.number(),
+  "pins": zod.number(),
   "fraudPins": zod.number(),
   "payoutRate": zod.number(),
   "marginPct": zod.number(),
@@ -612,7 +612,7 @@ export const UpdateBillingRecordBody = zod.object({
   "clientId": zod.number().nullish(),
   "costModelId": zod.number(),
   "period": zod.string(),
-  "appsflyerPins": zod.number(),
+  "pins": zod.number(),
   "fraudPins": zod.number(),
   "payoutRate": zod.number(),
   "marginPct": zod.number(),
@@ -637,7 +637,7 @@ export const UpdateBillingRecordResponse = zod.object({
   "costModelPayoutRate": zod.number().nullish(),
   "costModelMarginPct": zod.number().nullish(),
   "period": zod.string(),
-  "appsflyerPins": zod.number(),
+  "pins": zod.number(),
   "fraudPins": zod.number(),
   "payoutRate": zod.number(),
   "marginPct": zod.number(),
@@ -1041,7 +1041,7 @@ export const GetConcentrationResponse = zod.object({
 
 
 /**
- * @summary Fraud-quality trend — appsflyer pins vs fraud pins by period, from billing records
+ * @summary Fraud-quality trend — total pins vs fraud pins by period, from billing records
  */
 export const GetFraudQualityQueryParams = zod.object({
   "dateFrom": zod.coerce.string().nullish(),
@@ -1053,7 +1053,7 @@ export const GetFraudQualityQueryParams = zod.object({
 
 export const GetFraudQualityResponseItem = zod.object({
   "period": zod.string(),
-  "appsflyerPins": zod.number(),
+  "pins": zod.number(),
   "fraudPins": zod.number(),
   "validPins": zod.number(),
   "fraudRatePct": zod.number()
@@ -1273,7 +1273,7 @@ export const ListBuyingHouseBillingRecordsResponseItem = zod.object({
   "period": zod.string(),
   "platformId": zod.number(),
   "platformName": zod.string().nullish(),
-  "appsflyerPins": zod.number(),
+  "pins": zod.number(),
   "fraudPins": zod.number(),
   "actualPins": zod.number(),
   "netMarginPkr": zod.number(),
@@ -1304,7 +1304,7 @@ export const ListAllBillingRecordsResponseItem = zod.object({
   "costModelPayoutRate": zod.number().nullish(),
   "costModelMarginPct": zod.number().nullish(),
   "period": zod.string(),
-  "appsflyerPins": zod.number(),
+  "pins": zod.number(),
   "fraudPins": zod.number(),
   "payoutRate": zod.number(),
   "marginPct": zod.number(),

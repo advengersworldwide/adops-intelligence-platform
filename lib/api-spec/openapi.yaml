@@ -1037,7 +1037,7 @@ paths:
     get:
       operationId: getFraudQuality
       tags: [analytics]
-      summary: Fraud-quality trend — appsflyer pins vs fraud pins by period, from billing records
+      summary: Fraud-quality trend — total pins vs fraud pins by period, from billing records
       parameters:
         - name: dateFrom
           in: query
@@ -2065,7 +2065,7 @@ components:
 
     BuyingHouseBillingRecord:
       type: object
-      required: [id, period, platformId, appsflyerPins, fraudPins, actualPins, netMarginPkr, createdAt]
+      required: [id, period, platformId, pins, fraudPins, actualPins, netMarginPkr, createdAt]
       properties:
         id:
           type: integer
@@ -2075,7 +2075,7 @@ components:
           type: integer
         platformName:
           type: ["string", "null"]
-        appsflyerPins:
+        pins:
           type: integer
         fraudPins:
           type: integer
@@ -2398,7 +2398,7 @@ components:
 
     BillingRecord:
       type: object
-      required: [id, platformId, buyingHouseId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, salesTaxPct, remittanceTaxPct, withholdingTaxPct, createdAt]
+      required: [id, platformId, buyingHouseId, costModelId, period, pins, fraudPins, payoutRate, marginPct, salesTaxPct, remittanceTaxPct, withholdingTaxPct, createdAt]
       properties:
         id:
           type: integer
@@ -2422,7 +2422,7 @@ components:
           type: ["number", "null"]
         period:
           type: string
-        appsflyerPins:
+        pins:
           type: integer
         fraudPins:
           type: integer
@@ -2451,7 +2451,7 @@ components:
 
     BillingRecordInput:
       type: object
-      required: [buyingHouseId, costModelId, period, appsflyerPins, fraudPins, payoutRate, marginPct, salesTaxPct, remittanceTaxPct, withholdingTaxPct]
+      required: [buyingHouseId, costModelId, period, pins, fraudPins, payoutRate, marginPct, salesTaxPct, remittanceTaxPct, withholdingTaxPct]
       properties:
         buyingHouseId:
           type: integer
@@ -2461,7 +2461,7 @@ components:
           type: integer
         period:
           type: string
-        appsflyerPins:
+        pins:
           type: integer
         fraudPins:
           type: integer
@@ -2738,11 +2738,11 @@ components:
 
     FraudPoint:
       type: object
-      required: [period, appsflyerPins, fraudPins, validPins, fraudRatePct]
+      required: [period, pins, fraudPins, validPins, fraudRatePct]
       properties:
         period:
           type: string
-        appsflyerPins:
+        pins:
           type: integer
         fraudPins:
           type: integer

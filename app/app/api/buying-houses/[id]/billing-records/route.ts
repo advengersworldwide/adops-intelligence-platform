@@ -22,7 +22,7 @@ export async function GET(
   const rows = await db
     .select({
       id: billingRecordsTable.id, period: billingRecordsTable.period, platformId: billingRecordsTable.platformId,
-      appsflyerPins: billingRecordsTable.appsflyerPins, fraudPins: billingRecordsTable.fraudPins,
+      pins: billingRecordsTable.pins, fraudPins: billingRecordsTable.fraudPins,
       payoutRate: billingRecordsTable.payoutRate, marginPct: billingRecordsTable.marginPct,
       forexSellingRate: billingRecordsTable.forexSellingRate, forexBuyingRate: billingRecordsTable.forexBuyingRate,
       salesTaxPct: billingRecordsTable.salesTaxPct, remittanceTaxPct: billingRecordsTable.remittanceTaxPct,
@@ -37,7 +37,7 @@ export async function GET(
 
   const mapped = rows.map(r => {
     const c = computeRow(r);
-    return { id: r.id, period: r.period, platformId: r.platformId, platformName: r.platformName ?? null, appsflyerPins: r.appsflyerPins, fraudPins: r.fraudPins, actualPins: c.actualPins, netMarginPkr: c.netMarginPkr, createdAt: r.createdAt.toISOString() };
+    return { id: r.id, period: r.period, platformId: r.platformId, platformName: r.platformName ?? null, pins: r.pins, fraudPins: r.fraudPins, actualPins: c.actualPins, netMarginPkr: c.netMarginPkr, createdAt: r.createdAt.toISOString() };
   });
   return NextResponse.json(ListBuyingHouseBillingRecordsResponse.parse(mapped));
 }

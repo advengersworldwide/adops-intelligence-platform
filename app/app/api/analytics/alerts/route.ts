@@ -120,7 +120,7 @@ export async function GET(): Promise<Response> {
   // fraud_spike: aggregate billing records into fraud series by period; flag latest period if >10%.
   const fraudRows = await db.select({
     period: billingRecordsTable.period,
-    appsflyerPins: billingRecordsTable.appsflyerPins,
+    pins: billingRecordsTable.pins,
     fraudPins: billingRecordsTable.fraudPins,
   }).from(billingRecordsTable);
   const fraudSeries = buildFraudSeries(fraudRows);

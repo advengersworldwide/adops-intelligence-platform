@@ -20,7 +20,7 @@ export function NeedsAttention() {
     ...r,
     platformName: platformNameMap[r.platformId] ?? null,
     ...computeRow({
-      appsflyerPins: r.appsflyerPins,
+      pins: r.pins,
       fraudPins: r.fraudPins,
       payoutRate: String(r.payoutRate ?? 0),
       marginPct: String(r.marginPct ?? 0),

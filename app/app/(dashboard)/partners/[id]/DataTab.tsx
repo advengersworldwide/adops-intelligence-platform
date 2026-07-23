@@ -37,7 +37,7 @@ export default function PlatformDataTab({ platformId, platform }: { platformId: 
   const computed = (records ?? []).map(r => ({
     ...r,
     ...computeRow({
-      appsflyerPins: r.appsflyerPins,
+      pins: r.pins,
       fraudPins: r.fraudPins,
       payoutRate: String(r.payoutRate ?? 0),
       marginPct: String(r.marginPct ?? 0),
@@ -52,7 +52,7 @@ export default function PlatformDataTab({ platformId, platform }: { platformId: 
   }));
 
   const totals = computed.reduce((acc, r) => ({
-    appsflyerPins: acc.appsflyerPins + r.appsflyerPins,
+    pins: acc.pins + r.pins,
     fraudPins: acc.fraudPins + r.fraudPins,
     actualPins: acc.actualPins + r.actualPins,
     netPayableUsd: acc.netPayableUsd + r.netPayableUsd,
@@ -60,12 +60,12 @@ export default function PlatformDataTab({ platformId, platform }: { platformId: 
     totalPayableUsd: acc.totalPayableUsd + r.totalPayableUsd,
     platformDiscountAmt: acc.platformDiscountAmt + r.platformDiscountAmt,
     totalPayablePkr: acc.totalPayablePkr + r.totalPayablePkr,
-  }), { appsflyerPins: 0, fraudPins: 0, actualPins: 0, netPayableUsd: 0, remittanceTax: 0, totalPayableUsd: 0, platformDiscountAmt: 0, totalPayablePkr: 0 });
+  }), { pins: 0, fraudPins: 0, actualPins: 0, netPayableUsd: 0, remittanceTax: 0, totalPayableUsd: 0, platformDiscountAmt: 0, totalPayablePkr: 0 });
 
   const exportCSV = () => {
     if (!computed.length) return;
     const headers = ["S#","Client","Via (BH)","Period","MMP Pins","Fraud Pins","Actual Pins","Payout Rate","Net Payable (USD)","Remittance Tax","Total Payable (USD)","Forex Buying Rate","Platform Discount","Total Payable (PKR)"];
-    const rows = computed.map((r,i) => [i+1,r.clientName??"",r.buyingHouseName??"",r.period,r.appsflyerPins,r.fraudPins,r.actualPins,(r.payoutRate ?? 0).toFixed(4),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexBuyingRate,r.platformDiscountAmt.toFixed(2),r.totalPayablePkr.toFixed(2)]);
+    const rows = computed.map((r,i) => [i+1,r.clientName??"",r.buyingHouseName??"",r.period,r.pins,r.fraudPins,r.actualPins,(r.payoutRate ?? 0).toFixed(4),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexBuyingRate,r.platformDiscountAmt.toFixed(2),r.totalPayablePkr.toFixed(2)]);
     const csv = [headers,...rows].map(r=>r.join(",")).join("\n");
     const blob = new Blob([csv],{type:"text/csv"});
     const url = URL.createObjectURL(blob);
@@ -123,7 +123,7 @@ export default function PlatformDataTab({ platformId, platform }: { platformId: 
                   <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/20">
                     <TD>{i+1}</TD><TD bold>{r.clientName??"—"}</TD><TD>{r.buyingHouseName??"—"}</TD>
                     <TD bold>{r.period}</TD>
-                    <TD>{r.appsflyerPins.toLocaleString()}</TD><TD>{r.fraudPins.toLocaleString()}</TD>
+                    <TD>{r.pins.toLocaleString()}</TD><TD>{r.fraudPins.toLocaleString()}</TD>
                     <TD bold>{r.actualPins.toLocaleString()}</TD>
                     <TD>{fmtNum(r.payoutRate,4)}</TD>
                     <TD>{fmtNum(r.netPayableUsd)}</TD><TD>{fmtNum(r.remittanceTax)}</TD>
@@ -135,7 +135,7 @@ export default function PlatformDataTab({ platformId, platform }: { platformId: 
                 ))}
                 <tr className="border-t-2 border-border bg-muted/30">
                   <TD bold></TD><TD bold>Total</TD><TD></TD><TD></TD>
-                  <TD bold>{totals.appsflyerPins.toLocaleString()}</TD>
+                  <TD bold>{totals.pins.toLocaleString()}</TD>
                   <TD bold>{totals.fraudPins.toLocaleString()}</TD>
                   <TD bold>{totals.actualPins.toLocaleString()}</TD>
                   <TD></TD>

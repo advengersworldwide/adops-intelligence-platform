@@ -30,7 +30,7 @@ export async function GET(req: Request): Promise<Response> {
   const rows = await db
     .select({
       period: billingRecordsTable.period,
-      appsflyerPins: billingRecordsTable.appsflyerPins,
+      pins: billingRecordsTable.pins,
       fraudPins: billingRecordsTable.fraudPins,
     })
     .from(billingRecordsTable)

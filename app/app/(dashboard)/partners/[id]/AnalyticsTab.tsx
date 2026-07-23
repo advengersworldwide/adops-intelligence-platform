@@ -11,11 +11,11 @@ import {
 } from "recharts";
 
 function computeNetMargin(
-  appsflyerPins: number, fraudPins: number, payoutRate: number,
+  pins: number, fraudPins: number, payoutRate: number,
   marginPct: number, salesTaxPct: number, remittanceTaxPct: number, forexRate: number,
   withholdingTaxPct: number
 ) {
-  const actualPins = appsflyerPins - fraudPins;
+  const actualPins = pins - fraudPins;
   const netAmtUsd = actualPins * payoutRate;
   const netAmtPkr = netAmtUsd * forexRate;
   const grossAmtPkr = marginPct > 0 ? netAmtPkr / (1 - marginPct / 100) : netAmtPkr;
@@ -58,7 +58,7 @@ export default function PlatformAnalyticsTab({ platformId, platform }: { platfor
   const allComputed = (records ?? []).map(r => ({
     ...r,
     ...computeNetMargin(
-      r.appsflyerPins, r.fraudPins, r.payoutRate ?? 0, r.marginPct ?? 0,
+      r.pins, r.fraudPins, r.payoutRate ?? 0, r.marginPct ?? 0,
       r.salesTaxPct ?? 0, r.remittanceTaxPct ?? 0, r.forexSellingRate ?? 278, r.withholdingTaxPct ?? 0
     ),
   }));

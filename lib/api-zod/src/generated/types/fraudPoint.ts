@@ -8,7 +8,7 @@
 
 export interface FraudPoint {
   period: string;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   validPins: number;
   fraudRatePct: number;

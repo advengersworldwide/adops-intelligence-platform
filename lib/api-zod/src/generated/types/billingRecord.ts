@@ -24,7 +24,7 @@ export interface BillingRecord {
   /** @nullable */
   costModelMarginPct?: number | null;
   period: string;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   payoutRate: number;
   marginPct: number;

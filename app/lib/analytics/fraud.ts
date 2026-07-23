@@ -1,39 +1,39 @@
 export interface FraudPoint {
   period: string;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   validPins: number;
   fraudRatePct: number;
 }
 
 /** fraudRatePct = total>0 ? fraud/total*100 : 0. */
-export function fraudRate(fraudPins: number, appsflyerPins: number): number {
-  return appsflyerPins > 0 ? (fraudPins / appsflyerPins) * 100 : 0;
+export function fraudRate(fraudPins: number, pins: number): number {
+  return pins > 0 ? (fraudPins / pins) * 100 : 0;
 }
 
 /**
- * Aggregate rows by period (sum pins), compute validPins = appsflyer - fraud and
+ * Aggregate rows by period (sum pins), compute validPins = pins - fraud and
  * fraudRatePct, sorted ascending by period. Empty input → [].
  */
 export function buildFraudSeries(
-  rows: { period: string; appsflyerPins: number; fraudPins: number }[]
+  rows: { period: string; pins: number; fraudPins: number }[]
 ): FraudPoint[] {
-  const byPeriod = new Map<string, { appsflyerPins: number; fraudPins: number }>();
+  const byPeriod = new Map<string, { pins: number; fraudPins: number }>();
 
   for (const row of rows) {
-    const existing = byPeriod.get(row.period) ?? { appsflyerPins: 0, fraudPins: 0 };
-    existing.appsflyerPins += row.appsflyerPins;
+    const existing = byPeriod.get(row.period) ?? { pins: 0, fraudPins: 0 };
+    existing.pins += row.pins;
     existing.fraudPins += row.fraudPins;
     byPeriod.set(row.period, existing);
   }
 
   return Array.from(byPeriod.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([period, { appsflyerPins, fraudPins }]) => ({
+    .map(([period, { pins, fraudPins }]) => ({
       period,
-      appsflyerPins,
+      pins,
       fraudPins,
-      validPins: appsflyerPins - fraudPins,
-      fraudRatePct: fraudRate(fraudPins, appsflyerPins),
+      validPins: pins - fraudPins,
+      fraudRatePct: fraudRate(fraudPins, pins),
     }));
 }

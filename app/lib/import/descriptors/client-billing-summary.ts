@@ -21,7 +21,7 @@ interface Payload {
   clientId: number;
   costModelId: number;
   period: string;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   payoutRate: number;
   marginPct: number;
@@ -74,7 +74,7 @@ function resolveRow(cells: Record<string, string>, rowNumber: number, ctx: Ctx, 
   if (!PERIOD_RE.test(period)) return error(`Period must be YYYY-MM (got "${cells.period}")`);
 
   const errors: string[] = [];
-  const appsflyerPins = num(cells.appsflyerPins, "AppsFlyer PINs", errors, { int: true, min: 0 });
+  const pins = num(cells.pins, "PINs", errors, { int: true, min: 0 });
   const fraudPins = num(cells.fraudPins, "Fraud PINs", errors, { int: true, min: 0 });
   const payoutRate = num(cells.payoutRate, "Payout Rate", errors, { min: 0 });
   const marginPct = num(cells.marginPct, "Margin %", errors);
@@ -91,7 +91,7 @@ function resolveRow(cells: Record<string, string>, rowNumber: number, ctx: Ctx, 
     rowNumber, status: "valid", messages: [],
     payload: {
       platformId: partner.id, buyingHouseId, clientId: ctx.client.id, costModelId: cm[0].id, period,
-      appsflyerPins, fraudPins, payoutRate, marginPct, forexSellingRate, forexBuyingRate,
+      pins, fraudPins, payoutRate, marginPct, forexSellingRate, forexBuyingRate,
       salesTaxPct: ctx.tax.salesTaxPct, remittanceTaxPct: ctx.tax.remittanceTaxPct, withholdingTaxPct: ctx.tax.withholdingTaxPct,
       bulkDiscountPct: ctx.client.bulkDiscountPct, platformBulkDiscountPct: partner.platformBulkDiscountPct,
     },
@@ -150,7 +150,7 @@ export const clientBillingSummaryDescriptor: FlatImportDescriptor<Ctx, Payload> 
       for (const p of payloads) {
         await tx.insert(billingRecordsTable).values({
           platformId: p.platformId, buyingHouseId: p.buyingHouseId, clientId: p.clientId, costModelId: p.costModelId,
-          period: p.period, appsflyerPins: p.appsflyerPins, fraudPins: p.fraudPins,
+          period: p.period, pins: p.pins, fraudPins: p.fraudPins,
           payoutRate: String(p.payoutRate), marginPct: String(p.marginPct),
           forexSellingRate: String(p.forexSellingRate), forexBuyingRate: String(p.forexBuyingRate),
           salesTaxPct: String(p.salesTaxPct), remittanceTaxPct: String(p.remittanceTaxPct), withholdingTaxPct: String(p.withholdingTaxPct),

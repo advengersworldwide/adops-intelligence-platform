@@ -1,5 +1,5 @@
 export interface ComputeRowInput {
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   payoutRate: string;
   marginPct: string;
@@ -32,7 +32,7 @@ export interface ComputeRowResult {
 }
 
 export function computeRow(r: ComputeRowInput): ComputeRowResult {
-  const actualPins = r.appsflyerPins - r.fraudPins;
+  const actualPins = r.pins - r.fraudPins;
   const payoutRate = Number(r.payoutRate);
   const marginPct = Number(r.marginPct);
   const forexSellingRate = Number(r.forexSellingRate);

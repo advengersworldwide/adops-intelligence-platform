@@ -18,7 +18,7 @@ export const billingRecordsTable = pgTable("billing_records", {
     .notNull()
     .references(() => costModelsTable.id),
   period: text("period").notNull(),
-  appsflyerPins: integer("appsflyer_pins").notNull(),
+  pins: integer("pins").notNull(),
   fraudPins: integer("fraud_pins").notNull(),
   payoutRate: numeric("payout_rate", { precision: 12, scale: 4 }).notNull(),
   marginPct: numeric("margin_pct", { precision: 6, scale: 2 }).notNull(),

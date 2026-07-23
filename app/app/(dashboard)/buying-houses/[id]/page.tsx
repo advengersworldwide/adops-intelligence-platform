@@ -90,7 +90,7 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
     platformName: platformNameMap[r.platformId] ?? null,
     clientName: r.clientId != null ? (clientNameMap[r.clientId] ?? null) : null,
     ...computeRow({
-      appsflyerPins: r.appsflyerPins,
+      pins: r.pins,
       fraudPins: r.fraudPins,
       payoutRate: String(r.payoutRate ?? 0),
       marginPct: String(r.marginPct ?? 0),
@@ -105,13 +105,13 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
   }));
 
   const bhTotals = computed.reduce((acc, r) => ({
-    appsflyerPins: acc.appsflyerPins + r.appsflyerPins,
+    pins: acc.pins + r.pins,
     fraudPins: acc.fraudPins + r.fraudPins,
     actualPins: acc.actualPins + r.actualPins,
     grossAmtPkr: acc.grossAmtPkr + r.grossAmtPkr,
     bulkDiscountAmt: acc.bulkDiscountAmt + r.bulkDiscountAmt,
     receivablePkr: acc.receivablePkr + r.receivablePkr,
-  }), { appsflyerPins: 0, fraudPins: 0, actualPins: 0, grossAmtPkr: 0, bulkDiscountAmt: 0, receivablePkr: 0 });
+  }), { pins: 0, fraudPins: 0, actualPins: 0, grossAmtPkr: 0, bulkDiscountAmt: 0, receivablePkr: 0 });
 
   if (bhLoading) {
     return (
@@ -243,7 +243,7 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
                       <TD bold>{r.clientName ?? "—"}</TD>
                       <TD bold>{r.period}</TD>
                       <TD>{r.platformName ?? "—"}</TD>
-                      <TD>{r.appsflyerPins.toLocaleString()}</TD>
+                      <TD>{r.pins.toLocaleString()}</TD>
                       <TD>{r.fraudPins.toLocaleString()}</TD>
                       <TD bold>{r.actualPins.toLocaleString()}</TD>
                       <TD>{fmtNum(r.grossAmtPkr)}</TD>
@@ -253,7 +253,7 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
                   ))}
                   <tr className="border-t-2 border-border bg-muted/30">
                     <TD bold>Total</TD><TD></TD><TD></TD>
-                    <TD bold>{bhTotals.appsflyerPins.toLocaleString()}</TD>
+                    <TD bold>{bhTotals.pins.toLocaleString()}</TD>
                     <TD bold>{bhTotals.fraudPins.toLocaleString()}</TD>
                     <TD bold>{bhTotals.actualPins.toLocaleString()}</TD>
                     <TD bold>{fmtNum(bhTotals.grossAmtPkr)}</TD>

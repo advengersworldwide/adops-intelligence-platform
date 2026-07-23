@@ -260,7 +260,7 @@ export interface BuyingHouseBillingRecord {
   platformId: number;
   /** @nullable */
   platformName?: string | null;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   actualPins: number;
   netMarginPkr: number;
@@ -557,7 +557,7 @@ export interface BillingRecord {
   /** @nullable */
   costModelMarginPct?: number | null;
   period: string;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   payoutRate: number;
   marginPct: number;
@@ -583,7 +583,7 @@ export interface BillingRecordInput {
   clientId?: number | null;
   costModelId: number;
   period: string;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   payoutRate: number;
   marginPct: number;
@@ -758,7 +758,7 @@ export interface ConcentrationResponse {
 
 export interface FraudPoint {
   period: string;
-  appsflyerPins: number;
+  pins: number;
   fraudPins: number;
   validPins: number;
   fraudRatePct: number;

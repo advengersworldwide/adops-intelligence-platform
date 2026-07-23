@@ -51,7 +51,7 @@ const addRecordSchema = z.object({
   clientId: z.number().nullable().optional(),
   costModelId: z.number({ required_error: "Cost model is required" }),
   period: z.string().min(1, "Period is required"),
-  appsflyerPins: z.number().int().min(0),
+  pins: z.number().int().min(0),
   fraudPins: z.number().int().min(0),
   payoutRate: z.number().min(0),
   marginPct: z.number().min(0).max(100),
@@ -103,7 +103,7 @@ export default function BillingPage() {
     ...r,
     platformName: platformNameMap[r.platformId] ?? null,
     ...computeRow({
-      appsflyerPins: r.appsflyerPins,
+      pins: r.pins,
       fraudPins: r.fraudPins,
       payoutRate: String(r.payoutRate),
       marginPct: String(r.marginPct),
@@ -118,7 +118,7 @@ export default function BillingPage() {
   }));
 
   const totals = computed.reduce((acc, r) => ({
-    appsflyerPins: acc.appsflyerPins + r.appsflyerPins,
+    pins: acc.pins + r.pins,
     fraudPins: acc.fraudPins + r.fraudPins,
     actualPins: acc.actualPins + r.actualPins,
     netAmtUsd: acc.netAmtUsd + r.netAmtUsd,
@@ -137,7 +137,7 @@ export default function BillingPage() {
     totalPayablePkr: acc.totalPayablePkr + r.totalPayablePkr,
     netMarginPkr: acc.netMarginPkr + r.netMarginPkr,
   }), {
-    appsflyerPins: 0, fraudPins: 0, actualPins: 0, netAmtUsd: 0, netAmtPkr: 0,
+    pins: 0, fraudPins: 0, actualPins: 0, netAmtUsd: 0, netAmtPkr: 0,
     grossAmtPkr: 0, salesTax: 0, totalAmtPkr: 0, bulkDiscountAmt: 0, amtAfterDiscount: 0,
     wht: 0, receivablePkr: 0, netPayableUsd: 0, remittanceTax: 0, totalPayableUsd: 0,
     platformDiscountAmt: 0, totalPayablePkr: 0, netMarginPkr: 0,
@@ -146,7 +146,7 @@ export default function BillingPage() {
   const exportCSV = () => {
     if (!computed.length) return;
     const headers = ["S#","Client","Via (BH)","Platform","Period","MMP Pins","Fraud Pins","Actual Pins","Payout Rate","Net Amt (USD)","Forex Sell","Net Amt (PKR)","Gross Amt (PKR)","Sales Tax","Total Amt (PKR)","BH Discount","After Discount","WHT","Receivable (PKR)","Net Payable (USD)","Remittance Tax","Total Payable (USD)","Forex Buy","Platform Discount","Total Payable (PKR)","Net Margin (PKR)","Logged By","Logged At"];
-    const rows = computed.map((r, i) => [i+1,r.clientName??"",r.buyingHouseName??"",r.platformName??"",r.period,r.appsflyerPins,r.fraudPins,r.actualPins,r.payoutRate.toFixed(4),r.netAmtUsd.toFixed(2),r.forexSellingRate ?? 0,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.bulkDiscountAmt.toFixed(2),r.amtAfterDiscount.toFixed(2),r.wht.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexBuyingRate ?? 0,r.platformDiscountAmt.toFixed(2),r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2),r.createdBy??"",`"${new Date(r.createdAt).toLocaleString()}"`]);
+    const rows = computed.map((r, i) => [i+1,r.clientName??"",r.buyingHouseName??"",r.platformName??"",r.period,r.pins,r.fraudPins,r.actualPins,r.payoutRate.toFixed(4),r.netAmtUsd.toFixed(2),r.forexSellingRate ?? 0,r.netAmtPkr.toFixed(2),r.grossAmtPkr.toFixed(2),r.salesTax.toFixed(2),r.totalAmtPkr.toFixed(2),r.bulkDiscountAmt.toFixed(2),r.amtAfterDiscount.toFixed(2),r.wht.toFixed(2),r.receivablePkr.toFixed(2),r.netPayableUsd.toFixed(2),r.remittanceTax.toFixed(2),r.totalPayableUsd.toFixed(2),r.forexBuyingRate ?? 0,r.platformDiscountAmt.toFixed(2),r.totalPayablePkr.toFixed(2),r.netMarginPkr.toFixed(2),r.createdBy??"",`"${new Date(r.createdAt).toLocaleString()}"`]);
     const csv = [headers,...rows].map(r=>r.join(",")).join("\n");
     const blob = new Blob([csv],{type:"text/csv"});
     const url = URL.createObjectURL(blob);
@@ -231,7 +231,7 @@ export default function BillingPage() {
                       <TD>{r.buyingHouseName ?? "—"}</TD>
                       <TD>{r.platformName ?? "—"}</TD>
                       <TD bold>{r.period}</TD>
-                      <TD>{r.appsflyerPins.toLocaleString()}</TD>
+                      <TD>{r.pins.toLocaleString()}</TD>
                       <TD>{r.fraudPins.toLocaleString()}</TD>
                       <TD bold>{r.actualPins.toLocaleString()}</TD>
                       <TD>{fmtNum(r.payoutRate, 4)}</TD>
@@ -272,7 +272,7 @@ export default function BillingPage() {
                   ))}
                   <tr className="border-t-2 border-border bg-muted/30">
                     <TD bold></TD><TD bold>Total</TD><TD></TD><TD></TD><TD></TD>
-                    <TD bold>{totals.appsflyerPins.toLocaleString()}</TD>
+                    <TD bold>{totals.pins.toLocaleString()}</TD>
                     <TD bold>{totals.fraudPins.toLocaleString()}</TD>
                     <TD bold>{totals.actualPins.toLocaleString()}</TD>
                     <TD></TD>
@@ -335,7 +335,7 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
   onSuccess: () => void;
   defaultValues?: {
     platformId: number; buyingHouseId: number; clientId?: number | null;
-    costModelId: number; period: string; appsflyerPins: number; fraudPins: number;
+    costModelId: number; period: string; pins: number; fraudPins: number;
     payoutRate: number; marginPct: number;
     forexSellingRate?: number | null; forexBuyingRate?: number | null;
     salesTaxPct: number; remittanceTaxPct: number; withholdingTaxPct: number;
@@ -355,7 +355,7 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
         clientId: defaultValues.clientId ?? null,
         costModelId: defaultValues.costModelId,
         period: defaultValues.period,
-        appsflyerPins: defaultValues.appsflyerPins,
+        pins: defaultValues.pins,
         fraudPins: defaultValues.fraudPins,
         payoutRate: defaultValues.payoutRate,
         marginPct: defaultValues.marginPct,
@@ -422,7 +422,7 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
       clientId: data.clientId ?? null,
       costModelId: data.costModelId,
       period: data.period,
-      appsflyerPins: data.appsflyerPins,
+      pins: data.pins,
       fraudPins: data.fraudPins,
       payoutRate: data.payoutRate,
       marginPct: data.marginPct,
@@ -487,7 +487,7 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
               <FormItem><FormLabel>Period</FormLabel><FormControl><Input type="month" {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <div className="grid grid-cols-2 gap-3">
-              <FormField control={form.control} name="appsflyerPins" render={({ field }) => (
+              <FormField control={form.control} name="pins" render={({ field }) => (
                 <FormItem><FormLabel>MMP Pins</FormLabel><FormControl><Input type="number" min={0} {...field} onChange={e => field.onChange(parseInt(e.target.value)||0)} /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="fraudPins" render={({ field }) => (

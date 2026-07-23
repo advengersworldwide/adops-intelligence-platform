@@ -52,7 +52,7 @@ function rec(overrides: Record<string, unknown> = {}) {
     platformId: 1,
     buyingHouseId: 1,
     period: "2026-06",
-    appsflyerPins: 100,
+    pins: 100,
     fraudPins: 0,
     payoutRate: "1",
     marginPct: "20",

@@ -3,7 +3,7 @@ import { aggregateTotals, aggregateBy, type AggRecord } from "./billing-records-
 
 const rec = (over: Partial<AggRecord> = {}): AggRecord => ({
   clientId: 1, platformId: 1, buyingHouseId: 1, period: "2026-06",
-  appsflyerPins: 100, fraudPins: 0, payoutRate: "1", marginPct: "20",
+  pins: 100, fraudPins: 0, payoutRate: "1", marginPct: "20",
   forexSellingRate: "1", forexBuyingRate: "1", salesTaxPct: "0",
   remittanceTaxPct: "0", withholdingTaxPct: "0", bulkDiscountPct: "0", platformBulkDiscountPct: "0",
   ...over,

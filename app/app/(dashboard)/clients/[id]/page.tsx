@@ -302,7 +302,7 @@ function DataTab({ clientId }: { clientId: number }) {
     platformName: platformNameMap[r.platformId] ?? null,
     buyingHouseName: r.buyingHouseName ?? buyingHouseNameMap[r.buyingHouseId] ?? null,
     ...computeRow({
-      appsflyerPins: r.appsflyerPins,
+      pins: r.pins,
       fraudPins: r.fraudPins,
       payoutRate: String(r.payoutRate ?? 0),
       marginPct: String(r.marginPct ?? 0),
@@ -343,7 +343,7 @@ function DataTab({ clientId }: { clientId: number }) {
                   <TD bold>{r.period}</TD>
                   <TD>{r.buyingHouseName ?? "—"}</TD>
                   <TD>{r.platformName ?? "—"}</TD>
-                  <TD>{fmtNum(r.appsflyerPins)}</TD>
+                  <TD>{fmtNum(r.pins)}</TD>
                   <TD>{fmtNum(r.fraudPins)}</TD>
                   <TD>{fmtNum(r.actualPins)}</TD>
                   <TD className={r.receivablePkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>

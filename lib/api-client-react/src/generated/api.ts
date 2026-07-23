@@ -3612,7 +3612,7 @@ export const getGetFraudQualityUrl = (params?: GetFraudQualityParams,) => {
 }
 
 /**
- * @summary Fraud-quality trend — appsflyer pins vs fraud pins by period, from billing records
+ * @summary Fraud-quality trend — total pins vs fraud pins by period, from billing records
  */
 export const getFraudQuality = async (params?: GetFraudQualityParams, options?: RequestInit): Promise<FraudPoint[]> => {
 
@@ -3659,7 +3659,7 @@ export type GetFraudQualityQueryError = ErrorType<unknown>
 
 
 /**
- * @summary Fraud-quality trend — appsflyer pins vs fraud pins by period, from billing records
+ * @summary Fraud-quality trend — total pins vs fraud pins by period, from billing records
  */
 
 export function useGetFraudQuality<TData = Awaited<ReturnType<typeof getFraudQuality>>, TError = ErrorType<unknown>>(
