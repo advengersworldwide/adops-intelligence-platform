@@ -193,9 +193,9 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
             )} />
             <FormField control={form.control} name="platformBulkDiscountPct" render={({ field }) => (
               <FormItem>
-                <FormLabel>Platform Bulk Discount %</FormLabel>
+                <FormLabel>Bulk Discount %</FormLabel>
                 <FormControl><Input type="number" step="0.01" placeholder="0" {...field} /></FormControl>
-                <p className="text-xs text-muted-foreground">The partner&apos;s platform discount, applied to billing records on upload.</p>
+                <p className="text-xs text-muted-foreground">Discount taken from this partner, applied to their payout on billing-record uploads.</p>
                 <FormMessage />
               </FormItem>
             )} />

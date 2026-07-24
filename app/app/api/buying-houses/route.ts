@@ -16,7 +16,7 @@ async function aggregateBH(bhId: number) {
 
 function mapBH(bh: typeof buyingHousesTable.$inferSelect) {
   return {
-    id: bh.id, name: bh.name, bulkDiscountPct: bh.bulkDiscountPct !== null ? Number(bh.bulkDiscountPct) : null,
+    id: bh.id, name: bh.name,
     address: bh.address, pocName: bh.pocName, pocNumber: bh.pocNumber, pocEmail: bh.pocEmail,
     companyEmail: bh.companyEmail, companyNumber: bh.companyNumber, bankName: bh.bankName,
     bankAccountNumber: bh.bankAccountNumber, bankAddress: bh.bankAddress, swiftCode: bh.swiftCode, iban: bh.iban,
@@ -45,7 +45,7 @@ export async function POST(req: Request): Promise<Response> {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   const d = parsed.data;
   const [row] = await db.insert(buyingHousesTable).values({
-    name: d.name, bulkDiscountPct: d.bulkDiscountPct != null ? String(d.bulkDiscountPct) : null,
+    name: d.name,
     address: d.address ?? null, pocName: d.pocName ?? null, pocNumber: d.pocNumber ?? null, pocEmail: d.pocEmail ?? null,
     companyEmail: d.companyEmail ?? null, companyNumber: d.companyNumber ?? null, bankName: d.bankName ?? null,
     bankAccountNumber: d.bankAccountNumber ?? null, bankAddress: d.bankAddress ?? null, swiftCode: d.swiftCode ?? null,

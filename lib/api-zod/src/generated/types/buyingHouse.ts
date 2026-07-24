@@ -12,8 +12,6 @@ export interface BuyingHouse {
   clientCount: number;
   netMarginPkr: number;
   /** @nullable */
-  bulkDiscountPct?: number | null;
-  /** @nullable */
   address?: string | null;
   /** @nullable */
   pocName?: string | null;

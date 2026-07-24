@@ -1104,7 +1104,6 @@ export const ListBuyingHousesResponseItem = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
-  "bulkDiscountPct": zod.number().nullish(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -1131,7 +1130,6 @@ export const ListBuyingHousesResponse = zod.array(ListBuyingHousesResponseItem)
 
 export const CreateBuyingHouseBody = zod.object({
   "name": zod.string().min(1),
-  "bulkDiscountPct": zod.number().nullish(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -1160,7 +1158,6 @@ export const GetBuyingHouseResponse = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
-  "bulkDiscountPct": zod.number().nullish(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -1190,7 +1187,6 @@ export const UpdateBuyingHouseParams = zod.object({
 
 export const UpdateBuyingHouseBody = zod.object({
   "name": zod.string().min(1),
-  "bulkDiscountPct": zod.number().nullish(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),
@@ -1211,7 +1207,6 @@ export const UpdateBuyingHouseResponse = zod.object({
   "name": zod.string(),
   "clientCount": zod.number(),
   "netMarginPkr": zod.number(),
-  "bulkDiscountPct": zod.number().nullish(),
   "address": zod.string().nullish(),
   "pocName": zod.string().nullish(),
   "pocNumber": zod.string().nullish(),

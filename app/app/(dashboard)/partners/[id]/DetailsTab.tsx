@@ -72,10 +72,10 @@ export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
         </Select>
       </div>
       <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
-        <span className="text-xs font-medium text-muted-foreground">Platform Bulk Discount %</span>
+        <span className="text-xs font-medium text-muted-foreground">Bulk Discount %</span>
         <Input type="number" step="0.01" value={platformBulkDiscountPct} disabled={!canEdit}
           onChange={e => setPlatformBulkDiscountPct(e.target.value)} placeholder="e.g. 5" />
-        <p className="text-xs text-muted-foreground">Applied to this partner&apos;s payout on billing-record uploads.</p>
+        <p className="text-xs text-muted-foreground">Discount taken from this partner, applied to their payout on billing-record uploads.</p>
       </div>
       {canEdit && <div className="flex justify-end"><Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button></div>}
     </div>

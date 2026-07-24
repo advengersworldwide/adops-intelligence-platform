@@ -11,7 +11,6 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { KycFields, kycFromRecord, kycToPayload, type KycState, EMPTY_KYC } from "@/components/KycFields";
@@ -27,13 +26,11 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
   const updateBH = useUpdateBuyingHouse();
 
   const [kyc, setKyc] = useState<KycState>(EMPTY_KYC);
-  const [bulkDiscountPct, setBulkDiscountPct] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!bh) return;
     setKyc(kycFromRecord(bh));
-    setBulkDiscountPct(bh.bulkDiscountPct != null ? String(bh.bulkDiscountPct) : "");
   }, [bh]);
 
   async function handleSave() {
@@ -43,7 +40,6 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
       await updateBH.mutateAsync({ id, data: {
         name: bh.name,
         ...kycToPayload(kyc),
-        bulkDiscountPct: bulkDiscountPct.trim() !== "" ? parseFloat(bulkDiscountPct) : null,
       }});
       await qc.invalidateQueries({ queryKey: getGetBuyingHouseQueryKey(id) });
       toast({ title: "Changes saved" });
@@ -75,13 +71,8 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
         <h1 className="text-xl font-bold text-foreground">{bh.name}</h1>
       </div>
 
-      {/* Details — KYC + Bulk Discount */}
+      {/* Details — KYC */}
       <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
-      <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
-        <span className="text-xs font-medium text-muted-foreground">Bulk Discount %</span>
-        <Input type="number" step="0.01" value={bulkDiscountPct} disabled={!canEdit}
-          onChange={e => setBulkDiscountPct(e.target.value)} placeholder="e.g. 5" />
-      </div>
       {canEdit && (
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button>

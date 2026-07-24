@@ -170,8 +170,6 @@ export interface BuyingHouse {
   clientCount: number;
   netMarginPkr: number;
   /** @nullable */
-  bulkDiscountPct?: number | null;
-  /** @nullable */
   address?: string | null;
   /** @nullable */
   pocName?: string | null;
@@ -203,8 +201,6 @@ export interface BuyingHouse {
 export interface BuyingHouseInput {
   /** @minLength 1 */
   name: string;
-  /** @nullable */
-  bulkDiscountPct?: number | null;
   /** @nullable */
   address?: string | null;
   /** @nullable */

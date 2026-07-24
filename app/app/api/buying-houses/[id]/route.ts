@@ -16,7 +16,7 @@ async function aggregateBH(bhId: number) {
 
 function mapBH(bh: typeof buyingHousesTable.$inferSelect) {
   return {
-    id: bh.id, name: bh.name, bulkDiscountPct: bh.bulkDiscountPct !== null ? Number(bh.bulkDiscountPct) : null,
+    id: bh.id, name: bh.name,
     address: bh.address, pocName: bh.pocName, pocNumber: bh.pocNumber, pocEmail: bh.pocEmail,
     companyEmail: bh.companyEmail, companyNumber: bh.companyNumber, bankName: bh.bankName,
     bankAccountNumber: bh.bankAccountNumber, bankAddress: bh.bankAddress, swiftCode: bh.swiftCode, iban: bh.iban,
@@ -55,7 +55,6 @@ export async function PATCH(
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
   const d = parsed.data;
   const updates: Record<string, unknown> = { name: d.name };
-  if (d.bulkDiscountPct !== undefined) updates.bulkDiscountPct = d.bulkDiscountPct != null ? String(d.bulkDiscountPct) : null;
   const kycKeys = ["address","pocName","pocNumber","pocEmail","companyEmail","companyNumber","bankName","bankAccountNumber","bankAddress","swiftCode","iban","salesTaxNumber","ntnNumber"] as const;
   for (const k of kycKeys) if ((d as Record<string, unknown>)[k] !== undefined) updates[k] = (d as Record<string, unknown>)[k];
   const [row] = await db.update(buyingHousesTable).set(updates).where(eq(buyingHousesTable.id, p.data.id)).returning();
