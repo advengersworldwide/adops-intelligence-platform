@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { and, eq, inArray } from "drizzle-orm";
-import { db, clientsTable, clientEventsTable, costModelsTable, partnerClientsTable, partnerEventPayoutsTable } from "@workspace/db";
+import { db, clientsTable, clientEventsTable, costModelsTable, partnerClientsTable, partnerEventPayoutsTable, buyingHousesTable } from "@workspace/db";
 import {
   ListPartnerClientsParams, ListPartnerClientsResponse, ListPartnerClientsResponseItem,
   LinkPartnerClientParams, LinkPartnerClientBody,
@@ -10,7 +10,12 @@ import { requirePermission, isAuthError } from "@/lib/auth/require";
 export const runtime = "nodejs";
 
 async function buildPartnerClient(pc: typeof partnerClientsTable.$inferSelect, partnerId: number) {
-  const [client] = await db.select({ name: clientsTable.name }).from(clientsTable).where(eq(clientsTable.id, pc.clientId));
+  const [client] = await db.select({ name: clientsTable.name, buyingHouseId: clientsTable.buyingHouseId }).from(clientsTable).where(eq(clientsTable.id, pc.clientId));
+  let buyingHouseName: string | null = null;
+  if (client?.buyingHouseId != null) {
+    const [bh] = await db.select({ name: buyingHousesTable.name }).from(buyingHousesTable).where(eq(buyingHousesTable.id, client.buyingHouseId));
+    buyingHouseName = bh?.name ?? null;
+  }
   const events = await db
     .select({ id: clientEventsTable.id, name: clientEventsTable.name, costModelId: clientEventsTable.costModelId, billableRate: clientEventsTable.billableRate, costModelName: costModelsTable.name })
     .from(clientEventsTable)
@@ -23,7 +28,7 @@ async function buildPartnerClient(pc: typeof partnerClientsTable.$inferSelect, p
   const payoutMap = new Map(payouts.map(p => [p.clientEventId, Number(p.payoutRate)]));
   return {
     id: pc.id, partnerId: pc.partnerId, clientId: pc.clientId,
-    clientName: client?.name ?? "", buyingHouseName: null as string | null,
+    clientName: client?.name ?? "", buyingHouseName,
     events: events.map(e => ({ id: e.id, clientEventId: e.id, name: e.name, costModelId: e.costModelId ?? null, costModelName: e.costModelName ?? null, billableRate: Number(e.billableRate), payoutRate: payoutMap.get(e.id) ?? null })),
   };
 }

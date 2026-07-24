@@ -1536,6 +1536,20 @@ paths:
             application/json:
               schema: { type: array, items: { $ref: "#/components/schemas/ClientPurchaseOrder" } }
 
+  /clients/{id}/partners:
+    get:
+      operationId: listClientPartners
+      tags: [clients]
+      summary: List the partners linked to a client
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: List
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: "#/components/schemas/ClientPartner" } }
+
   # ── Partner Purchase Orders ───────────────────────────────────────────────────
   /partner-purchase-orders:
     get:
@@ -2213,6 +2227,8 @@ components:
           type: ["string", "null"]
         paymentTermsId:
           type: ["integer", "null"]
+        platformBulkDiscountPct:
+          type: ["number", "null"]
 
     # ── Partner Config ────────────────────────────────────────────────────────────
     PartnerClientEvent:
@@ -2280,6 +2296,14 @@ components:
       properties:
         url: { type: string, minLength: 1 }
         name: { type: ["string", "null"] }
+
+    ClientPartner:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        codePrefix: { type: ["string", "null"] }
 
     ClientPurchaseOrder:
       type: object

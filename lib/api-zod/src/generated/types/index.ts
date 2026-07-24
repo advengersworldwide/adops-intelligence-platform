@@ -47,6 +47,7 @@ export * from './clientEventInput';
 export * from './clientEventUpdate';
 export * from './clientIdsParameter';
 export * from './clientInput';
+export * from './clientPartner';
 export * from './clientPurchaseOrder';
 export * from './clientPurchaseOrderAttachment';
 export * from './clientPurchaseOrderAttachmentInput';

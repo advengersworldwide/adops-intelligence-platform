@@ -16,6 +16,7 @@ async function mapRow(r: typeof partnersTable.$inferSelect) {
     bankAccountNumber: r.bankAccountNumber, bankAddress: r.bankAddress, swiftCode: r.swiftCode, iban: r.iban,
     salesTaxNumber: r.salesTaxNumber, ntnNumber: r.ntnNumber,
     paymentTermsId: r.paymentTermsId ?? null, paymentTermName: pt?.name ?? null,
+    platformBulkDiscountPct: r.platformBulkDiscountPct != null ? Number(r.platformBulkDiscountPct) : null,
     createdAt: r.createdAt.toISOString(),
   };
 }
@@ -47,7 +48,13 @@ export async function PATCH(
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
   const parsed = UpdatePartnerBody.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.message }, { status: 400 });
-  const [row] = await db.update(partnersTable).set(parsed.data).where(eq(partnersTable.id, p.data.id)).returning();
+  const { platformBulkDiscountPct, ...rest } = parsed.data;
+  const [row] = await db.update(partnersTable).set({
+    ...rest,
+    ...(platformBulkDiscountPct !== undefined
+      ? { platformBulkDiscountPct: platformBulkDiscountPct != null ? String(platformBulkDiscountPct) : null }
+      : {}),
+  }).where(eq(partnersTable.id, p.data.id)).returning();
   if (!row) return NextResponse.json({ error: "Partner not found" }, { status: 404 });
   return NextResponse.json(UpdatePartnerResponse.parse(await mapRow(row)));
 }

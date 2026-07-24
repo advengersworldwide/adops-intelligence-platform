@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import {
-  useGetClient, useUpdateClient, getGetClientQueryKey,
+  useGetClient, useUpdateClient, getGetClientQueryKey, useListClientPartners,
   useListClientEvents, useCreateClientEvent, useUpdateClientEvent, useDeleteClientEvent,
   getListClientEventsQueryKey,
   useListCostModels, useListPaymentTerms,
@@ -33,6 +33,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
   const can = useCan();
   const { data: client } = useGetClient(clientId);
   const { data: paymentTerms } = useListPaymentTerms();
+  const { data: clientPartners } = useListClientPartners(clientId);
   const updateClient = useUpdateClient();
 
   const [kyc, setKyc] = useState<KycState>(EMPTY_KYC);
@@ -101,6 +102,24 @@ function DetailsTab({ clientId }: { clientId: number }) {
         </div>
       </div>
       {canEdit && <div className="flex justify-end"><Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button></div>}
+
+      <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-border bg-muted/30">
+          <h3 className="text-sm font-semibold text-foreground">Partners used by this client</h3>
+        </div>
+        {!clientPartners?.length ? (
+          <p className="px-5 py-8 text-center text-sm text-muted-foreground">No partners linked yet. Link them from a partner&apos;s Clients tab.</p>
+        ) : (
+          <ul className="divide-y divide-border">
+            {clientPartners.map(p => (
+              <li key={p.id} className="px-5 py-3 text-sm">
+                <Link href={`/partners/${p.id}`} className="font-medium text-foreground hover:text-primary hover:underline">{p.name}</Link>
+                {p.codePrefix && <span className="ml-2 text-xs text-muted-foreground">({p.codePrefix})</span>}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

@@ -42,4 +42,6 @@ export interface PartnerUpdate {
   ntnNumber?: string | null;
   /** @nullable */
   paymentTermsId?: number | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
 }

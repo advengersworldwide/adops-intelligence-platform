@@ -41,6 +41,7 @@ import type {
   ClientEventInput,
   ClientEventUpdate,
   ClientInput,
+  ClientPartner,
   ClientPurchaseOrder,
   ClientPurchaseOrderInput,
   ClientPurchaseOrderUpdate,
@@ -5574,6 +5575,83 @@ export function useListClientPurchaseOrdersByClient<TData = Awaited<ReturnType<t
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getListClientPurchaseOrdersByClientQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getListClientPartnersUrl = (id: number,) => {
+
+
+
+
+  return `/api/clients/${id}/partners`
+}
+
+/**
+ * @summary List the partners linked to a client
+ */
+export const listClientPartners = async (id: number, options?: RequestInit): Promise<ClientPartner[]> => {
+
+  return customFetch<ClientPartner[]>(getListClientPartnersUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListClientPartnersQueryKey = (id: number,) => {
+    return [
+    `/api/clients/${id}/partners`
+    ] as const;
+    }
+
+
+export const getListClientPartnersQueryOptions = <TData = Awaited<ReturnType<typeof listClientPartners>>, TError = ErrorType<unknown>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClientPartners>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListClientPartnersQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listClientPartners>>> = ({ signal }) => listClientPartners(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listClientPartners>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListClientPartnersQueryResult = NonNullable<Awaited<ReturnType<typeof listClientPartners>>>
+export type ListClientPartnersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List the partners linked to a client
+ */
+
+export function useListClientPartners<TData = Awaited<ReturnType<typeof listClientPartners>>, TError = ErrorType<unknown>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listClientPartners>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListClientPartnersQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

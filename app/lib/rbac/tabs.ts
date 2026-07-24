@@ -31,8 +31,6 @@ export const CLIENT_DETAIL_TABS: TabNode[] = [
 export const PARTNER_DETAIL_TABS: TabNode[] = [
   { id: "details", label: "Details", permission: "partners.details:view" },
   { id: "clients", label: "Clients", permission: "partners.clients:view" },
-  { id: "data", label: "Data", permission: "partners.data:view" },
-  { id: "analytics", label: "Analytics", permission: "partners.analytics:view" },
 ];
 
 export const BUYING_HOUSE_DETAIL_TABS: TabNode[] = [

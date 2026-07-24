@@ -383,6 +383,8 @@ export interface PartnerUpdate {
   ntnNumber?: string | null;
   /** @nullable */
   paymentTermsId?: number | null;
+  /** @nullable */
+  platformBulkDiscountPct?: number | null;
 }
 
 export interface PartnerClientEvent {
@@ -427,6 +429,13 @@ export interface ClientPurchaseOrderAttachmentInput {
   url: string;
   /** @nullable */
   name?: string | null;
+}
+
+export interface ClientPartner {
+  id: number;
+  name: string;
+  /** @nullable */
+  codePrefix?: string | null;
 }
 
 export interface ClientPurchaseOrder {

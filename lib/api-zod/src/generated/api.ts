@@ -425,7 +425,8 @@ export const UpdatePartnerBody = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
-  "paymentTermsId": zod.number().nullish()
+  "paymentTermsId": zod.number().nullish(),
+  "platformBulkDiscountPct": zod.number().nullish()
 })
 
 export const UpdatePartnerResponse = zod.object({
@@ -1666,6 +1667,21 @@ export const ListClientPurchaseOrdersByClientResponseItem = zod.object({
   "createdAt": zod.string()
 })
 export const ListClientPurchaseOrdersByClientResponse = zod.array(ListClientPurchaseOrdersByClientResponseItem)
+
+
+/**
+ * @summary List the partners linked to a client
+ */
+export const ListClientPartnersParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ListClientPartnersResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "codePrefix": zod.string().nullish()
+})
+export const ListClientPartnersResponse = zod.array(ListClientPartnersResponseItem)
 
 
 /**

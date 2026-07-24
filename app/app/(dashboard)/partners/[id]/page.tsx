@@ -10,8 +10,6 @@ import { PARTNER_DETAIL_TABS } from "@/lib/rbac/tabs";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import PartnerDetailsTab from "./DetailsTab";
 import PartnerClientsTab from "./ClientsTab";
-import PlatformDataTab from "./DataTab";
-import PlatformAnalyticsTab from "./AnalyticsTab";
 
 function PartnerDetailPage({ id }: { id: number }) {
   const { data: partner, isLoading } = useGetPartner(id);
@@ -39,8 +37,6 @@ function PartnerDetailPage({ id }: { id: number }) {
           content={{
             details: <PartnerDetailsTab partner={partner} />,
             clients: <PartnerClientsTab partnerId={id} />,
-            data: <PlatformDataTab platformId={id} platform={partner} />,
-            analytics: <PlatformAnalyticsTab platformId={id} platform={partner} />,
           }}
         />
       ) : (
