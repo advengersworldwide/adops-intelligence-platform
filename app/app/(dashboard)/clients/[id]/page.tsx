@@ -6,7 +6,6 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import {
   useGetClient, useUpdateClient, getGetClientQueryKey,
-  useListAllBillingRecords, useListPartners, useListBuyingHouses,
   useListClientEvents, useCreateClientEvent, useUpdateClientEvent, useDeleteClientEvent,
   getListClientEventsQueryKey,
   useListCostModels, useListPaymentTerms,
@@ -23,23 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useHasPermission, useCan } from "@/lib/auth/user-context";
 import { KycFields, kycFromRecord, kycToPayload, type KycState, EMPTY_KYC } from "@/components/KycFields";
 import { cn } from "@/lib/utils";
-import { computeRow } from "@/lib/compute-row";
 import { PermissionGuard } from "@/components/PermissionGuard";
-
-function fmtPkr(n: number) {
-  return "PKR " + n.toLocaleString("en-PK", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-
-function fmtNum(n: number | null | undefined, d = 0) {
-  if (n == null || isNaN(n)) return "—";
-  return n.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
-}
-
-const TH = ({ children }: { children?: React.ReactNode }) =>
-  <th className="px-3 py-2 text-left text-[10px] font-medium text-muted-foreground whitespace-nowrap">{children}</th>;
-
-const TD = ({ children, bold, className }: { children?: React.ReactNode; bold?: boolean; className?: string }) =>
-  <td className={cn("px-3 py-2 text-xs whitespace-nowrap", bold && "font-semibold", className)}>{children}</td>;
 
 // ── Details Tab ──────────────────────────────────────────────────────────────
 
@@ -287,81 +270,6 @@ function EventRow({ clientId, ev, canEdit, costModels, onDelete, onUpdated }: {
   );
 }
 
-// ── Data Tab ─────────────────────────────────────────────────────────────────
-
-function DataTab({ clientId }: { clientId: number }) {
-  const { data: billingRecords, isLoading: recordsLoading } = useListAllBillingRecords({ clientId });
-  const { data: platforms } = useListPartners();
-  const { data: buyingHouses } = useListBuyingHouses();
-
-  const platformNameMap = Object.fromEntries((platforms ?? []).map(p => [p.id, p.name]));
-  const buyingHouseNameMap = Object.fromEntries((buyingHouses ?? []).map(bh => [bh.id, bh.name]));
-
-  const computed = (billingRecords ?? []).map(r => ({
-    ...r,
-    platformName: platformNameMap[r.platformId] ?? null,
-    buyingHouseName: r.buyingHouseName ?? buyingHouseNameMap[r.buyingHouseId] ?? null,
-    ...computeRow({
-      pins: r.pins,
-      fraudPins: r.fraudPins,
-      payoutRate: String(r.payoutRate ?? 0),
-      marginPct: String(r.marginPct ?? 0),
-      forexSellingRate: String(r.forexSellingRate ?? 0),
-      forexBuyingRate: String(r.forexBuyingRate ?? 0),
-      salesTaxPct: String(r.salesTaxPct ?? 0),
-      remittanceTaxPct: String(r.remittanceTaxPct ?? 0),
-      withholdingTaxPct: String(r.withholdingTaxPct ?? 0),
-      bulkDiscountPct: String(r.bulkDiscountPct ?? 0),
-      platformBulkDiscountPct: String(r.platformBulkDiscountPct ?? 0),
-    }),
-  }));
-
-  return (
-    <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-      {recordsLoading ? (
-        <div className="p-5 space-y-2">{[...Array(3)].map((_, i) => <Skeleton key={i} className="h-4 w-full" />)}</div>
-      ) : !computed.length ? (
-        <p className="px-5 py-8 text-center text-sm text-muted-foreground">No billing records yet.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border">
-                <TH>Period</TH>
-                <TH>Via (BH)</TH>
-                <TH>Partner</TH>
-                <TH>MMP Pins</TH>
-                <TH>Fraud Pins</TH>
-                <TH>Actual Pins</TH>
-                <TH>Receivable (PKR)</TH>
-                <TH>Net Margin (PKR)</TH>
-              </tr>
-            </thead>
-            <tbody>
-              {computed.map(r => (
-                <tr key={r.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                  <TD bold>{r.period}</TD>
-                  <TD>{r.buyingHouseName ?? "—"}</TD>
-                  <TD>{r.platformName ?? "—"}</TD>
-                  <TD>{fmtNum(r.pins)}</TD>
-                  <TD>{fmtNum(r.fraudPins)}</TD>
-                  <TD>{fmtNum(r.actualPins)}</TD>
-                  <TD className={r.receivablePkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
-                    {fmtPkr(r.receivablePkr)}
-                  </TD>
-                  <TD bold className={r.netMarginPkr < 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}>
-                    {fmtPkr(r.netMarginPkr)}
-                  </TD>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 function ClientDetailPage({ id }: { id: number }) {
@@ -399,7 +307,6 @@ function ClientDetailPage({ id }: { id: number }) {
         content={{
           details: <DetailsTab clientId={id} />,
           events: <EventsTab clientId={id} />,
-          data: <DataTab clientId={id} />,
         }}
       />
     </div>

@@ -26,7 +26,6 @@ export function visibleTabs(nodes: TabNode[], can: (p: Permission) => boolean): 
 export const CLIENT_DETAIL_TABS: TabNode[] = [
   { id: "details", label: "Details", permission: "clients.details:view" },
   { id: "events", label: "Events", permission: "clients.events:view" },
-  { id: "data", label: "Data", permission: "clients.data:view" },
 ];
 
 export const PARTNER_DETAIL_TABS: TabNode[] = [
