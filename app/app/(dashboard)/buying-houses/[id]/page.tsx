@@ -73,12 +73,6 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
 
       {/* Details — KYC */}
       <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
-      {canEdit && (
-        <div className="flex justify-end">
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button>
-        </div>
-      )}
-
       {/* Clients under this buying house */}
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="px-5 py-3 border-b border-border bg-muted/30">
@@ -100,6 +94,12 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
           </ul>
         )}
       </div>
+
+      {canEdit && (
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button>
+        </div>
+      )}
     </div>
   );
 }
