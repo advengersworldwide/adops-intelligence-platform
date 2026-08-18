@@ -117,8 +117,10 @@ describe("validatePassword", () => {
   });
 
   it("rejects a breached password", async () => {
-    // SHA-1 of "password123" is CBFDAC6008F9CAB4083784CBD1874F76618D2A97
-    vi.stubGlobal("fetch", okFetch("0000000000000000000000000000000000A:1\n08F9CAB4083784CBD1874F76618D2A97:24230577"));
+    // SHA-1("password123!!") = 2EA80 F19974A00FB7A3CC5C86EE6C419ABB63C14
+    // The range API returns only the suffix (everything after the 5-char prefix),
+    // so the mocked body must carry the suffix of the password under test.
+    vi.stubGlobal("fetch", okFetch("0000000000000000000000000000000000A:1\nF19974A00FB7A3CC5C86EE6C419ABB63C14:24230577"));
     const result = await validatePassword("password123!!");
     expect(result.ok).toBe(false);
     expect(result.errors.join(" ")).toContain("breach");
