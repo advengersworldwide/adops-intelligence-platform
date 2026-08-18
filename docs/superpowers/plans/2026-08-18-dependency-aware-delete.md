@@ -590,7 +590,7 @@ git commit -m "feat(dependencies): add per-table presentation and permission des
 - Produces:
   - `types.ts`: `ImpactNode`, `CascadeGroup`, `NullifyGroup`, `Impact`, `MAX_DEPTH = 4`, `MAX_ROWS_PER_LEVEL = 50`
   - `fingerprint.ts`: `fingerprintOf(nodes: { table: string; id: number | string }[]): string`
-  - `resolve.ts`: `resolveImpact(table: string, id: number | string, permissions: Set<string>): Promise<Impact>`, `collectDeletableNodes(impact: Impact): { table: string; id: number | string }[]`
+  - `resolve.ts`: `NotFoundError` (Error subclass), `resolveImpact(table: string, id: number | string, permissions: Set<string>): Promise<Impact>`, `collectDeletableNodes(impact: Impact): { table: string; id: number | string }[]`
 
 **Background:** Table and column names are interpolated into SQL, so they **must** come from the graph/descriptors (trusted, schema-derived) and never from request input. Use `sql.identifier()` for them and normal `${}` parameter binding for ids. The route layer rejects unknown tables before calling the resolver.
 
@@ -775,6 +775,14 @@ import {
 
 type Row = Record<string, unknown>;
 
+/** Thrown when the target row does not exist. Routes map this to 404 via instanceof. */
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
+
 async function selectRows(table: string, column: string, value: unknown, columns: string[], limit: number): Promise<Row[]> {
   const list = sql.join(columns.map(c => sql.identifier(c)), sql`, `);
   const res = await db.execute(sql`
@@ -858,7 +866,7 @@ export async function resolveImpact(table: string, id: number | string, permissi
   const targetDesc = getDescriptor(table);
 
   const [targetRow] = await selectRows(table, "id", id, targetDesc.labelColumns, 1);
-  if (!targetRow) throw new Error(`${targetDesc.singular} not found`);
+  if (!targetRow) throw new NotFoundError(`${targetDesc.singular} not found`);
 
   const { nodes: blockers, truncated } = await resolveBlockers(table, id, permissions, 0);
 
@@ -989,7 +997,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const resolveImpact = vi.fn();
 
-vi.mock("@/lib/dependencies/resolve", () => ({ resolveImpact: (...a: unknown[]) => resolveImpact(...a) }));
+// Keep the real NotFoundError class — the route's 404 path checks `instanceof`,
+// so a fully synthetic mock would break it.
+vi.mock("@/lib/dependencies/resolve", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/dependencies/resolve")>("@/lib/dependencies/resolve");
+  return { ...actual, resolveImpact: (...a: unknown[]) => resolveImpact(...a) };
+});
 vi.mock("@/lib/auth/session", () => ({ getSession: vi.fn(async () => ({ sub: 1, name: "T", email: "t@x.com", role: "System Admin", isSystem: true })) }));
 vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions: vi.fn(async () => []) }));
 
@@ -1023,8 +1036,14 @@ describe("GET /api/dependencies", () => {
   });
 
   it("404s when the entity does not exist", async () => {
-    resolveImpact.mockRejectedValueOnce(new Error("Client not found"));
+    const { NotFoundError } = await import("@/lib/dependencies/resolve");
+    resolveImpact.mockRejectedValueOnce(new NotFoundError("Client not found"));
     expect((await get("table=clients&id=999")).status).toBe(404);
+  });
+
+  it("500s on an unrelated error, even one whose message says 'not found'", async () => {
+    resolveImpact.mockRejectedValueOnce(new Error("relation \"clients\" not found"));
+    expect((await get("table=clients&id=1")).status).toBe(500);
   });
 });
 ```
@@ -1044,7 +1063,7 @@ import { getSession } from "@/lib/auth/session";
 import { getRolePermissions } from "@/lib/rbac/role-permissions";
 import { effectivePermissions } from "@/lib/rbac/can";
 import { getDescriptor, hasDescriptor } from "@/lib/dependencies/descriptors";
-import { resolveImpact } from "@/lib/dependencies/resolve";
+import { resolveImpact, NotFoundError } from "@/lib/dependencies/resolve";
 
 export const runtime = "nodejs";
 
@@ -1071,9 +1090,11 @@ export async function GET(req: Request): Promise<Response> {
   try {
     return NextResponse.json(await resolveImpact(table, id, permissions));
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to resolve dependencies";
-    if (/not found/i.test(message)) return NextResponse.json({ error: message }, { status: 404 });
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (err instanceof NotFoundError) return NextResponse.json({ error: err.message }, { status: 404 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to resolve dependencies" },
+      { status: 500 },
+    );
   }
 }
 ```
@@ -1217,7 +1238,7 @@ import { getSession } from "@/lib/auth/session";
 import { getRolePermissions } from "@/lib/rbac/role-permissions";
 import { effectivePermissions } from "@/lib/rbac/can";
 import { getDescriptor, hasDescriptor } from "@/lib/dependencies/descriptors";
-import { resolveImpact, collectDeletableNodes } from "@/lib/dependencies/resolve";
+import { resolveImpact, collectDeletableNodes, NotFoundError } from "@/lib/dependencies/resolve";
 
 export const runtime = "nodejs";
 
@@ -1249,9 +1270,11 @@ export async function POST(req: Request): Promise<Response> {
   try {
     impact = await resolveImpact(table, id, permissions);
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to resolve dependencies";
-    if (/not found/i.test(message)) return NextResponse.json({ error: message }, { status: 404 });
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (err instanceof NotFoundError) return NextResponse.json({ error: err.message }, { status: 404 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to resolve dependencies" },
+      { status: 500 },
+    );
   }
 
   if (impact.fingerprint !== fingerprint)
