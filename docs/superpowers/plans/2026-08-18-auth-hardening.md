@@ -21,6 +21,9 @@
 - Auth endpoints are **not** in `lib/api-spec/openapi.yaml`. Do not run orval codegen for any of this work.
 - Every route returns generic failure text (`"Invalid credentials"`). Never reveal whether a username exists.
 - Run tests with `pnpm --filter @workspace/web test`. Typecheck with `pnpm typecheck`.
+- Baseline on this branch is **67 test files / 232 tests, green**. The suite can flake under machine load; a red run that does not reproduce on a second run is contention, not a regression.
+- **Tasks 1-14 are logic tasks and require tests** — each has its test code written in the task.
+- **Tasks 15-18 are UI tasks and ship without automated tests by decision.** They are gated on `pnpm --filter @workspace/web typecheck` plus the manual verification steps written into each task. Missing component tests on these four tasks is not a defect and must not be reported as one.
 
 ---
 
