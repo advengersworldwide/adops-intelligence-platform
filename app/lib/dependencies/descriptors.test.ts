@@ -18,6 +18,7 @@ describe("descriptor registry", () => {
     expect(getDescriptor("payments").deletePermission).toBe("payments:edit");
     expect(getDescriptor("billings").deletePermission).toBe("billings:edit");
     expect(getDescriptor("cost_models").deletePermission).toBe("settings.catalogs:manage");
+    expect(getDescriptor("tax_settings").deletePermission).toBe("settings.general:view");
   });
 
   it("marks financial tables so they trigger typed confirmation", () => {

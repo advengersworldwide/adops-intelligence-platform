@@ -200,7 +200,7 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     labelColumns: ["id"],
     labelWith: r => `Tax Setting #${r.id}`,
     href: null,
-    deletePermission: "settings.catalogs:manage",
+    deletePermission: "settings.general:view",
     deleteEndpoint: null,
     financial: false,
   },
