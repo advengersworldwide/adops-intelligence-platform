@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Password minimum length: **12** characters. Maximum: **72** characters (bcrypt truncates silently past 72 bytes — rejecting is safer than truncating).
+- Password minimum length: **12** characters (counted in characters). Maximum: **72** **bytes**, checked with `Buffer.byteLength(password, "utf8")` — bcrypt truncates silently past 72 bytes, and a character-count check lets a 72-character multi-byte password through at 144 bytes.
 - **No composition rules.** Do not require uppercase/lowercase/symbols anywhere. This was an explicit decision.
 - Usernames are **case-insensitive**: normalize with `.trim().toLowerCase()` on every write and every lookup.
 - Privileged = holds `settings.users:manage`, OR `isSystem === true`, OR `role === "System Admin"`. Use `effectivePermissions()` from `app/lib/rbac/can.ts` — never re-derive it.
@@ -205,7 +205,10 @@ export async function validatePassword(password: string): Promise<PasswordValida
   if (password.length < MIN_PASSWORD_LENGTH) {
     errors.push(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
   }
-  if (password.length > MAX_PASSWORD_LENGTH) {
+  // Byte length, not character count: bcrypt truncates at 72 BYTES, so a
+  // 72-character multi-byte password is still silently truncated. The minimum
+  // above stays character-based — NIST measures minimums in characters.
+  if (Buffer.byteLength(password, "utf8") > MAX_PASSWORD_LENGTH) {
     errors.push(`Password must be at most ${MAX_PASSWORD_LENGTH} characters.`);
   }
 
