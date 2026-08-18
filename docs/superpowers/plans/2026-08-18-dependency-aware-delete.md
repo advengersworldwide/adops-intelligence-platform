@@ -14,7 +14,7 @@
 
 - **Package manager is pnpm.** `npx only-allow pnpm` is enforced in `preinstall`. Never use npm or yarn.
 - **Tests run from `app/`:** `pnpm test` (which is `vitest run`). Run a single file with `pnpm exec vitest run <path>`.
-- **Typecheck:** `pnpm typecheck` from the repo root (builds libs, then typechecks `app` and `scripts`).
+- **Typecheck:** run **`pnpm typecheck:libs`** from the repo root and **`pnpm typecheck`** from `app/`. Do **not** use the root `pnpm typecheck` — it also builds `@workspace/scripts`, which has a **pre-existing failure** unrelated to this work: `scripts/src/seed.ts` imports `campaignsTable` and `transactionsTable`, dropped by the legacy-media retirement (last touched in `d232232`). Treat that failure as expected background noise; do not fix it in this plan.
 - **API contract flow is one-directional:** `lib/db/src/schema/*` → `lib/api-spec/openapi.yaml` → orval generates `lib/api-zod` + `lib/api-client-react` → `app/app/api/*` route handlers → `app/app/(dashboard)/*` pages. **Never hand-edit anything under `lib/api-zod/src/generated` or `lib/api-client-react/src/generated`** — edit `openapi.yaml` and run codegen.
 - **Codegen command:** `pnpm --filter @workspace/api-spec codegen`.
 - **Do not change any FK policy** in `lib/db/src/schema/*`. This feature reports what the schema already declares.
