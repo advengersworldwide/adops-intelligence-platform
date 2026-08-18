@@ -10,11 +10,15 @@ const apiDir = join(here, "..", "..", "app", "api");
 // - public: healthz, login, logout
 // - auth/me self-guards inline (getSession -> 401) and returns the permission
 //   set that bootstraps the client, so it cannot require a specific permission.
+// - dependencies self-guards inline: needs the full permission set to resolve
+//   the impact tree with per-node deletability, so it composes getSession +
+//   getRolePermissions + effectivePermissions directly, not requirePermission.
 const PUBLIC_ALLOWLIST = [
   "healthz/route.ts",
   "users/login/route.ts",
   "users/logout/route.ts",
   "auth/me/route.ts",
+  "dependencies/route.ts",
 ];
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
