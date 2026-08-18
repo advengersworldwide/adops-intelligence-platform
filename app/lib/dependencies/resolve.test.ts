@@ -39,7 +39,10 @@ describe("resolveImpact", () => {
     expect(impact.blockers).toEqual([]);
     expect(impact.cascades).toEqual([]);
     expect(impact.nullifies).toEqual([]);
-    expect(impact.totals.deletes).toBe(0);
+    // totals.deletes is the true blast radius and includes the target row
+    // itself, so "no dependents" still means exactly 1 (the row being
+    // deleted) — not 0.
+    expect(impact.totals.deletes).toBe(1);
     expect(impact.canDeleteAll).toBe(true);
   });
 

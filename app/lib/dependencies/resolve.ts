@@ -166,7 +166,9 @@ export async function resolveImpact(table: string, id: number | string, permissi
     blockedReason,
     missingPermissions: [...missing].sort(),
     totals: {
-      deletes: blockerCount + cascades.reduce((s, c) => s + c.count, 0),
+      // +1 counts the target row itself — deletes is the true blast radius,
+      // not just what's destroyed in addition to it. Do not remove the +1.
+      deletes: blockerCount + cascades.reduce((s, c) => s + c.count, 0) + 1,
       nullifies: nullifies.reduce((s, n) => s + n.count, 0),
       touchesFinancial,
     },
