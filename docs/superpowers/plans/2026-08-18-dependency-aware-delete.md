@@ -698,7 +698,10 @@ describe("resolveImpact", () => {
     expect(impact.blockers).toEqual([]);
     expect(impact.cascades).toEqual([]);
     expect(impact.nullifies).toEqual([]);
-    expect(impact.totals.deletes).toBe(0);
+    // 1, not 0: totals.deletes is the blast radius and INCLUDES the target row itself.
+    // The UI renders it as "Delete All — {deletes} records", and Tasks 5 and 7 both fixture
+    // an empty impact as `totals: { deletes: 1, ... }`.
+    expect(impact.totals.deletes).toBe(1);
     expect(impact.canDeleteAll).toBe(true);
   });
 
