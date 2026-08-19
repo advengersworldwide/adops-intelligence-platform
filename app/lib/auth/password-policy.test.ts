@@ -50,14 +50,15 @@ describe("validatePassword", () => {
     // SHA-1("password123!!") = 2EA80 F19974A00FB7A3CC5C86EE6C419ABB63C14
     // The range API returns only the suffix (everything after the 5-char prefix),
     // so the mocked body must carry the suffix of the password under test.
-    const mockFetch = vi.fn(async () => new Response("0000000000000000000000000000000000A:1\nF19974A00FB7A3CC5C86EE6C419ABB63C14:24230577", { status: 200 }));
+    const mockFetch = vi.fn(async (_input: string | URL, _init?: Record<string, unknown>) =>
+      new Response("0000000000000000000000000000000000A:1\nF19974A00FB7A3CC5C86EE6C419ABB63C14:24230577", { status: 200 }));
     vi.stubGlobal("fetch", mockFetch);
     const result = await validatePassword("password123!!");
     expect(result.ok).toBe(false);
     expect(result.errors.join(" ")).toContain("breach");
     // Verify k-anonymity: only the 5-char prefix is sent, not the full hash or password
     expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining("/2EA80"), expect.anything());
-    const calledUrl = mockFetch.mock.calls[0]?.[0] as string;
+    const calledUrl = String(mockFetch.mock.calls[0][0]);
     expect(calledUrl).not.toContain("F19974A00FB7A3CC5C86EE6C419ABB63C14"); // full hash not sent
     expect(calledUrl).not.toContain("password123!!"); // password not sent
   });
