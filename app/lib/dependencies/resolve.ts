@@ -9,6 +9,14 @@ import {
 
 type Row = Record<string, unknown>;
 
+/** Thrown when the target row does not exist. Routes map this to 404 via instanceof. */
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
+
 async function selectRows(table: string, column: string, value: unknown, columns: string[], limit: number): Promise<Row[]> {
   const list = sql.join(columns.map(c => sql.identifier(c)), sql`, `);
   const res = await db.execute(sql`
@@ -92,7 +100,7 @@ export async function resolveImpact(table: string, id: number | string, permissi
   const targetDesc = getDescriptor(table);
 
   const [targetRow] = await selectRows(table, "id", id, targetDesc.labelColumns, 1);
-  if (!targetRow) throw new Error(`${targetDesc.singular} not found`);
+  if (!targetRow) throw new NotFoundError(`${targetDesc.singular} not found`);
 
   const { nodes: blockers, truncated } = await resolveBlockers(table, id, permissions, 0);
 

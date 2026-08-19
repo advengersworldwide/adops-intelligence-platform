@@ -4,9 +4,20 @@ const resolveImpact = vi.fn();
 const getSession = vi.fn();
 const getRolePermissions = vi.fn();
 
-vi.mock("@/lib/dependencies/resolve", () => ({ resolveImpact }));
-vi.mock("@/lib/auth/session", () => ({ getSession }));
-vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions }));
+/** Mock NotFoundError class to avoid loading the real module */
+class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotFoundError";
+  }
+}
+
+vi.mock("@/lib/dependencies/resolve", () => ({
+  NotFoundError,
+  resolveImpact: (...args: unknown[]) => resolveImpact(...args),
+}));
+vi.mock("@/lib/auth/session", () => ({ getSession: (...args: unknown[]) => getSession(...args) }));
+vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions: (...args: unknown[]) => getRolePermissions(...args) }));
 
 beforeEach(() => {
   resolveImpact.mockReset();
@@ -44,8 +55,13 @@ describe("GET /api/dependencies", () => {
   });
 
   it("404s when the entity does not exist", async () => {
-    resolveImpact.mockRejectedValueOnce(new Error("Client not found"));
+    resolveImpact.mockRejectedValueOnce(new NotFoundError("Client not found"));
     expect((await get("table=clients&id=999")).status).toBe(404);
+  });
+
+  it("500s on an unrelated error, even one whose message says 'not found'", async () => {
+    resolveImpact.mockRejectedValueOnce(new Error("relation \"clients\" not found"));
+    expect((await get("table=clients&id=1")).status).toBe(500);
   });
 
   it("401s when session is null", async () => {

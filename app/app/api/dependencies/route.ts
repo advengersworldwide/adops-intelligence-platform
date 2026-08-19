@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth/session";
 import { getRolePermissions } from "@/lib/rbac/role-permissions";
 import { effectivePermissions } from "@/lib/rbac/can";
 import { getDescriptor, hasDescriptor } from "@/lib/dependencies/descriptors";
-import { resolveImpact } from "@/lib/dependencies/resolve";
+import { resolveImpact, NotFoundError } from "@/lib/dependencies/resolve";
 
 export const runtime = "nodejs";
 
@@ -30,8 +30,10 @@ export async function GET(req: Request): Promise<Response> {
   try {
     return NextResponse.json(await resolveImpact(table, id, permissions));
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Failed to resolve dependencies";
-    if (/not found/i.test(message)) return NextResponse.json({ error: message }, { status: 404 });
-    return NextResponse.json({ error: message }, { status: 500 });
+    if (err instanceof NotFoundError) return NextResponse.json({ error: err.message }, { status: 404 });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to resolve dependencies" },
+      { status: 500 },
+    );
   }
 }
