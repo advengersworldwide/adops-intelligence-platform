@@ -590,7 +590,8 @@ git commit -m "feat(dependencies): add per-table presentation and permission des
 - Produces:
   - `types.ts`: `ImpactNode`, `CascadeGroup`, `NullifyGroup`, `Impact`, `MAX_DEPTH = 4`, `MAX_ROWS_PER_LEVEL = 50`
   - `fingerprint.ts`: `fingerprintOf(nodes: { table: string; id: number | string }[]): string`
-  - `resolve.ts`: `NotFoundError` (Error subclass), `resolveImpact(table: string, id: number | string, permissions: Set<string>): Promise<Impact>`, `collectDeletableNodes(impact: Impact): { table: string; id: number | string }[]`
+  - `errors.ts`: `NotFoundError` (Error subclass). **Deliberately a dependency-free leaf module** — it must not import `resolve.ts`, `@workspace/db`, or anything else. Routes and tests need this class for `instanceof` checks, and routing it through `resolve.ts` would drag the whole database layer (and a `pg.Pool` construction) into every consumer, which measurably pushed a route test past vitest's 5s timeout.
+  - `resolve.ts`: `resolveImpact(table: string, id: number | string, permissions: Set<string>): Promise<Impact>`, `collectDeletableNodes(impact: Impact): { table: string; id: number | string }[]`
 
 **Background:** Table and column names are interpolated into SQL, so they **must** come from the graph/descriptors (trusted, schema-derived) and never from request input. Use `sql.identifier()` for them and normal `${}` parameter binding for ids. The route layer rejects unknown tables before calling the resolver.
 
@@ -768,20 +769,13 @@ import { sql } from "drizzle-orm";
 import { db, dependentsOf, isBlocking, type FkEdge } from "@workspace/db";
 import { getDescriptor, hasDescriptor } from "./descriptors";
 import { fingerprintOf } from "./fingerprint";
+import { NotFoundError } from "./errors";
 import {
   MAX_DEPTH, MAX_ROWS_PER_LEVEL, CASCADE_SAMPLE_SIZE,
   type Impact, type ImpactNode, type CascadeGroup, type NullifyGroup,
 } from "./types";
 
 type Row = Record<string, unknown>;
-
-/** Thrown when the target row does not exist. Routes map this to 404 via instanceof. */
-export class NotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "NotFoundError";
-  }
-}
 
 async function selectRows(table: string, column: string, value: unknown, columns: string[], limit: number): Promise<Row[]> {
   const list = sql.join(columns.map(c => sql.identifier(c)), sql`, `);
@@ -997,12 +991,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const resolveImpact = vi.fn();
 
-// Keep the real NotFoundError class — the route's 404 path checks `instanceof`,
-// so a fully synthetic mock would break it.
-vi.mock("@/lib/dependencies/resolve", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/dependencies/resolve")>("@/lib/dependencies/resolve");
-  return { ...actual, resolveImpact: (...a: unknown[]) => resolveImpact(...a) };
-});
+// NotFoundError lives in its own dependency-free module, so this mock stays fully
+// synthetic — no importActual, and nothing drags @workspace/db into this test.
+import { NotFoundError } from "@/lib/dependencies/errors";
+vi.mock("@/lib/dependencies/resolve", () => ({ resolveImpact: (...a: unknown[]) => resolveImpact(...a) }));
 vi.mock("@/lib/auth/session", () => ({ getSession: vi.fn(async () => ({ sub: 1, name: "T", email: "t@x.com", role: "System Admin", isSystem: true })) }));
 vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions: vi.fn(async () => []) }));
 
@@ -1036,7 +1028,6 @@ describe("GET /api/dependencies", () => {
   });
 
   it("404s when the entity does not exist", async () => {
-    const { NotFoundError } = await import("@/lib/dependencies/resolve");
     resolveImpact.mockRejectedValueOnce(new NotFoundError("Client not found"));
     expect((await get("table=clients&id=999")).status).toBe(404);
   });
@@ -1063,7 +1054,8 @@ import { getSession } from "@/lib/auth/session";
 import { getRolePermissions } from "@/lib/rbac/role-permissions";
 import { effectivePermissions } from "@/lib/rbac/can";
 import { getDescriptor, hasDescriptor } from "@/lib/dependencies/descriptors";
-import { resolveImpact, NotFoundError } from "@/lib/dependencies/resolve";
+import { resolveImpact } from "@/lib/dependencies/resolve";
+import { NotFoundError } from "@/lib/dependencies/errors";
 
 export const runtime = "nodejs";
 
@@ -1238,7 +1230,8 @@ import { getSession } from "@/lib/auth/session";
 import { getRolePermissions } from "@/lib/rbac/role-permissions";
 import { effectivePermissions } from "@/lib/rbac/can";
 import { getDescriptor, hasDescriptor } from "@/lib/dependencies/descriptors";
-import { resolveImpact, collectDeletableNodes, NotFoundError } from "@/lib/dependencies/resolve";
+import { resolveImpact, collectDeletableNodes } from "@/lib/dependencies/resolve";
+import { NotFoundError } from "@/lib/dependencies/errors";
 
 export const runtime = "nodejs";
 
