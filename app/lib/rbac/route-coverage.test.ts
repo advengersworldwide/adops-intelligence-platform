@@ -15,11 +15,10 @@ const PUBLIC_ALLOWLIST = [
 
 // Routes that self-guard inline (getSession + explicit auth enforcement).
 // These do not use requirePermission() because they need full permission context
-// or special bootstrap behavior. Must verify they have getSession( and either
-// a 401 (auth required) or 403 (permission denied) response.
-const SELF_GUARDED_ROUTES = [
-  "auth/me/route.ts",
-  "dependencies/route.ts",
+// or special bootstrap behavior. Each must have getSession( and the listed status codes.
+const SELF_GUARDED_ROUTES: { file: string; requiredStatusCodes: number[] }[] = [
+  { file: "auth/me/route.ts", requiredStatusCodes: [401] },
+  { file: "dependencies/route.ts", requiredStatusCodes: [401, 403] },
 ];
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
@@ -33,9 +32,10 @@ function routeFiles(): string[] {
 describe("every API route enforces authorization", () => {
   it("has a require* guard in each exported HTTP handler", () => {
     const offenders: string[] = [];
+    const selfGuardedFiles = new Set(SELF_GUARDED_ROUTES.map((r) => r.file));
     for (const rel of routeFiles()) {
       if (PUBLIC_ALLOWLIST.includes(rel)) continue;
-      if (SELF_GUARDED_ROUTES.includes(rel)) continue;
+      if (selfGuardedFiles.has(rel)) continue;
       const src = readFileSync(join(apiDir, rel), "utf8");
       const exportsHandler = HTTP_METHODS.some((m) =>
         new RegExp(`export async function ${m}\\b`).test(src),
@@ -47,18 +47,22 @@ describe("every API route enforces authorization", () => {
     expect(offenders, `Unguarded routes:\n${offenders.join("\n")}`).toEqual([]);
   });
 
-  it("self-guarded routes have getSession( and auth enforcement (401 or 403)", () => {
+  it("self-guarded routes have getSession( and all required status codes", () => {
     const missing: { file: string; checks: string[] }[] = [];
-    for (const rel of SELF_GUARDED_ROUTES) {
-      if (!routeFiles().includes(rel)) {
-        missing.push({ file: rel, checks: ["file does not exist"] });
+    for (const route of SELF_GUARDED_ROUTES) {
+      if (!routeFiles().includes(route.file)) {
+        missing.push({ file: route.file, checks: ["file does not exist"] });
         continue;
       }
-      const src = readFileSync(join(apiDir, rel), "utf8");
+      const src = readFileSync(join(apiDir, route.file), "utf8");
       const checks: string[] = [];
       if (!/getSession\s*\(/.test(src)) checks.push("missing getSession(");
-      if (!/status:\s*(401|403)/.test(src)) checks.push("missing status: 401 or 403");
-      if (checks.length > 0) missing.push({ file: rel, checks });
+      for (const code of route.requiredStatusCodes) {
+        if (!new RegExp(`status:\\s*${code}`).test(src)) {
+          checks.push(`missing status: ${code}`);
+        }
+      }
+      if (checks.length > 0) missing.push({ file: route.file, checks });
     }
     expect(missing, `Self-guarded routes missing security checks:\n${missing.map((m) => `${m.file}: ${m.checks.join(", ")}`).join("\n")}`).toEqual([]);
   });
