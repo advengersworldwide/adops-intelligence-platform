@@ -1,17 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NotFoundError } from "@/lib/dependencies/errors";
 
 const resolveImpact = vi.fn();
 const getSession = vi.fn();
 const getRolePermissions = vi.fn();
 
-vi.mock("@/lib/dependencies/resolve", async () => {
-  // @workspace/db's index.ts throws at module-load time if DATABASE_URL is unset.
-  // We need the real NotFoundError class, so we can't hand-mock the whole module.
-  // Just satisfy the load-time guard with a placeholder.
-  process.env.DATABASE_URL ??= "postgresql://test:test@localhost:5432/test";
-  const actual = await vi.importActual<typeof import("@/lib/dependencies/resolve")>("@/lib/dependencies/resolve");
-  return { ...actual, resolveImpact: (...args: unknown[]) => resolveImpact(...args) };
-});
+vi.mock("@/lib/dependencies/resolve", () => ({ resolveImpact: (...a: unknown[]) => resolveImpact(...a) }));
 vi.mock("@/lib/auth/session", () => ({ getSession: (...args: unknown[]) => getSession(...args) }));
 vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions: (...args: unknown[]) => getRolePermissions(...args) }));
 
@@ -51,7 +45,6 @@ describe("GET /api/dependencies", () => {
   });
 
   it("404s when the entity does not exist", async () => {
-    const { NotFoundError } = await import("@/lib/dependencies/resolve");
     resolveImpact.mockRejectedValueOnce(new NotFoundError("Client not found"));
     expect((await get("table=clients&id=999")).status).toBe(404);
   });

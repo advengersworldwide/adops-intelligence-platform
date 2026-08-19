@@ -3,7 +3,8 @@ import { getSession } from "@/lib/auth/session";
 import { getRolePermissions } from "@/lib/rbac/role-permissions";
 import { effectivePermissions } from "@/lib/rbac/can";
 import { getDescriptor, hasDescriptor } from "@/lib/dependencies/descriptors";
-import { resolveImpact, NotFoundError } from "@/lib/dependencies/resolve";
+import { resolveImpact } from "@/lib/dependencies/resolve";
+import { NotFoundError } from "@/lib/dependencies/errors";
 
 export const runtime = "nodejs";
 

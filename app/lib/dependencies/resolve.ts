@@ -2,20 +2,13 @@ import { sql } from "drizzle-orm";
 import { db, dependentsOf, isBlocking, type FkEdge } from "@workspace/db";
 import { getDescriptor, hasDescriptor } from "./descriptors";
 import { fingerprintOf } from "./fingerprint";
+import { NotFoundError } from "./errors";
 import {
   MAX_DEPTH, MAX_ROWS_PER_LEVEL, CASCADE_SAMPLE_SIZE,
   type Impact, type ImpactNode, type CascadeGroup, type NullifyGroup,
 } from "./types";
 
 type Row = Record<string, unknown>;
-
-/** Thrown when the target row does not exist. Routes map this to 404 via instanceof. */
-export class NotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "NotFoundError";
-  }
-}
 
 async function selectRows(table: string, column: string, value: unknown, columns: string[], limit: number): Promise<Row[]> {
   const list = sql.join(columns.map(c => sql.identifier(c)), sql`, `);
