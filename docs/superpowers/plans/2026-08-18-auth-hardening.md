@@ -21,6 +21,7 @@
 - Auth endpoints are **not** in `lib/api-spec/openapi.yaml`. Do not run orval codegen for any of this work.
 - Every route returns generic failure text (`"Invalid credentials"`). Never reveal whether a username exists.
 - Run tests with `pnpm --filter @workspace/web test`. Typecheck with `pnpm typecheck`.
+- **No task may connect to a database.** `DATABASE_URL` points at the live Supabase instance serving the deployed app. Never run `drizzle-kit push`/`push-force`, `psql`, `db:seed`, or any command that opens a database connection. Every task's tests mock `@workspace/db`; none needs a reachable database. Schema SQL is written to a file and applied by the operator by hand.
 - Baseline on this branch is **67 test files / 232 tests, green**. The suite can flake under machine load; a red run that does not reproduce on a second run is contention, not a regression.
 - **Tasks 1-14 are logic tasks and require tests** — each has its test code written in the task.
 - **Tasks 15-18 are UI tasks and ship without automated tests by decision.** They are gated on `pnpm --filter @workspace/web typecheck` plus the manual verification steps written into each task. Missing component tests on these four tasks is not a defect and must not be reported as one.
@@ -769,10 +770,13 @@ CREATE TABLE user_backup_codes (
 CREATE INDEX user_backup_codes_user_id_idx ON user_backup_codes (user_id);
 ```
 
-- [ ] **Step 3: Apply the schema to the database**
+- [ ] **Step 3: Do NOT apply the schema to any database**
 
-Run: `pnpm --filter @workspace/db push`
-Expected: drizzle-kit reports the new columns and table applied with no data loss warnings.
+`DATABASE_URL` points at the live Supabase instance backing the deployed app. **Do not run `pnpm --filter @workspace/db push`, `push-force`, `psql`, or any other command that connects to a database.** Write the SQL file and stop.
+
+Note for the record: `drizzle-kit push` performs a schema *diff* and does not execute `migrations/*.sql`. It would attempt to add `username text NOT NULL UNIQUE` directly to a populated `users` table, skipping the staged backfill in `0008_auth_hardening.sql` entirely — which is why that file's add-nullable → backfill → constrain sequence exists and why push is the wrong tool here. The operator applies the SQL by hand.
+
+Every remaining task in this plan mocks `@workspace/db` in its tests, so no task requires a reachable database.
 
 - [ ] **Step 4: Verify the typecheck passes**
 
@@ -3951,7 +3955,7 @@ git commit -m "docs(auth): document TOTP_ENCRYPTION_KEY and rollout checks"
 Apply in this order:
 
 1. Set `TOTP_ENCRYPTION_KEY` in the production environment **first**. The 2FA routes throw without it.
-2. Apply the schema: `pnpm --filter @workspace/db push`. The migration is additive and backfills usernames from emails, so no existing login breaks.
+2. Apply the schema by executing `lib/db/migrations/0008_auth_hardening.sql` against the database directly (psql, or the Supabase SQL editor). **Do not use `drizzle-kit push`** — it performs a schema diff, does not run this file, and would try to add `username text NOT NULL UNIQUE` to a populated table in one step, skipping the staged backfill. The SQL file is additive and backfills usernames from emails, so no existing login breaks.
 3. Deploy the application.
 4. **Immediately sign in as an admin and complete 2FA enrolment**, storing the backup codes somewhere durable. Until at least one admin is enrolled with saved codes, a lost device means database surgery to recover.
 5. Confirm a second account holds `settings.users:manage`, so the two admins can unlock each other.
