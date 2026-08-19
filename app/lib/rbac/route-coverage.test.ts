@@ -19,6 +19,7 @@ const PUBLIC_ALLOWLIST = [
 const SELF_GUARDED_ROUTES: { file: string; requiredStatusCodes: number[] }[] = [
   { file: "auth/me/route.ts", requiredStatusCodes: [401] },
   { file: "dependencies/route.ts", requiredStatusCodes: [401, 403] },
+  { file: "dependencies/delete/route.ts", requiredStatusCodes: [401, 403] },
 ];
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
