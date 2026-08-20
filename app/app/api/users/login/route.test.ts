@@ -54,7 +54,10 @@ describe("POST /api/users/login", () => {
     const res = await call({ username: "admin", password: "right" });
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ next: "session" });
-    expect(res.headers.get("set-cookie")).toContain("adops-session=");
+    const setCookies = res.headers.getSetCookie();
+    const sessionCookie = setCookies.find((c) => c.startsWith("adops-session="));
+    expect(sessionCookie).toBeDefined();
+    expect(sessionCookie).toContain("HttpOnly");
   });
 
   it("returns a totp challenge WITHOUT a session cookie for an enrolled user", async () => {
@@ -62,9 +65,9 @@ describe("POST /api/users/login", () => {
     compareMock.mockResolvedValue(true);
     const res = await call({ username: "admin", password: "right" });
     expect(await res.json()).toMatchObject({ next: "totp" });
-    const cookies = res.headers.get("set-cookie") ?? "";
-    expect(cookies).toContain("adops-challenge=");
-    expect(cookies).not.toContain("adops-session=ey"); // no real session issued
+    const setCookies = res.headers.getSetCookie();
+    expect(setCookies.some((c) => c.startsWith("adops-challenge="))).toBe(true);
+    expect(setCookies.some((c) => c.startsWith("adops-session=ey"))).toBe(false); // no real session issued
   });
 
   it("returns a password_change challenge for a temp password", async () => {
