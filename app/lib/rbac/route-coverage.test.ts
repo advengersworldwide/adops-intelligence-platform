@@ -10,9 +10,15 @@ const apiDir = join(here, "..", "..", "app", "api");
 // - public: healthz, login, logout
 // - auth/me self-guards inline (getSession -> 401) and returns the permission
 //   set that bootstraps the client, so it cannot require a specific permission.
+// - login/2fa is pre-session by construction: it exchanges a short-lived
+//   challenge cookie (issued by login, verified via verifyChallenge) for the
+//   real session, so requireAuth/requireAdmin/requirePermission cannot apply —
+//   there is no session yet to check. It guards itself via the challenge
+//   token plus TOTP/backup-code verification and database-backed lockout.
 const PUBLIC_ALLOWLIST = [
   "healthz/route.ts",
   "users/login/route.ts",
+  "users/login/2fa/route.ts",
   "users/logout/route.ts",
   "auth/me/route.ts",
 ];
