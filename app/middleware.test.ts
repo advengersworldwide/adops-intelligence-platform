@@ -24,7 +24,7 @@ describe("middleware auth gate", () => {
 
   it("allows authenticated requests through", async () => {
     const token = await signSession({
-      sub: 1, name: "Admin", email: "admin@advengers.com", role: "System Admin", isSystem: true,
+      sub: 1, name: "Admin", username: "admin", email: "admin@advengers.com", role: "System Admin", isSystem: true, tokenVersion: 0,
     });
     const res = await middleware(reqFor("/clients", token));
     // NextResponse.next() has no redirect location.

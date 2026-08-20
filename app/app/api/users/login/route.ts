@@ -45,9 +45,11 @@ export async function POST(req: Request): Promise<Response> {
   const token = await signSession({
     sub: user.id,
     name: user.name,
+    username: user.username,
     email: user.email,
     role: user.role,
     isSystem: user.isSystem,
+    tokenVersion: user.tokenVersion,
   });
 
   const res = NextResponse.json({

@@ -31,7 +31,7 @@ describe("GET /api/auth/me", () => {
   });
 
   it("returns the role's permission set for a normal user", async () => {
-    mockGetSession.mockResolvedValueOnce({ sub: 2, name: "V", email: "v@x.com", role: "Viewer", isSystem: false });
+    mockGetSession.mockResolvedValueOnce({ sub: 2, name: "V", username: "v", email: "v@x.com", role: "Viewer", isSystem: false, tokenVersion: 0 });
     mockGetRolePermissions.mockResolvedValueOnce(["clients:view"]);
     mockEffectivePermissions.mockReturnValueOnce(new Set(["clients:view"]));
     const res = await GET();
@@ -40,7 +40,7 @@ describe("GET /api/auth/me", () => {
   });
 
   it("returns the full catalog for a system admin", async () => {
-    mockGetSession.mockResolvedValueOnce({ sub: 1, name: "A", email: "a@x.com", role: "System Admin", isSystem: true });
+    mockGetSession.mockResolvedValueOnce({ sub: 1, name: "A", username: "admin", email: "a@x.com", role: "System Admin", isSystem: true, tokenVersion: 0 });
     mockGetRolePermissions.mockResolvedValueOnce([]);
     mockEffectivePermissions.mockReturnValueOnce(new Set(["settings.roles:manage"]));
     const res = await GET();

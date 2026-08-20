@@ -21,3 +21,13 @@ export function buildCookieOptions(
     ...overrides,
   };
 }
+
+export const CHALLENGE_COOKIE = "adops-challenge";
+
+/** Same protections as the session cookie, but scoped to the challenge TTL. */
+export function buildChallengeCookieOptions(
+  maxAgeSeconds: number,
+  nodeEnv: string = process.env.NODE_ENV ?? "development",
+): CookieOptions {
+  return buildCookieOptions({ maxAge: maxAgeSeconds }, nodeEnv);
+}

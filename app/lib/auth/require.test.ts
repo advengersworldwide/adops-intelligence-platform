@@ -28,7 +28,7 @@ describe("requirePermission", () => {
   });
 
   it("403 when the role lacks the permission", async () => {
-    mockGetSession.mockResolvedValueOnce({ sub: 2, name: "V", email: "v@x.com", role: "Viewer", isSystem: false });
+    mockGetSession.mockResolvedValueOnce({ sub: 2, name: "V", username: "v", email: "v@x.com", role: "Viewer", isSystem: false, tokenVersion: 0 });
     mockGetRolePermissions.mockResolvedValueOnce(["clients:view"]);
     const res = await requirePermission("clients:edit");
     expect(isAuthError(res)).toBe(true);
@@ -36,14 +36,14 @@ describe("requirePermission", () => {
   });
 
   it("passes for a granted permission", async () => {
-    mockGetSession.mockResolvedValueOnce({ sub: 2, name: "V", email: "v@x.com", role: "Viewer", isSystem: false });
+    mockGetSession.mockResolvedValueOnce({ sub: 2, name: "V", username: "v", email: "v@x.com", role: "Viewer", isSystem: false, tokenVersion: 0 });
     mockGetRolePermissions.mockResolvedValueOnce(["clients:view"]);
     const res = await requirePermission("clients:view");
     expect(isAuthError(res)).toBe(false);
   });
 
   it("passes for a system admin regardless of role perms", async () => {
-    mockGetSession.mockResolvedValueOnce({ sub: 1, name: "A", email: "a@x.com", role: "System Admin", isSystem: true });
+    mockGetSession.mockResolvedValueOnce({ sub: 1, name: "A", username: "admin", email: "a@x.com", role: "System Admin", isSystem: true, tokenVersion: 0 });
     mockGetRolePermissions.mockResolvedValueOnce([]);
     const res = await requirePermission("settings.roles:manage");
     expect(isAuthError(res)).toBe(false);
