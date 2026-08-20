@@ -16,7 +16,9 @@ vi.mock("@workspace/db", () => ({
 }));
 
 vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions: vi.fn(async () => []) }));
-vi.mock("@/lib/auth/secret-crypto", () => ({ decryptSecret: (s: string) => s }));
+
+const decryptSecretMock = vi.fn((s: string) => s);
+vi.mock("@/lib/auth/secret-crypto", () => ({ decryptSecret: (s: string) => decryptSecretMock(s) }));
 
 const verifyTotpMock = vi.fn();
 vi.mock("@/lib/auth/totp", () => ({ verifyTotp: (...a: unknown[]) => verifyTotpMock(...a) }));
@@ -46,7 +48,9 @@ async function challengeFor(sub: number) {
 
 beforeEach(() => {
   userRow.mockReset(); backupRows.mockReset(); updateSet.mockReset(); verifyTotpMock.mockReset();
+  decryptSecretMock.mockReset();
   backupRows.mockReturnValue([]);
+  decryptSecretMock.mockImplementation((s: string) => s);
 });
 
 describe("POST /api/users/login/2fa", () => {
@@ -93,6 +97,30 @@ describe("POST /api/users/login/2fa", () => {
   it("accepts a backup code and marks it used", async () => {
     userRow.mockReturnValue([enrolledUser]);
     verifyTotpMock.mockReturnValue({ valid: false, step: null });
+    const { hashBackupCode } = await import("@/lib/auth/credentials");
+    backupRows.mockReturnValue([{ id: 9, codeHash: await hashBackupCode("ABCD-2345"), usedAt: null }]);
+    const res = await call("ABCD-2345", await challengeFor(1));
+    expect(res.status).toBe(200);
+    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ usedAt: expect.any(Date) }));
+  });
+
+  it("returns a generic invalid response, not 500, when decryptSecret throws, and increments the failure counter", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    userRow.mockReturnValue([enrolledUser]);
+    decryptSecretMock.mockImplementation(() => {
+      throw new Error("Unsupported state or unable to authenticate data");
+    });
+    const res = await call("123456", await challengeFor(1));
+    expect(res.status).toBe(401);
+    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ twoFactorFailedAttempts: 1 }));
+  });
+
+  it("still accepts a backup code when decryptSecret throws (e.g. a rotated encryption key)", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    userRow.mockReturnValue([enrolledUser]);
+    decryptSecretMock.mockImplementation(() => {
+      throw new Error("Unsupported state or unable to authenticate data");
+    });
     const { hashBackupCode } = await import("@/lib/auth/credentials");
     backupRows.mockReturnValue([{ id: 9, codeHash: await hashBackupCode("ABCD-2345"), usedAt: null }]);
     const res = await call("ABCD-2345", await challengeFor(1));

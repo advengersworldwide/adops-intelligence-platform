@@ -28,7 +28,12 @@ const INVALID = () => NextResponse.json({ error: "Invalid code" }, { status: 401
 function tryDecryptSecret(payload: string): string | null {
   try {
     return decryptSecret(payload);
-  } catch {
+  } catch (err) {
+    // Server-side signal only — never surfaced to the caller. Without this,
+    // a rotated TOTP_ENCRYPTION_KEY or corrupt row is indistinguishable from
+    // users mistyping codes: every enrolled user starts failing 2FA and the
+    // only symptom is a spike in generic lockouts.
+    console.warn("[login/2fa] decryptSecret failed; treating TOTP as invalid", err);
     return null;
   }
 }
