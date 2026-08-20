@@ -33,6 +33,12 @@ describe("isEmptyImpact", () => {
       canDelete: true, requiredPermission: "clients:edit",
     }] })).toBe(false);
   });
+
+  it("is false when only a nullify group exists", () => {
+    expect(isEmptyImpact({ ...base, nullifies: [{
+      table: "billing_records", column: "client_id", label: "Billing Records", count: 3,
+    }] })).toBe(false);
+  });
 });
 
 describe("needsTypedConfirmation", () => {

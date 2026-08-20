@@ -126,7 +126,9 @@ export function DeleteImpactDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {screen === "review"
-              ? "Review everything this will affect before continuing."
+              ? impact && isEmptyImpact(impact)
+                ? `This only deletes ${impact.target.singular.toLowerCase()} "${impact.target.label}" and cannot be undone.`
+                : "Review everything this will affect before continuing."
               : `This permanently deletes ${impact?.totals.deletes ?? 0} records. This cannot be undone.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -134,60 +136,66 @@ export function DeleteImpactDialog({
         {isLoading ? (
           <p className="py-6 text-center text-sm text-muted-foreground">Checking dependencies…</p>
         ) : !impact ? null : screen === "review" ? (
-          <div className="max-h-[50vh] space-y-5 overflow-y-auto">
-            {hasBlockers && (
-              <section>
-                <h3 className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  <AlertTriangle className="h-3.5 w-3.5" /> Must be deleted first
-                </h3>
-                {impact.blockers.map(n => (
-                  <NodeRow
-                    key={`${n.table}:${n.id}`} node={n} depth={0}
-                    pendingKey={pendingKey} setPendingKey={setPendingKey}
-                    onDeleteNode={onDeleteNode} isDeleting={isDeleting}
-                  />
-                ))}
-              </section>
-            )}
-
-            {impact.cascades.length > 0 && (
-              <section>
-                <h3 className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  <Flame className="h-3.5 w-3.5" /> Will also be permanently deleted
-                </h3>
-                <ul className="space-y-1 text-sm">
-                  {impact.cascades.map(c => (
-                    <li key={c.table} className="flex items-center gap-2">
-                      <span className="font-medium">{c.count}</span>
-                      <span>{c.label}</span>
-                      {!c.canDelete && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Lock className="h-3 w-3" /> needs {c.requiredPermission}
-                        </span>
-                      )}
-                    </li>
+          isEmptyImpact(impact) && !impact.blockedReason ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Nothing else references this record — it&apos;s safe to delete.
+            </p>
+          ) : (
+            <div className="max-h-[50vh] space-y-5 overflow-y-auto">
+              {hasBlockers && (
+                <section>
+                  <h3 className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <AlertTriangle className="h-3.5 w-3.5" /> Must be deleted first
+                  </h3>
+                  {impact.blockers.map(n => (
+                    <NodeRow
+                      key={`${n.table}:${n.id}`} node={n} depth={0}
+                      pendingKey={pendingKey} setPendingKey={setPendingKey}
+                      onDeleteNode={onDeleteNode} isDeleting={isDeleting}
+                    />
                   ))}
-                </ul>
-              </section>
-            )}
+                </section>
+              )}
 
-            {impact.nullifies.length > 0 && (
-              <section>
-                <h3 className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  <Link2 className="h-3.5 w-3.5" /> Will be unlinked, not deleted
-                </h3>
-                <ul className="space-y-1 text-sm">
-                  {impact.nullifies.map(n => (
-                    <li key={`${n.table}.${n.column}`}>{nullifySentence(n)}</li>
-                  ))}
-                </ul>
-              </section>
-            )}
+              {impact.cascades.length > 0 && (
+                <section>
+                  <h3 className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <Flame className="h-3.5 w-3.5" /> Will also be permanently deleted
+                  </h3>
+                  <ul className="space-y-1 text-sm">
+                    {impact.cascades.map(c => (
+                      <li key={c.table} className="flex items-center gap-2">
+                        <span className="font-medium">{c.count}</span>
+                        <span>{c.label}</span>
+                        {!c.canDelete && (
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Lock className="h-3 w-3" /> needs {c.requiredPermission}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
 
-            {impact.blockedReason && (
-              <p className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{impact.blockedReason}</p>
-            )}
-          </div>
+              {impact.nullifies.length > 0 && (
+                <section>
+                  <h3 className="mb-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <Link2 className="h-3.5 w-3.5" /> Will be unlinked, not deleted
+                  </h3>
+                  <ul className="space-y-1 text-sm">
+                    {impact.nullifies.map(n => (
+                      <li key={`${n.table}.${n.column}`}>{nullifySentence(n)}</li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {impact.blockedReason && (
+                <p className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{impact.blockedReason}</p>
+              )}
+            </div>
+          )
         ) : (
           <div className="space-y-3">
             <ul className="space-y-1 text-sm">
@@ -224,7 +232,7 @@ export function DeleteImpactDialog({
             </Button>
           ) : (
             <Button
-              variant="destructive" size="sm" disabled={!confirmOk || isDeleting}
+              variant="destructive" size="sm" disabled={!confirmOk || isDeleting || isLoading}
               onClick={async () => { await (hasBlockers ? onDeleteAll() : onDeleteTarget()); }}
             >
               {isDeleting ? "Deleting…" : "Delete Everything"}
