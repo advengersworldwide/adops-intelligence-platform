@@ -1887,3 +1887,13 @@ export type DeleteDependencies200 = {
   deleted: DeleteDependencies200DeletedItem[];
 };
 
+export type DeleteDependencies403 = {
+  error: string;
+  missingPermissions?: string[];
+};
+
+export type DeleteDependencies409 = {
+  error: string;
+  impact?: Impact;
+};
+

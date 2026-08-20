@@ -53,6 +53,8 @@ import type {
   CostResourceInput,
   DashboardSummary,
   DeleteDependencies200,
+  DeleteDependencies403,
+  DeleteDependencies409,
   DeleteDependenciesBody,
   FlowGraph,
   ForecastResponse,
@@ -7360,7 +7362,7 @@ export const deleteDependencies = async (deleteDependenciesBody: DeleteDependenc
 
 
 
-export const getDeleteDependenciesMutationOptions = <TError = ErrorType<void>,
+export const getDeleteDependenciesMutationOptions = <TError = ErrorType<void | DeleteDependencies403 | DeleteDependencies409>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDependencies>>, TError,{data: BodyType<DeleteDependenciesBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof deleteDependencies>>, TError,{data: BodyType<DeleteDependenciesBody>}, TContext> => {
 
@@ -7389,12 +7391,12 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type DeleteDependenciesMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDependencies>>>
     export type DeleteDependenciesMutationBody = BodyType<DeleteDependenciesBody>
-    export type DeleteDependenciesMutationError = ErrorType<void>
+    export type DeleteDependenciesMutationError = ErrorType<void | DeleteDependencies403 | DeleteDependencies409>
 
     /**
  * @summary Delete an entity and all reviewed dependents in one transaction
  */
-export const useDeleteDependencies = <TError = ErrorType<void>,
+export const useDeleteDependencies = <TError = ErrorType<void | DeleteDependencies403 | DeleteDependencies409>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDependencies>>, TError,{data: BodyType<DeleteDependenciesBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof deleteDependencies>>,

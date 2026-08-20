@@ -65,6 +65,8 @@ export * from './costResourceInput';
 export * from './dashboardSummary';
 export * from './deleteDependencies200';
 export * from './deleteDependencies200DeletedItem';
+export * from './deleteDependencies403';
+export * from './deleteDependencies409';
 export * from './deleteDependenciesBody';
 export * from './engineParameter';
 export * from './flowGraph';

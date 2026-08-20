@@ -1925,11 +1925,29 @@ paths:
         "401":
           description: Authentication required
         "403":
-          description: Forbidden — missing delete permission, or impact is no longer fully deletable
+          description: Forbidden — missing delete permission, or impact is no longer fully deletable (the latter includes missingPermissions)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error]
+                properties:
+                  error: { type: string }
+                  missingPermissions:
+                    type: array
+                    items: { type: string }
         "404":
           description: Not found
         "409":
-          description: Impact changed since review (fingerprint mismatch), or a record outside the reviewed list still depends on this
+          description: Impact changed since review (fingerprint mismatch, includes a refreshed impact tree), or a record outside the reviewed list still depends on this (no impact tree in that case)
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [error]
+                properties:
+                  error: { type: string }
+                  impact: { $ref: "#/components/schemas/Impact" }
 
 components:
   schemas:
@@ -1942,6 +1960,14 @@ components:
         - status
 
     # ── Dependency-Aware Delete ────────────────────────────────────────────────
+    # NOTE: ImpactNode is self-referential via `children`. Orval's generated TypeScript
+    # types (api-client-react and api-zod) stay correctly, fully recursive. The generated
+    # ZOD RUNTIME VALIDATOR in @workspace/api-zod does not: it inlines ImpactNode one level
+    # deep and then falls back to `children: zod.array(zod.unknown())` — nested grandchildren
+    # are not validated at runtime. Harmless today (neither /dependencies route imports
+    # @workspace/api-zod or calls `.parse()`), but if a future change adopts this repo's
+    # `SomeResponse.parse(...)` self-check pattern for these routes, know that depth > 1 of
+    # `children` will pass through unvalidated rather than throwing on a real shape mismatch.
     ImpactNode:
       type: object
       required: [table, id, label, singular, canDelete, requiredPermission, children, truncated]
