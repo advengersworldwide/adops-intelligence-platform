@@ -1521,14 +1521,21 @@ export type DeleteImpactDialogProps = {
   onDeleteTarget: () => Promise<void>;
 };
 export function DeleteImpactDialog(props: DeleteImpactDialogProps): JSX.Element;
+
+// Pure decision logic, exported for direct unit testing (repo convention —
+// see app/components/rbac/GatedTabs.test.tsx). No DOM, no render harness.
 export function isEmptyImpact(impact: Impact | null): boolean;
+export function needsTypedConfirmation(impact: Impact): boolean;
+export function canConfirm(impact: Impact, typed: string): boolean;
+export function primaryActionLabel(impact: Impact): string;
+export function nullifySentence(group: NullifyGroup): string;
 ```
 
-**Background:** `vitest.config.ts` sets `environment: "node"`, so component tests must opt into a DOM. Add `// @vitest-environment jsdom` as the **first line** of the test file. Check whether `jsdom` and `@testing-library/react` are installed (`app/components/rbac/GatedTabs.test.tsx` is the existing precedent — read it first and match its setup). If they are missing, install them as devDependencies in `app/`:
+**Background — testing approach (decided 2026-08-20):** this repo has **no render-testing infrastructure**: `jsdom`, `@testing-library/react`, and `@testing-library/user-event` are all absent, and `vitest.config.ts` sets `environment: "node"`. The existing precedent, `app/components/rbac/GatedTabs.test.tsx`, does not render anything — it imports a pure exported function (`pickDefaultTab`) from the component's own `.tsx` and unit-tests it directly.
 
-```bash
-pnpm --filter @workspace/web add -D jsdom @testing-library/react @testing-library/user-event
-```
+Follow that convention. **Do not install any test dependencies and do not add `@vitest-environment jsdom`.**
+
+This means the dialog's decision logic must be extracted into pure, exported functions that carry the behaviour worth protecting — whether the impact is empty, whether the primary action is enabled, whether typed confirmation is required, what the primary button says. The JSX then becomes a thin renderer over those functions. Rendering and event wiring are not unit-tested here; they are covered by browser QA after the feature lands.
 
 - [ ] **Step 1: Read the existing component-test precedent**
 
@@ -1536,18 +1543,18 @@ pnpm --filter @workspace/web add -D jsdom @testing-library/react @testing-librar
 sed -n '1,30p' app/components/rbac/GatedTabs.test.tsx
 ```
 
-Match its environment directive, imports, and render helper style.
+Note what it does: plain `environment: "node"`, no DOM, no rendering — it imports a pure function from the component file and asserts on its return value. Match that exactly.
 
 - [ ] **Step 2: Write the failing test**
 
 Create `app/components/ui/delete-impact-dialog.test.tsx`:
 
 ```tsx
-// @vitest-environment jsdom
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { DeleteImpactDialog, isEmptyImpact } from "./delete-impact-dialog";
-import type { Impact } from "@/lib/dependencies/types";
+import { describe, it, expect } from "vitest";
+import {
+  isEmptyImpact, needsTypedConfirmation, canConfirm, primaryActionLabel, nullifySentence,
+} from "./delete-impact-dialog";
+import type { Impact, ImpactNode } from "@/lib/dependencies/types";
 
 const base: Impact = {
   target: { table: "clients", id: 1, label: "Acme Corp", singular: "Client" },
@@ -1557,11 +1564,11 @@ const base: Impact = {
   fingerprint: "fp1",
 };
 
-const noop = async () => {};
-const props = {
-  open: true, onOpenChange: () => {}, isLoading: false, isDeleting: false,
-  onDeleteNode: noop, onDeleteAll: noop, onDeleteTarget: noop,
-};
+const node = (over: Partial<ImpactNode> = {}): ImpactNode => ({
+  table: "billings", id: 12, label: "CBILL-0012", singular: "Client Bill",
+  href: null, canDelete: true, requiredPermission: "billings:edit",
+  deleteEndpoint: "/api/billings/12", children: [], truncated: false, ...over,
+});
 
 describe("isEmptyImpact", () => {
   it("is true when nothing is affected", () => {
@@ -1569,11 +1576,7 @@ describe("isEmptyImpact", () => {
   });
 
   it("is false when a blocker exists", () => {
-    expect(isEmptyImpact({ ...base, blockers: [{
-      table: "billings", id: 12, label: "CBILL-0012", singular: "Client Bill",
-      href: null, canDelete: true, requiredPermission: "billings:edit",
-      deleteEndpoint: null, children: [], truncated: false,
-    }] })).toBe(false);
+    expect(isEmptyImpact({ ...base, blockers: [node()] })).toBe(false);
   });
 
   it("is false when a cascade exists", () => {
@@ -1584,39 +1587,58 @@ describe("isEmptyImpact", () => {
   });
 });
 
-describe("DeleteImpactDialog", () => {
-  it("renders blockers with their labels", () => {
-    render(<DeleteImpactDialog {...props} impact={{ ...base, blockers: [{
-      table: "billings", id: 12, label: "CBILL-0012", singular: "Client Bill",
-      href: null, canDelete: true, requiredPermission: "billings:edit",
-      deleteEndpoint: "/api/billings/12", children: [], truncated: false,
-    }] }} />);
-    expect(screen.getByText("CBILL-0012")).toBeDefined();
-    expect(screen.getByText(/must be deleted first/i)).toBeDefined();
+describe("needsTypedConfirmation", () => {
+  it("is required when financial records are touched", () => {
+    expect(needsTypedConfirmation({ ...base, totals: { ...base.totals, touchesFinancial: true } })).toBe(true);
   });
 
-  it("shows the required permission on a locked row and disables Delete All", () => {
-    render(<DeleteImpactDialog {...props} impact={{
-      ...base, canDeleteAll: false, missingPermissions: ["billings:edit"],
-      blockedReason: "You do not have permission to delete every affected record.",
-      blockers: [{
-        table: "billings", id: 12, label: "CBILL-0012", singular: "Client Bill",
-        href: null, canDelete: false, requiredPermission: "billings:edit",
-        deleteEndpoint: "/api/billings/12", children: [], truncated: false,
-      }],
-    }} />);
-    expect(screen.getByText(/billings:edit/)).toBeDefined();
-    expect(screen.getByRole("button", { name: /delete all/i }).hasAttribute("disabled")).toBe(true);
+  it("is not required otherwise", () => {
+    expect(needsTypedConfirmation(base)).toBe(false);
+  });
+});
+
+describe("canConfirm", () => {
+  it("allows confirming a non-financial delete with no typed input", () => {
+    expect(canConfirm(base, "")).toBe(true);
   });
 
-  it("renders cascade counts and nullify lines", () => {
-    render(<DeleteImpactDialog {...props} impact={{
-      ...base,
-      cascades: [{ table: "billing_records", label: "Billing Records", count: 142, sample: [], canDelete: true, requiredPermission: "billings:edit" }],
-      nullifies: [{ table: "billing_records", column: "client_id", label: "Billing Records", count: 3 }],
-    }} />);
-    expect(screen.getByText(/142/)).toBeDefined();
-    expect(screen.getByText(/will be unlinked/i)).toBeDefined();
+  it("blocks confirming while canDeleteAll is false, even with the name typed", () => {
+    const locked = { ...base, canDeleteAll: false, missingPermissions: ["billings:edit"] };
+    expect(canConfirm(locked, "Acme Corp")).toBe(false);
+  });
+
+  it("requires the exact target label when financial records are involved", () => {
+    const financial = { ...base, totals: { ...base.totals, touchesFinancial: true } };
+    expect(canConfirm(financial, "")).toBe(false);
+    expect(canConfirm(financial, "acme corp")).toBe(false);
+    expect(canConfirm(financial, "  Acme Corp  ")).toBe(true);
+  });
+});
+
+describe("primaryActionLabel", () => {
+  it("offers a plain delete when nothing blocks", () => {
+    expect(primaryActionLabel(base)).toBe("Delete Client");
+  });
+
+  it("offers Delete All with the total blast radius when blockers exist", () => {
+    const withBlockers = {
+      ...base, blockers: [node()], totals: { ...base.totals, deletes: 154 },
+    };
+    expect(primaryActionLabel(withBlockers)).toBe("Delete All — 154 records");
+  });
+});
+
+describe("nullifySentence", () => {
+  it("renders a readable unlink line from the FK column", () => {
+    expect(nullifySentence({
+      table: "billing_records", column: "client_id", label: "Billing Records", count: 3,
+    })).toBe("3 Billing Records will lose their client");
+  });
+
+  it("strips the _id suffix and underscores from a compound column", () => {
+    expect(nullifySentence({
+      table: "clients", column: "buying_house_id", label: "Clients", count: 1,
+    })).toBe("1 Clients will lose their buying house");
   });
 });
 ```
@@ -1640,11 +1662,41 @@ import {
   AlertDialogTitle, AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import type { Impact, ImpactNode } from "@/lib/dependencies/types";
+import type { Impact, ImpactNode, NullifyGroup } from "@/lib/dependencies/types";
+
+// ---------------------------------------------------------------------------
+// Pure decision logic. Exported and unit-tested directly, per this repo's
+// convention (see app/components/rbac/GatedTabs.test.tsx). The JSX below is a
+// thin renderer over these — keep behaviour here, not inline in the markup.
+// ---------------------------------------------------------------------------
 
 export function isEmptyImpact(impact: Impact | null): boolean {
   if (!impact) return true;
   return impact.blockers.length === 0 && impact.cascades.length === 0 && impact.nullifies.length === 0;
+}
+
+/** Financial records (bills, payments) require the user to type the target's name. */
+export function needsTypedConfirmation(impact: Impact): boolean {
+  return impact.totals.touchesFinancial;
+}
+
+/** Whether the final destructive action may proceed. */
+export function canConfirm(impact: Impact, typed: string): boolean {
+  if (!impact.canDeleteAll) return false;
+  if (!needsTypedConfirmation(impact)) return true;
+  return typed.trim() === impact.target.label;
+}
+
+/** Primary button text: a plain delete when nothing blocks, otherwise the blast radius. */
+export function primaryActionLabel(impact: Impact): string {
+  if (impact.blockers.length === 0) return `Delete ${impact.target.singular}`;
+  return `Delete All — ${impact.totals.deletes} records`;
+}
+
+/** "3 Billing Records will lose their client" — derived from the FK column name. */
+export function nullifySentence(group: NullifyGroup): string {
+  const field = group.column.replace(/_id$/, "").replace(/_/g, " ");
+  return `${group.count} ${group.label} will lose their ${field}`;
 }
 
 export type DeleteImpactDialogProps = {
@@ -1717,8 +1769,8 @@ export function DeleteImpactDialog({
   const [typed, setTyped] = useState("");
 
   const hasBlockers = (impact?.blockers.length ?? 0) > 0;
-  const needsTyped = impact?.totals.touchesFinancial ?? false;
-  const typedOk = !needsTyped || typed.trim() === impact?.target.label;
+  const needsTyped = impact ? needsTypedConfirmation(impact) : false;
+  const confirmOk = impact ? canConfirm(impact, typed) : false;
 
   return (
     <AlertDialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) { setScreen("review"); setTyped(""); setPendingKey(null); } }}>
@@ -1781,9 +1833,7 @@ export function DeleteImpactDialog({
                 </h3>
                 <ul className="space-y-1 text-sm">
                   {impact.nullifies.map(n => (
-                    <li key={`${n.table}.${n.column}`}>
-                      {n.count} {n.label} will lose their {n.column.replace(/_id$/, "").replace(/_/g, " ")}
-                    </li>
+                    <li key={`${n.table}.${n.column}`}>{nullifySentence(n)}</li>
                   ))}
                 </ul>
               </section>
@@ -1825,13 +1875,11 @@ export function DeleteImpactDialog({
               disabled={!impact?.canDeleteAll || isDeleting || isLoading}
               onClick={() => setScreen("confirm")}
             >
-              {hasBlockers
-                ? `Delete All — ${impact?.totals.deletes ?? 0} records`
-                : `Delete ${impact?.target.singular ?? ""}`}
+              {impact ? primaryActionLabel(impact) : "Delete"}
             </Button>
           ) : (
             <Button
-              variant="destructive" size="sm" disabled={!typedOk || isDeleting}
+              variant="destructive" size="sm" disabled={!confirmOk || isDeleting}
               onClick={async () => { await (hasBlockers ? onDeleteAll() : onDeleteTarget()); }}
             >
               {isDeleting ? "Deleting…" : "Delete Everything"}
