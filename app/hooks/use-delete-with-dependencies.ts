@@ -23,16 +23,30 @@ export function useDeleteWithDependencies({ table, onDeleted, invalidateKeys = [
     await Promise.all(invalidateKeys.map(k => qc.invalidateQueries({ queryKey: k })));
   }, [qc, invalidateKeys]);
 
-  const fetchImpact = useCallback(async (id: number | string) => {
+  // `onError` lets callers distinguish "nothing to show, close the dialog" (the
+  // default — used for the initial `start()` fetch) from "something already
+  // succeeded, just couldn't refresh the view" (used by post-delete re-resolves,
+  // which must never present a successful delete as a failure).
+  const fetchImpact = useCallback(async (
+    id: number | string,
+    opts?: { onError?: (message: string) => void },
+  ): Promise<boolean> => {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/dependencies?table=${encodeURIComponent(table)}&id=${id}`);
-      const body = await res.json();
+      const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? "Failed to check dependencies");
       setImpact(body as Impact);
+      return true;
     } catch (err) {
-      toast({ title: err instanceof Error ? err.message : "Failed to check dependencies", variant: "destructive" });
-      setOpen(false);
+      const message = err instanceof Error ? err.message : "Failed to check dependencies";
+      if (opts?.onError) {
+        opts.onError(message);
+      } else {
+        toast({ title: message, variant: "destructive" });
+        setOpen(false);
+      }
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -64,7 +78,16 @@ export function useDeleteWithDependencies({ table, onDeleted, invalidateKeys = [
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? "Failed to delete");
       }
-      if (targetId != null) await fetchImpact(targetId);   // re-resolve; tree shrinks
+      // The delete already succeeded at this point — a refresh failure below must
+      // never read as a failed delete. Keep the dialog open with the prior (now
+      // stale) tree and say so explicitly, instead of the default close+error.
+      if (targetId != null) {
+        await fetchImpact(targetId, {
+          onError: () => {
+            toast({ title: "Deleted — the view couldn't refresh. Reopen to see the latest." });
+          },
+        });
+      }
       await invalidateAll();
     } catch (err) {
       toast({ title: err instanceof Error ? err.message : "Failed to delete", variant: "destructive" });
@@ -88,6 +111,22 @@ export function useDeleteWithDependencies({ table, onDeleted, invalidateKeys = [
         toast({ title: body.error ?? "This changed while you were reviewing it.", variant: "destructive" });
         return;
       }
+      if (res.status === 403) {
+        // Same class of race as 409 — permissions were revoked after the initial
+        // GET. The route returns `missingPermissions` when the impact-level check
+        // fails, but not from its earlier "no permission on the target at all"
+        // check, so both shapes have to be handled here.
+        const missing: string[] = Array.isArray(body.missingPermissions) ? body.missingPermissions : [];
+        const message = missing.length > 0
+          ? `${body.error ?? "Forbidden"} — missing permission: ${missing.join(", ")}`
+          : (body.error ?? "You don't have permission to complete this delete.");
+        // Re-resolve so canDeleteAll / locked-row indicators reflect reality. If the
+        // re-resolve itself 403s (target-level permission revoked too), stay silent
+        // there — the message below already covers it; don't double-toast.
+        await fetchImpact(targetId, { onError: () => {} });
+        toast({ title: message, variant: "destructive" });
+        return;
+      }
       if (!res.ok) throw new Error(body.error ?? "Failed to delete");
       await finish(`${impact.target.singular} deleted`);
     } catch (err) {
@@ -95,7 +134,7 @@ export function useDeleteWithDependencies({ table, onDeleted, invalidateKeys = [
     } finally {
       setIsDeleting(false);
     }
-  }, [impact, targetId, table, finish]);
+  }, [impact, targetId, table, fetchImpact, finish]);
 
   return {
     start,
