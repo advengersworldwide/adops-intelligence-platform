@@ -52,6 +52,8 @@ import type {
   CostResource,
   CostResourceInput,
   DashboardSummary,
+  DeleteDependencies200,
+  DeleteDependenciesBody,
   FlowGraph,
   ForecastResponse,
   FraudPoint,
@@ -62,6 +64,7 @@ import type {
   GetCashFlowParams,
   GetConcentrationParams,
   GetDashboardSummaryParams,
+  GetDependenciesParams,
   GetForecastParams,
   GetFraudQualityParams,
   GetInvoiceFunnelParams,
@@ -72,6 +75,7 @@ import type {
   GetProfitOverTimeParams,
   GetProfitWaterfallParams,
   HealthStatus,
+  Impact,
   ImportRequest,
   ImportResult,
   InvoiceFunnelResponse,
@@ -7244,5 +7248,160 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getUpdatePartnerPaymentStatusMutationOptions(options));
+    }
+
+export const getGetDependenciesUrl = (params: GetDependenciesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/dependencies?${stringifiedParams}` : `/api/dependencies`
+}
+
+/**
+ * @summary Resolve the deletion impact tree for an entity
+ */
+export const getDependencies = async (params: GetDependenciesParams, options?: RequestInit): Promise<Impact> => {
+
+  return customFetch<Impact>(getGetDependenciesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetDependenciesQueryKey = (params?: GetDependenciesParams,) => {
+    return [
+    `/api/dependencies`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetDependenciesQueryOptions = <TData = Awaited<ReturnType<typeof getDependencies>>, TError = ErrorType<void>>(params: GetDependenciesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDependencies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetDependenciesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getDependencies>>> = ({ signal }) => getDependencies(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getDependencies>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetDependenciesQueryResult = NonNullable<Awaited<ReturnType<typeof getDependencies>>>
+export type GetDependenciesQueryError = ErrorType<void>
+
+
+/**
+ * @summary Resolve the deletion impact tree for an entity
+ */
+
+export function useGetDependencies<TData = Awaited<ReturnType<typeof getDependencies>>, TError = ErrorType<void>>(
+ params: GetDependenciesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getDependencies>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetDependenciesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getDeleteDependenciesUrl = () => {
+
+
+
+
+  return `/api/dependencies/delete`
+}
+
+/**
+ * @summary Delete an entity and all reviewed dependents in one transaction
+ */
+export const deleteDependencies = async (deleteDependenciesBody: DeleteDependenciesBody, options?: RequestInit): Promise<DeleteDependencies200> => {
+
+  return customFetch<DeleteDependencies200>(getDeleteDependenciesUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      deleteDependenciesBody,)
+  }
+);}
+
+
+
+
+export const getDeleteDependenciesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDependencies>>, TError,{data: BodyType<DeleteDependenciesBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteDependencies>>, TError,{data: BodyType<DeleteDependenciesBody>}, TContext> => {
+
+const mutationKey = ['deleteDependencies'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteDependencies>>, {data: BodyType<DeleteDependenciesBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  deleteDependencies(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteDependenciesMutationResult = NonNullable<Awaited<ReturnType<typeof deleteDependencies>>>
+    export type DeleteDependenciesMutationBody = BodyType<DeleteDependenciesBody>
+    export type DeleteDependenciesMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete an entity and all reviewed dependents in one transaction
+ */
+export const useDeleteDependencies = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteDependencies>>, TError,{data: BodyType<DeleteDependenciesBody>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteDependencies>>,
+        TError,
+        {data: BodyType<DeleteDependenciesBody>},
+        TContext
+      > => {
+      return useMutation(getDeleteDependenciesMutationOptions(options));
     }
 

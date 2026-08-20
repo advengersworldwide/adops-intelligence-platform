@@ -9,6 +9,63 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface ImpactNode {
+  table: string;
+  id: number;
+  label: string;
+  singular: string;
+  /** @nullable */
+  href?: string | null;
+  canDelete: boolean;
+  requiredPermission: string;
+  /** @nullable */
+  deleteEndpoint?: string | null;
+  truncated: boolean;
+  children: ImpactNode[];
+}
+
+export interface CascadeGroup {
+  table: string;
+  label: string;
+  count: number;
+  canDelete: boolean;
+  requiredPermission: string;
+  sample: ImpactNode[];
+}
+
+export interface NullifyGroup {
+  table: string;
+  column: string;
+  label: string;
+  count: number;
+}
+
+export type ImpactTarget = {
+  table: string;
+  id: number;
+  label: string;
+  singular: string;
+};
+
+export type ImpactTotals = {
+  deletes: number;
+  nullifies: number;
+  touchesFinancial: boolean;
+};
+
+export interface Impact {
+  target: ImpactTarget;
+  blockers: ImpactNode[];
+  cascades: CascadeGroup[];
+  nullifies: NullifyGroup[];
+  canDeleteAll: boolean;
+  /** @nullable */
+  blockedReason?: string | null;
+  missingPermissions: string[];
+  totals: ImpactTotals;
+  fingerprint: string;
+}
+
 export interface CostModel {
   id: number;
   name: string;
@@ -1808,5 +1865,25 @@ period?: string | null;
  * @nullable
  */
 status?: string | null;
+};
+
+export type GetDependenciesParams = {
+table: string;
+id: number;
+};
+
+export type DeleteDependenciesBody = {
+  table: string;
+  id: number;
+  fingerprint: string;
+};
+
+export type DeleteDependencies200DeletedItem = {
+  table: string;
+  count: number;
+};
+
+export type DeleteDependencies200 = {
+  deleted: DeleteDependencies200DeletedItem[];
 };
 

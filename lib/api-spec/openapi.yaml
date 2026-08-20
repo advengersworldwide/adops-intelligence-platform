@@ -45,6 +45,7 @@ tags:
   - name: partner-bills
     description: Bills received from partners
   - { name: partner-payments, description: Disbursements to partners }
+  - { name: dependencies, description: Dependency-aware delete impact resolution }
 
 paths:
   /healthz:
@@ -1862,6 +1863,74 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/PartnerPayment" }
 
+  # ── Dependency-Aware Delete ────────────────────────────────────────────────────
+  /dependencies:
+    get:
+      operationId: getDependencies
+      tags: [dependencies]
+      summary: Resolve the deletion impact tree for an entity
+      parameters:
+        - { name: table, in: query, required: true, schema: { type: string } }
+        - { name: id, in: query, required: true, schema: { type: integer } }
+      responses:
+        "200":
+          description: Impact tree
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Impact" }
+        "400":
+          description: Missing/invalid table or id, or unknown table
+        "401":
+          description: Authentication required
+        "403":
+          description: Forbidden — missing delete permission for the target table
+        "404":
+          description: Not found
+
+  /dependencies/delete:
+    post:
+      operationId: deleteDependencies
+      tags: [dependencies]
+      summary: Delete an entity and all reviewed dependents in one transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [table, id, fingerprint]
+              properties:
+                table: { type: string }
+                id: { type: integer }
+                fingerprint: { type: string }
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted]
+                properties:
+                  deleted:
+                    type: array
+                    items:
+                      type: object
+                      required: [table, count]
+                      properties:
+                        table: { type: string }
+                        count: { type: integer }
+        "400":
+          description: Invalid request body or unknown table
+        "401":
+          description: Authentication required
+        "403":
+          description: Forbidden — missing delete permission, or impact is no longer fully deletable
+        "404":
+          description: Not found
+        "409":
+          description: Impact changed since review (fingerprint mismatch), or a record outside the reviewed list still depends on this
+
 components:
   schemas:
     HealthStatus:
@@ -1871,6 +1940,81 @@ components:
           type: string
       required:
         - status
+
+    # ── Dependency-Aware Delete ────────────────────────────────────────────────
+    ImpactNode:
+      type: object
+      required: [table, id, label, singular, canDelete, requiredPermission, children, truncated]
+      properties:
+        table: { type: string }
+        id: { type: integer }
+        label: { type: string }
+        singular: { type: string }
+        href: { type: ["string", "null"] }
+        canDelete: { type: boolean }
+        requiredPermission: { type: string }
+        deleteEndpoint: { type: ["string", "null"] }
+        truncated: { type: boolean }
+        children:
+          type: array
+          items: { $ref: "#/components/schemas/ImpactNode" }
+
+    CascadeGroup:
+      type: object
+      required: [table, label, count, sample, canDelete, requiredPermission]
+      properties:
+        table: { type: string }
+        label: { type: string }
+        count: { type: integer }
+        canDelete: { type: boolean }
+        requiredPermission: { type: string }
+        sample:
+          type: array
+          items: { $ref: "#/components/schemas/ImpactNode" }
+
+    NullifyGroup:
+      type: object
+      required: [table, column, label, count]
+      properties:
+        table: { type: string }
+        column: { type: string }
+        label: { type: string }
+        count: { type: integer }
+
+    Impact:
+      type: object
+      required: [target, blockers, cascades, nullifies, canDeleteAll, missingPermissions, totals, fingerprint]
+      properties:
+        target:
+          type: object
+          required: [table, id, label, singular]
+          properties:
+            table: { type: string }
+            id: { type: integer }
+            label: { type: string }
+            singular: { type: string }
+        blockers:
+          type: array
+          items: { $ref: "#/components/schemas/ImpactNode" }
+        cascades:
+          type: array
+          items: { $ref: "#/components/schemas/CascadeGroup" }
+        nullifies:
+          type: array
+          items: { $ref: "#/components/schemas/NullifyGroup" }
+        canDeleteAll: { type: boolean }
+        blockedReason: { type: ["string", "null"] }
+        missingPermissions:
+          type: array
+          items: { type: string }
+        totals:
+          type: object
+          required: [deletes, nullifies, touchesFinancial]
+          properties:
+            deletes: { type: integer }
+            nullifies: { type: integer }
+            touchesFinancial: { type: boolean }
+        fingerprint: { type: string }
 
     # ── Cost Models + Payment Terms ───────────────────────────────────────────
     CostModel:

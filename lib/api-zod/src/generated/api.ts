@@ -2421,3 +2421,84 @@ export const UpdatePartnerPaymentStatusResponse = zod.object({
 })
 
 
+/**
+ * @summary Resolve the deletion impact tree for an entity
+ */
+export const GetDependenciesQueryParams = zod.object({
+  "table": zod.coerce.string(),
+  "id": zod.coerce.number()
+})
+
+export const GetDependenciesResponse = zod.object({
+  "target": zod.object({
+  "table": zod.string(),
+  "id": zod.number(),
+  "label": zod.string(),
+  "singular": zod.string()
+}),
+  "blockers": zod.array(zod.object({
+  "table": zod.string(),
+  "id": zod.number(),
+  "label": zod.string(),
+  "singular": zod.string(),
+  "href": zod.string().nullish(),
+  "canDelete": zod.boolean(),
+  "requiredPermission": zod.string(),
+  "deleteEndpoint": zod.string().nullish(),
+  "truncated": zod.boolean(),
+  "children": zod.array(zod.unknown())
+})),
+  "cascades": zod.array(zod.object({
+  "table": zod.string(),
+  "label": zod.string(),
+  "count": zod.number(),
+  "canDelete": zod.boolean(),
+  "requiredPermission": zod.string(),
+  "sample": zod.array(zod.object({
+  "table": zod.string(),
+  "id": zod.number(),
+  "label": zod.string(),
+  "singular": zod.string(),
+  "href": zod.string().nullish(),
+  "canDelete": zod.boolean(),
+  "requiredPermission": zod.string(),
+  "deleteEndpoint": zod.string().nullish(),
+  "truncated": zod.boolean(),
+  "children": zod.array(zod.unknown())
+}))
+})),
+  "nullifies": zod.array(zod.object({
+  "table": zod.string(),
+  "column": zod.string(),
+  "label": zod.string(),
+  "count": zod.number()
+})),
+  "canDeleteAll": zod.boolean(),
+  "blockedReason": zod.string().nullish(),
+  "missingPermissions": zod.array(zod.string()),
+  "totals": zod.object({
+  "deletes": zod.number(),
+  "nullifies": zod.number(),
+  "touchesFinancial": zod.boolean()
+}),
+  "fingerprint": zod.string()
+})
+
+
+/**
+ * @summary Delete an entity and all reviewed dependents in one transaction
+ */
+export const DeleteDependenciesBody = zod.object({
+  "table": zod.string(),
+  "id": zod.number(),
+  "fingerprint": zod.string()
+})
+
+export const DeleteDependenciesResponse = zod.object({
+  "deleted": zod.array(zod.object({
+  "table": zod.string(),
+  "count": zod.number()
+}))
+})
+
+
