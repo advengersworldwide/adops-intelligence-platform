@@ -1284,7 +1284,7 @@ git commit -m "feat(auth): login step resolver with TOTP-first ordering"
 
 **Interfaces:**
 - Consumes: `resolveNextStep`, `isPrivileged` (Task 8); `signSession`, `signChallenge`, `CHALLENGE_TTL_SECONDS` (Task 6); `CHALLENGE_COOKIE`, `buildChallengeCookieOptions` (Task 6); `getRolePermissions`.
-- Produces: `app/lib/auth/session-issue.ts` exporting `issueSession(user: User): Promise<NextResponse>` and `issueChallenge(userId: number, step: Exclude<NextStep, "session">, totpDone: boolean): Promise<NextResponse>`, reused by Tasks 10-12. Also `app/lib/auth/actor.ts` exporting `readChallengeCookie(req: Request): string | null`, extended in Task 11. Login responds `{ next }` + challenge cookie, or `{ user }` + session cookie.
+- Produces: `app/lib/auth/session-issue.ts` exporting `issueSession(user: User): Promise<NextResponse>` and `issueChallenge(userId: number, step: Exclude<NextStep, "session">, totpDone: boolean): Promise<NextResponse>`, reused by Tasks 10-12. (`app/lib/auth/actor.ts` is created in Task 10, not here.) Login responds `{ next }` + challenge cookie, or `{ user }` + session cookie.
 
 - [ ] **Step 1: Write the shared response helper**
 
