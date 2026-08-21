@@ -8,7 +8,7 @@ export function fkViolationResponse(err: unknown): Response | null {
   const e = err as { code?: string; cause?: { code?: string } };
   if ((e?.code ?? e?.cause?.code) !== "23503") return null;
   return NextResponse.json(
-    { error: "Another record still depends on this. Open the delete dialog to review and remove them first." },
+    { error: "Another record still depends on this. Remove the dependent records first, then try again." },
     { status: 409 },
   );
 }
