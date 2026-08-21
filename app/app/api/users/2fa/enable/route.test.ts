@@ -18,6 +18,7 @@ vi.mock("@workspace/db", () => ({
 vi.mock("@/lib/auth/secret-crypto", () => ({
   encryptSecret: (s: string) => s,
   decryptSecret: (s: string) => s,
+  tryDecryptSecret: (s: string) => s,
 }));
 vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions: vi.fn(async () => []) }));
 
@@ -38,7 +39,10 @@ const pendingUser = {
 beforeEach(() => {
   userRow.mockReset(); updateSet.mockReset(); insertValues.mockReset();
   verifyTotpMock.mockReset(); sessionMock.mockReset();
-  sessionMock.mockResolvedValue({ sub: 1 });
+  // tokenVersion: 0 matches pendingUser.tokenVersion below, so resolveActor's
+  // isCurrentSession check (which reads the DB via the same userRow() mock)
+  // treats this session as current by default.
+  sessionMock.mockResolvedValue({ sub: 1, tokenVersion: 0 });
 });
 
 async function call(code: string) {
@@ -90,5 +94,12 @@ describe("POST /api/users/2fa/enable", () => {
   it("rejects an unauthenticated caller", async () => {
     sessionMock.mockResolvedValue(null);
     expect((await call("123456")).status).toBe(401);
+  });
+
+  it("rejects a revoked session (JWT tokenVersion stale against the DB row)", async () => {
+    userRow.mockReturnValue([pendingUser]); // DB row reports tokenVersion 0
+    sessionMock.mockResolvedValue({ sub: 1, tokenVersion: 99 }); // JWT claims a version that's since been bumped
+    expect((await call("123456")).status).toBe(401);
+    expect(updateSet).not.toHaveBeenCalled();
   });
 });

@@ -19,8 +19,12 @@ const unauthenticated = () =>
  *
  * This is one indexed primary-key lookup; these guards already query the
  * database for role permissions, so it adds no round trip in practice.
+ *
+ * Exported so `resolveActor` (app/lib/auth/actor.ts) can apply the same
+ * revocation check to the session branch of its dual-auth resolution,
+ * instead of a second, drifting copy of this comparison.
  */
-async function isCurrentSession(user: SessionUser): Promise<boolean> {
+export async function isCurrentSession(user: SessionUser): Promise<boolean> {
   const [row] = await db
     .select({ tokenVersion: usersTable.tokenVersion })
     .from(usersTable)

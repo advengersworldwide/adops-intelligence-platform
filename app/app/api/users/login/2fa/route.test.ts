@@ -18,7 +18,16 @@ vi.mock("@workspace/db", () => ({
 vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions: vi.fn(async () => []) }));
 
 const decryptSecretMock = vi.fn((s: string) => s);
-vi.mock("@/lib/auth/secret-crypto", () => ({ decryptSecret: (s: string) => decryptSecretMock(s) }));
+vi.mock("@/lib/auth/secret-crypto", () => ({
+  decryptSecret: (s: string) => decryptSecretMock(s),
+  tryDecryptSecret: (s: string) => {
+    try {
+      return decryptSecretMock(s);
+    } catch {
+      return null;
+    }
+  },
+}));
 
 const verifyTotpMock = vi.fn();
 vi.mock("@/lib/auth/totp", () => ({ verifyTotp: (...a: unknown[]) => verifyTotpMock(...a) }));

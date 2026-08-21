@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db, usersTable, userBackupCodesTable } from "@workspace/db";
-import { getSession } from "@/lib/auth/session";
+import { requireAuth, isAuthError } from "@/lib/auth/require";
 import { generateBackupCodes, hashBackupCode } from "@/lib/auth/credentials";
 
 export const runtime = "nodejs";
 
 export async function POST(): Promise<Response> {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  const auth = await requireAuth();
+  if (isAuthError(auth)) return auth;
 
-  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.sub));
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, auth.user.sub));
   if (!user?.twoFactorEnabledAt) {
     return NextResponse.json({ error: "Two-factor authentication is not enabled" }, { status: 400 });
   }

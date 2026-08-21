@@ -3,26 +3,10 @@ import { eq } from "drizzle-orm";
 import { db, usersTable, userBackupCodesTable } from "@workspace/db";
 import { resolveActor } from "@/lib/auth/actor";
 import { verifyTotp } from "@/lib/auth/totp";
-import { decryptSecret } from "@/lib/auth/secret-crypto";
+import { tryDecryptSecret } from "@/lib/auth/secret-crypto";
 import { generateBackupCodes, hashBackupCode } from "@/lib/auth/credentials";
 
 export const runtime = "nodejs";
-
-/**
- * `decryptSecret` throws when the AES-GCM auth tag fails to verify — e.g. if
- * TOTP_ENCRYPTION_KEY was rotated between /setup and this call, or the stored
- * row is corrupt. That is a server-side condition, not evidence the submitted
- * code is wrong, but per the "failures stay generic" rule we must not leak it
- * as a 500: treat it the same as an invalid code.
- */
-function tryDecryptSecret(payload: string): string | null {
-  try {
-    return decryptSecret(payload);
-  } catch (err) {
-    console.warn("[2fa/enable] decryptSecret failed; treating TOTP as invalid", err);
-    return null;
-  }
-}
 
 export async function POST(req: Request): Promise<Response> {
   const userId = await resolveActor(req, "totp_enroll");
@@ -47,7 +31,7 @@ export async function POST(req: Request): Promise<Response> {
 
   // Requiring a valid code proves the user actually scanned the QR — otherwise
   // we would lock them out of their own account at the next login.
-  const secret = tryDecryptSecret(user.twoFactorSecret);
+  const secret = tryDecryptSecret(user.twoFactorSecret, "2fa/enable");
   const result = secret ? verifyTotp(secret, code, null) : { valid: false, step: null };
   if (!result.valid) return NextResponse.json({ error: "Invalid code" }, { status: 401 });
 

@@ -37,3 +37,25 @@ export function decryptSecret(payload: string): string {
     decipher.final(),
   ]).toString("utf8");
 }
+
+/**
+ * `decryptSecret` throws when the AES-GCM auth tag fails to verify — e.g. if
+ * TOTP_ENCRYPTION_KEY was rotated since a secret was written, or the stored
+ * row is corrupt. That is a server-side condition, not evidence a submitted
+ * code is wrong, but per "failures stay generic" callers must not let it
+ * surface as a 500: this treats it the same as an invalid code, logging a
+ * server-side-only signal so a key rotation shows up as a warning spike
+ * instead of an unexplained wave of generic lockouts.
+ *
+ * `logPrefix` tags the warning with the calling route (e.g. `"login/2fa"`,
+ * `"2fa/enable"`, `"2fa/disable"`) so the three call sites stay distinguishable
+ * in logs despite sharing this one implementation.
+ */
+export function tryDecryptSecret(payload: string, logPrefix: string): string | null {
+  try {
+    return decryptSecret(payload);
+  } catch (err) {
+    console.warn(`[${logPrefix}] decryptSecret failed; treating TOTP as invalid`, err);
+    return null;
+  }
+}

@@ -17,20 +17,20 @@ const apiDir = join(here, "..", "..", "app", "api");
 //   token plus TOTP/backup-code verification and database-backed lockout.
 // - users/2fa/setup and users/2fa/enable authenticate via resolveActor, which
 //   is deliberately reachable two ways: an already-signed-in user turning 2FA
-//   on from settings (a real session exists), OR a half-authenticated user
-//   mid-login holding a totp_enroll challenge cookie (no session exists yet,
-//   same reasoning as login/2fa above). requireAuth/requireAdmin/
-//   requirePermission all assume a live session, so they cannot cover the
-//   challenge-cookie path; the route self-guards via resolveActor -> 401.
-// - users/2fa/disable and users/2fa/backup-codes are reachable only by an
-//   already-fully-authenticated user (both require 2FA to already be
-//   enabled), so a live session always exists. They self-guard inline with
-//   getSession -> 401, the same pattern as auth/me above, rather than
-//   requireAuth, because disable additionally re-verifies the caller's
-//   password and current TOTP/backup code before acting — a stronger check
-//   than the tokenVersion comparison requireAuth performs — and
-//   backup-codes is a low-blast-radius self-service action gated on the
-//   user's own already-enrolled account.
+//   on from settings (a real, tokenVersion-checked session exists), OR a
+//   half-authenticated user mid-login holding a totp_enroll challenge cookie
+//   (no session exists yet at all, same reasoning as login/2fa above).
+//   requireAuth/requireAdmin/requirePermission all assume a live session and
+//   return 401 outright when one is absent, so none of them can serve the
+//   challenge-cookie path. resolveActor performs its own revocation check on
+//   the session branch (via the same isCurrentSession tokenVersion
+//   comparison requireAuth uses internally) before falling back to the
+//   challenge cookie, so this is not a weaker guard than requireAuth — it is
+//   requireAuth's check plus a second, pre-session path requireAuth cannot
+//   offer. users/2fa/disable and users/2fa/backup-codes are NOT on this list:
+//   both are reachable only by an already-fully-authenticated user, so they
+//   call requireAuth directly like any other authenticated route and need no
+//   exemption.
 const PUBLIC_ALLOWLIST = [
   "healthz/route.ts",
   "users/login/route.ts",
@@ -39,8 +39,6 @@ const PUBLIC_ALLOWLIST = [
   "auth/me/route.ts",
   "users/2fa/setup/route.ts",
   "users/2fa/enable/route.ts",
-  "users/2fa/disable/route.ts",
-  "users/2fa/backup-codes/route.ts",
 ];
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];

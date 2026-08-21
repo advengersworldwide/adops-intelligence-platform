@@ -17,15 +17,31 @@ vi.mock("@workspace/db", () => ({
 vi.mock("bcryptjs", () => ({ default: { compare: (...a: unknown[]) => compareMock(...a) } }));
 
 const decryptSecretMock = vi.fn((s: string) => s);
-vi.mock("@/lib/auth/secret-crypto", () => ({ decryptSecret: (s: string) => decryptSecretMock(s) }));
+vi.mock("@/lib/auth/secret-crypto", () => ({
+  decryptSecret: (s: string) => decryptSecretMock(s),
+  tryDecryptSecret: (s: string) => {
+    try {
+      return decryptSecretMock(s);
+    } catch {
+      return null;
+    }
+  },
+}));
 
 vi.mock("@/lib/auth/totp", () => ({ verifyTotp: () => ({ valid: true, step: 1 }) }));
 
 const permsMock = vi.fn(async () => [] as string[]);
 vi.mock("@/lib/rbac/role-permissions", () => ({ getRolePermissions: () => permsMock() }));
 
-const sessionMock = vi.fn();
-vi.mock("@/lib/auth/session", () => ({ getSession: () => sessionMock() }));
+// disable is reachable only by an already-fully-authenticated user, so it
+// gates on requireAuth (tokenVersion-checked) rather than raw getSession —
+// mocked the same way as other requireAuth-guarded routes in this repo
+// (see app/app/api/me/dashboard-layout/route.test.ts).
+const requireAuthMock = vi.fn();
+vi.mock("@/lib/auth/require", () => ({
+  requireAuth: () => requireAuthMock(),
+  isAuthError: (r: unknown) => r instanceof Response,
+}));
 
 beforeAll(() => { process.env.JWT_SECRET = "test-secret-at-least-32-chars-long-xxxxx"; });
 
@@ -36,10 +52,10 @@ const enrolled = {
 };
 
 beforeEach(() => {
-  userRow.mockReset(); updateSet.mockReset(); compareMock.mockReset(); sessionMock.mockReset();
+  userRow.mockReset(); updateSet.mockReset(); compareMock.mockReset(); requireAuthMock.mockReset();
   decryptSecretMock.mockReset();
   permsMock.mockResolvedValue([]);
-  sessionMock.mockResolvedValue({ sub: 1 });
+  requireAuthMock.mockResolvedValue({ user: { sub: 1 } });
   compareMock.mockResolvedValue(true);
   decryptSecretMock.mockImplementation((s: string) => s);
 });
@@ -85,6 +101,14 @@ describe("POST /api/users/2fa/disable", () => {
     });
     const res = await call();
     expect(res.status).toBe(401);
+    expect(updateSet).not.toHaveBeenCalled();
+  });
+
+  it("rejects a revoked session — requireAuth's tokenVersion check runs before any of this route's own logic", async () => {
+    requireAuthMock.mockResolvedValue(new Response(JSON.stringify({ error: "Authentication required" }), { status: 401 }));
+    const res = await call();
+    expect(res.status).toBe(401);
+    expect(userRow).not.toHaveBeenCalled();
     expect(updateSet).not.toHaveBeenCalled();
   });
 });
