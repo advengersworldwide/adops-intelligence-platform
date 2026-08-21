@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db, partnersTable, paymentTermsTable } from "@workspace/db";
 import { GetPartnerParams, UpdatePartnerBody, UpdatePartnerParams, DeletePartnerParams, GetPartnerResponse, UpdatePartnerResponse } from "@workspace/api-zod";
 import { requirePermission, isAuthError } from "@/lib/auth/require";
+import { fkViolationResponse } from "@/lib/dependencies/fk-error";
 
 export const runtime = "nodejs";
 
@@ -68,7 +69,13 @@ export async function DELETE(
   const { id } = await params;
   const p = DeletePartnerParams.safeParse({ id: parseInt(id, 10) });
   if (!p.success) return NextResponse.json({ error: p.error.message }, { status: 400 });
-  const [row] = await db.delete(partnersTable).where(eq(partnersTable.id, p.data.id)).returning();
-  if (!row) return NextResponse.json({ error: "Partner not found" }, { status: 404 });
-  return new Response(null, { status: 204 });
+  try {
+    const [row] = await db.delete(partnersTable).where(eq(partnersTable.id, p.data.id)).returning();
+    if (!row) return NextResponse.json({ error: "Partner not found" }, { status: 404 });
+    return new Response(null, { status: 204 });
+  } catch (err: unknown) {
+    const fk = fkViolationResponse(err);
+    if (fk) return fk;
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to delete" }, { status: 500 });
+  }
 }

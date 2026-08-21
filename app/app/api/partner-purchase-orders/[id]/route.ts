@@ -5,6 +5,7 @@ import { UpdatePartnerPurchaseOrderBody } from "@workspace/api-zod";
 import { mapPpoRow } from "../route";
 import { lineBudget, totalBudget } from "@/lib/po-totals";
 import { requirePermission, isAuthError } from "@/lib/auth/require";
+import { fkViolationResponse } from "@/lib/dependencies/fk-error";
 
 export const runtime = "nodejs";
 
@@ -54,6 +55,12 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const auth = await requirePermission("purchase-orders:edit");
   if (isAuthError(auth)) return auth;
   const { id } = await params;
-  await db.delete(partnerPurchaseOrdersTable).where(eq(partnerPurchaseOrdersTable.id, Number(id)));
-  return new NextResponse(null, { status: 204 });
+  try {
+    await db.delete(partnerPurchaseOrdersTable).where(eq(partnerPurchaseOrdersTable.id, Number(id)));
+    return new NextResponse(null, { status: 204 });
+  } catch (err: unknown) {
+    const fk = fkViolationResponse(err);
+    if (fk) return fk;
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to delete" }, { status: 500 });
+  }
 }

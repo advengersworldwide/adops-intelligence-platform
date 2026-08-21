@@ -4,6 +4,7 @@ import { db, partnerPaymentsTable, partnerBillsTable } from "@workspace/db";
 import { UpdatePartnerPaymentBody } from "@workspace/api-zod";
 import { mapPartnerPayment, billRemaining, validateSource } from "../route";
 import { requirePermission, isAuthError } from "@/lib/auth/require";
+import { fkViolationResponse } from "@/lib/dependencies/fk-error";
 
 export const runtime = "nodejs";
 
@@ -47,7 +48,13 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const auth = await requirePermission("payments:edit");
   if (isAuthError(auth)) return auth;
   const { id } = await params;
-  const [row] = await db.delete(partnerPaymentsTable).where(eq(partnerPaymentsTable.id, Number(id))).returning();
-  if (!row) return NextResponse.json({ error: "Partner payment not found" }, { status: 404 });
-  return new NextResponse(null, { status: 204 });
+  try {
+    const [row] = await db.delete(partnerPaymentsTable).where(eq(partnerPaymentsTable.id, Number(id))).returning();
+    if (!row) return NextResponse.json({ error: "Partner payment not found" }, { status: 404 });
+    return new NextResponse(null, { status: 204 });
+  } catch (err: unknown) {
+    const fk = fkViolationResponse(err);
+    if (fk) return fk;
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to delete" }, { status: 500 });
+  }
 }

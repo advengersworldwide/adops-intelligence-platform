@@ -4,6 +4,7 @@ import { db, buyingHousesTable, billingRecordsTable, clientsTable } from "@works
 import { computeRow } from "@/lib/compute-row";
 import { GetBuyingHouseParams, UpdateBuyingHouseParams, DeleteBuyingHouseParams, CreateBuyingHouseBody, GetBuyingHouseResponse } from "@workspace/api-zod";
 import { requirePermission, isAuthError } from "@/lib/auth/require";
+import { fkViolationResponse } from "@/lib/dependencies/fk-error";
 
 export const runtime = "nodejs";
 
@@ -78,8 +79,8 @@ export async function DELETE(
     if (!row) return NextResponse.json({ error: "Buying house not found" }, { status: 404 });
     return new Response(null, { status: 204 });
   } catch (err: unknown) {
-    const e = err as { code?: string; cause?: { code?: string } };
-    if ((e.code ?? e.cause?.code) === "23503") return NextResponse.json({ error: "Cannot delete: this buying house has billing records linked to it." }, { status: 400 });
+    const fk = fkViolationResponse(err);
+    if (fk) return fk;
     return NextResponse.json({ error: err instanceof Error ? err.message : "Failed to delete" }, { status: 500 });
   }
 }
