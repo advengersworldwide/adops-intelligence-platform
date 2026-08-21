@@ -1,6 +1,11 @@
 export const MAX_DEPTH = 4;
 export const MAX_ROWS_PER_LEVEL = 50;
 export const CASCADE_SAMPLE_SIZE = 3;
+/**
+ * Ceiling on the queries the transitive cascade estimate may issue per resolve.
+ * Past it the walk stops recursing and takes each remaining group from its count.
+ */
+export const CASCADE_QUERY_BUDGET = 200;
 
 export type ImpactNode = {
   table: string;

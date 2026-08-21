@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Name } from "drizzle-orm";
+import { NotFoundError } from "@/lib/dependencies/errors";
 
 const resolveImpact = vi.fn();
 const txExecute = vi.fn();
@@ -126,12 +127,46 @@ describe("POST /api/dependencies/delete", () => {
     ]);
   });
 
-  it("rolls back and 500s when a delete fails", async () => {
+  // NOTE: this only proves the handler turns a failed delete into a generic 500 and
+  // does not leak the driver's text. It does NOT verify atomicity: `db.transaction`
+  // is a plain mock here with no BEGIN/ROLLBACK, so rollback is Postgres's guarantee,
+  // not this test's. Nothing in this suite exercises a real transaction.
+  it("500s with a generic message when a delete fails, leaking no driver text", async () => {
     resolveImpact.mockResolvedValueOnce(impact());
     txExecute.mockRejectedValueOnce(new Error("deadlock detected"));
     const res = await post({ table: "clients", id: 1, fingerprint: "abc123" });
     expect(res.status).toBe(500);
-    expect((await res.json()).error).toMatch(/deadlock/i);
+    const body = await res.json();
+    expect(body.error).toMatch(/failed to delete/i);
+    expect(body.error).not.toMatch(/deadlock/i);
+  });
+
+  it("re-resolves inside the transaction, not before it", async () => {
+    // A cascade row inserted between a pre-transaction resolve and the deletes is
+    // destroyed without ever being reviewed. Resolving on `tx` puts the read and the
+    // writes on one connection, so the resolve must not have run before BEGIN.
+    let resolvedInside = false;
+    transaction.mockImplementationOnce(async (cb: (tx: unknown) => Promise<unknown>) => {
+      const tx = { execute: txExecute };
+      resolveImpact.mockImplementationOnce(async (...args: unknown[]) => {
+        resolvedInside = true;
+        expect(args[3]).toBe(tx); // the executor handed to resolveImpact is the tx
+        return impact();
+      });
+      expect(resolvedInside).toBe(false); // nothing resolved before BEGIN
+      return cb(tx);
+    });
+
+    const res = await post({ table: "clients", id: 1, fingerprint: "abc123" });
+    expect(res.status).toBe(200);
+    expect(resolvedInside).toBe(true);
+  });
+
+  it("404s when the target disappears before the transaction resolves it", async () => {
+    resolveImpact.mockRejectedValueOnce(new NotFoundError("Client not found"));
+    const res = await post({ table: "clients", id: 1, fingerprint: "abc123" });
+    expect(res.status).toBe(404);
+    expect(txExecute).not.toHaveBeenCalled();
   });
 
   it("never deletes cascade rows — Postgres owns those via ON DELETE CASCADE", async () => {

@@ -32,9 +32,9 @@ export async function GET(req: Request): Promise<Response> {
     return NextResponse.json(await resolveImpact(table, id, permissions));
   } catch (err) {
     if (err instanceof NotFoundError) return NextResponse.json({ error: err.message }, { status: 404 });
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to resolve dependencies" },
-      { status: 500 },
-    );
+    // Driver text leaks schema internals into a user-facing toast — that is how
+    // `column "invoiceCode" does not exist` reached the UI. Log it, don't ship it.
+    console.error("[GET /api/dependencies] failed", { table, id }, err);
+    return NextResponse.json({ error: "Failed to check dependencies." }, { status: 500 });
   }
 }

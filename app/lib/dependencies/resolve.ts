@@ -4,15 +4,23 @@ import { getDescriptor, hasDescriptor } from "./descriptors";
 import { fingerprintOf } from "./fingerprint";
 import { NotFoundError } from "./errors";
 import {
-  MAX_DEPTH, MAX_ROWS_PER_LEVEL, CASCADE_SAMPLE_SIZE,
+  MAX_DEPTH, MAX_ROWS_PER_LEVEL, CASCADE_SAMPLE_SIZE, CASCADE_QUERY_BUDGET,
   type Impact, type ImpactNode, type CascadeGroup, type NullifyGroup,
 } from "./types";
 
 type Row = Record<string, unknown>;
 
-async function selectRows(table: string, column: string, value: unknown, columns: string[], limit: number): Promise<Row[]> {
+/**
+ * Anything that can run raw SQL: the module-level `db`, or a `tx` handed to
+ * `db.transaction`. `POST /api/dependencies/delete` passes its transaction so the
+ * impact it authorises and the deletes it issues run on the same connection;
+ * `GET /api/dependencies` takes the `db` default and behaves exactly as before.
+ */
+export type SqlExecutor = Pick<typeof db, "execute">;
+
+async function selectRows(exec: SqlExecutor, table: string, column: string, value: unknown, columns: string[], limit: number): Promise<Row[]> {
   const list = sql.join(columns.map(c => sql.identifier(c)), sql`, `);
-  const res = await db.execute(sql`
+  const res = await exec.execute(sql`
     select ${list} from ${sql.identifier(table)}
     where ${sql.identifier(column)} = ${value}
     order by ${sql.identifier("id")} limit ${limit}
@@ -20,28 +28,41 @@ async function selectRows(table: string, column: string, value: unknown, columns
   return (res.rows ?? []) as Row[];
 }
 
-async function countRows(table: string, column: string, value: unknown): Promise<number> {
-  const res = await db.execute(sql`
+async function countRows(exec: SqlExecutor, table: string, column: string, value: unknown): Promise<number> {
+  const res = await exec.execute(sql`
     select count(*)::int as n from ${sql.identifier(table)}
     where ${sql.identifier(column)} = ${value}
   `);
   return Number(((res.rows ?? [])[0] as { n?: number } | undefined)?.n ?? 0);
 }
 
-/** Total rows destroyed when `table`/`id` is deleted, following cascade edges only. */
-async function cascadeTotal(table: string, id: unknown, depth: number): Promise<number> {
+/**
+ * Total rows destroyed when `table`/`id` is deleted, following cascade edges only.
+ *
+ * This runs on every dialog open and, since the delete route re-resolves inside its
+ * transaction, while that transaction is held — so it stops before it can fan out:
+ * an edge with no rows costs one count and no SELECT, an edge wider than one level
+ * can hold is taken from the count alone, and `budget` caps the recursive walk.
+ */
+async function cascadeTotal(
+  exec: SqlExecutor, table: string, id: unknown, depth: number, budget: { remaining: number },
+): Promise<number> {
   if (depth > MAX_DEPTH) return 0;
   let total = 1;
   for (const edge of dependentsOf.get(table) ?? []) {
     if (edge.onDelete !== "cascade") continue;
-    const rows = await selectRows(edge.childTable, edge.childColumn, id, ["id"], MAX_ROWS_PER_LEVEL);
-    const count = await countRows(edge.childTable, edge.childColumn, id);
-    // Sampled sub-walk: exact for small sets, approximated by count for large ones.
-    if (count <= rows.length) {
-      for (const r of rows) total += await cascadeTotal(edge.childTable, r.id, depth + 1);
-    } else {
+    budget.remaining--;
+    const count = await countRows(exec, edge.childTable, edge.childColumn, id);
+    if (count === 0) continue;
+    // Sampled sub-walk: exact for small sets, approximated by the count for large
+    // ones and once the query budget for this resolve is spent.
+    if (count > MAX_ROWS_PER_LEVEL || budget.remaining <= 0) {
       total += count;
+      continue;
     }
+    budget.remaining--;
+    const rows = await selectRows(exec, edge.childTable, edge.childColumn, id, ["id"], MAX_ROWS_PER_LEVEL);
+    for (const r of rows) total += await cascadeTotal(exec, edge.childTable, r.id, depth + 1, budget);
   }
   return total;
 }
@@ -78,7 +99,7 @@ function toNode(edge: FkEdge, row: Row, permissions: Set<string>): ImpactNode {
  * deduplicated row is still emitted before every parent that it blocks.
  */
 async function resolveBlockers(
-  table: string, id: unknown, permissions: Set<string>, depth: number, seen: Set<string>,
+  exec: SqlExecutor, table: string, id: unknown, permissions: Set<string>, depth: number, seen: Set<string>,
 ): Promise<{ nodes: ImpactNode[]; truncated: boolean }> {
   if (depth >= MAX_DEPTH) return { nodes: [], truncated: true };
   const nodes: ImpactNode[] = [];
@@ -87,7 +108,7 @@ async function resolveBlockers(
   for (const edge of dependentsOf.get(table) ?? []) {
     if (!isBlocking(edge.onDelete)) continue;
     const d = getDescriptor(edge.childTable);
-    const rows = await selectRows(edge.childTable, edge.childColumn, id, d.labelColumns, MAX_ROWS_PER_LEVEL + 1);
+    const rows = await selectRows(exec, edge.childTable, edge.childColumn, id, d.labelColumns, MAX_ROWS_PER_LEVEL + 1);
     if (rows.length > MAX_ROWS_PER_LEVEL) {
       truncated = true;
       rows.length = MAX_ROWS_PER_LEVEL;
@@ -97,7 +118,7 @@ async function resolveBlockers(
       if (seen.has(key)) continue;
       seen.add(key);
       const node = toNode(edge, row, permissions);
-      const child = await resolveBlockers(edge.childTable, node.id, permissions, depth + 1, seen);
+      const child = await resolveBlockers(exec, edge.childTable, node.id, permissions, depth + 1, seen);
       node.children = child.nodes;
       node.truncated = child.truncated;
       if (child.truncated) truncated = true;
@@ -107,29 +128,36 @@ async function resolveBlockers(
   return { nodes, truncated };
 }
 
-export async function resolveImpact(table: string, id: number | string, permissions: Set<string>): Promise<Impact> {
+export async function resolveImpact(
+  table: string,
+  id: number | string,
+  permissions: Set<string>,
+  exec: SqlExecutor = db,
+): Promise<Impact> {
   if (!hasDescriptor(table)) throw new Error(`No dependency descriptor registered for table "${table}"`);
   const targetDesc = getDescriptor(table);
 
-  const [targetRow] = await selectRows(table, "id", id, targetDesc.labelColumns, 1);
+  const [targetRow] = await selectRows(exec, table, "id", id, targetDesc.labelColumns, 1);
   if (!targetRow) throw new NotFoundError(`${targetDesc.singular} not found`);
 
   // Seeded with the target so a self-referencing FK can never list the row as its
   // own blocker; every blocker below is then placed at most once.
   const { nodes: blockers, truncated } =
-    await resolveBlockers(table, id, permissions, 0, new Set([`${table}:${id}`]));
+    await resolveBlockers(exec, table, id, permissions, 0, new Set([`${table}:${id}`]));
 
   const cascades: CascadeGroup[] = [];
   const nullifies: NullifyGroup[] = [];
+  // One budget for the whole resolve, so a wide tree cannot multiply out.
+  const budget = { remaining: CASCADE_QUERY_BUDGET };
 
   for (const edge of dependentsOf.get(table) ?? []) {
     if (edge.onDelete === "cascade") {
-      const count = await countRows(edge.childTable, edge.childColumn, id);
+      const count = await countRows(exec, edge.childTable, edge.childColumn, id);
       if (count === 0) continue;
       const d = getDescriptor(edge.childTable);
-      const sampleRows = await selectRows(edge.childTable, edge.childColumn, id, d.labelColumns, CASCADE_SAMPLE_SIZE);
+      const sampleRows = await selectRows(exec, edge.childTable, edge.childColumn, id, d.labelColumns, CASCADE_SAMPLE_SIZE);
       let transitive = 0;
-      for (const r of sampleRows) transitive += await cascadeTotal(edge.childTable, r.id, 1);
+      for (const r of sampleRows) transitive += await cascadeTotal(exec, edge.childTable, r.id, 1, budget);
       const perRow = sampleRows.length > 0 ? transitive / sampleRows.length : 1;
       cascades.push({
         table: edge.childTable,
@@ -140,7 +168,7 @@ export async function resolveImpact(table: string, id: number | string, permissi
         requiredPermission: d.deletePermission,
       });
     } else if (edge.onDelete === "set null" || edge.onDelete === "set default") {
-      const count = await countRows(edge.childTable, edge.childColumn, id);
+      const count = await countRows(exec, edge.childTable, edge.childColumn, id);
       if (count === 0) continue;
       const d = getDescriptor(edge.childTable);
       nullifies.push({ table: edge.childTable, column: edge.childColumn, label: d.plural, count });
