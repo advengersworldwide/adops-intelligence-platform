@@ -8,7 +8,7 @@ import type { Impact } from "@/lib/dependencies/types";
 type Options = {
   table: string;
   onDeleted?: () => void;
-  invalidateKeys?: readonly unknown[][];
+  invalidateKeys?: readonly (readonly unknown[])[];
 };
 
 export function useDeleteWithDependencies({ table, onDeleted, invalidateKeys = [] }: Options) {

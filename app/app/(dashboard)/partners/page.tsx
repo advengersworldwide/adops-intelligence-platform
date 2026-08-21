@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2, Search } from "lucide-react";
 import Link from "next/link";
 import {
-  useListPartners, useCreatePartner, useDeletePartner,
+  useListPartners, useCreatePartner,
   getListPartnersQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -20,6 +20,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { derivePrefix } from "@/lib/po-codes";
+import { useDeleteWithDependencies } from "@/hooks/use-delete-with-dependencies";
+import { DeleteImpactDialog } from "@/components/ui/delete-impact-dialog";
 
 const createSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -54,14 +56,9 @@ function PartnersPage() {
     },
   });
 
-  const deleteMutation = useDeletePartner({
-    mutation: {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getListPartnersQueryKey() });
-        toast({ title: "Partner deleted" });
-      },
-      onError: () => toast({ title: "Failed to delete partner", variant: "destructive" }),
-    },
+  const del = useDeleteWithDependencies({
+    table: "partners",
+    invalidateKeys: [getListPartnersQueryKey()],
   });
 
   const filtered = platforms?.filter(p =>
@@ -121,7 +118,7 @@ function PartnersPage() {
                   {canEdit && (
                     <td className="px-5 py-3">
                       <button
-                        onClick={() => deleteMutation.mutate({ id: p.id })}
+                        onClick={() => del.start(p.id)}
                         className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                         data-testid={`delete-platform-${p.id}`}
                       >
@@ -145,6 +142,8 @@ function PartnersPage() {
         }}
         isSubmitting={createMutation.isPending}
       />
+
+      <DeleteImpactDialog {...del.dialogProps} />
     </div>
   );
 }

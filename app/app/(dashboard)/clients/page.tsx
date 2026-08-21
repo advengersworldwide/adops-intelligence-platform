@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, Search, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import {
-  useListClients, useCreateClient, useUpdateClient, useDeleteClient,
+  useListClients, useCreateClient, useUpdateClient,
   getListClientsQueryKey, useListBuyingHouses,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { derivePrefix } from "@/lib/po-codes";
+import { useDeleteWithDependencies } from "@/hooks/use-delete-with-dependencies";
+import { DeleteImpactDialog } from "@/components/ui/delete-impact-dialog";
 
 const clientSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -60,11 +62,9 @@ function ClientsContent() {
     },
   });
 
-  const deleteMutation = useDeleteClient({
-    mutation: {
-      onSuccess: () => { qc.invalidateQueries({ queryKey: getListClientsQueryKey() }); toast({ title: "Client deleted" }); },
-      onError: () => toast({ title: "Failed to delete client", variant: "destructive" }),
-    },
+  const del = useDeleteWithDependencies({
+    table: "clients",
+    invalidateKeys: [getListClientsQueryKey()],
   });
 
   const filtered = clients?.filter(c =>
@@ -130,7 +130,7 @@ function ClientsContent() {
                           data-testid={`edit-client-${c.id}`}>
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={() => deleteMutation.mutate({ id: c.id })}
+                        <button onClick={() => del.start(c.id)}
                           className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                           data-testid={`delete-client-${c.id}`}>
                           <Trash2 className="h-3.5 w-3.5" />
@@ -161,6 +161,8 @@ function ClientsContent() {
         isSubmitting={createMutation.isPending || updateMutation.isPending}
         title={editClient ? "Edit Client" : "Add Client"}
       />
+
+      <DeleteImpactDialog {...del.dialogProps} />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import {
-  useListBuyingHouses, useCreateBuyingHouse, useUpdateBuyingHouse, useDeleteBuyingHouse,
+  useListBuyingHouses, useCreateBuyingHouse, useUpdateBuyingHouse,
   getListBuyingHousesQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,6 +19,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { PermissionGuard } from "@/components/PermissionGuard";
+import { useDeleteWithDependencies } from "@/hooks/use-delete-with-dependencies";
+import { DeleteImpactDialog } from "@/components/ui/delete-impact-dialog";
 
 const bhSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -60,11 +62,9 @@ function BuyingHousesContent() {
     },
   });
 
-  const deleteMutation = useDeleteBuyingHouse({
-    mutation: {
-      onSuccess: () => { qc.invalidateQueries({ queryKey: getListBuyingHousesQueryKey() }); toast({ title: "Buying house deleted" }); },
-      onError: () => toast({ title: "Failed to delete", variant: "destructive" }),
-    },
+  const del = useDeleteWithDependencies({
+    table: "buying_houses",
+    invalidateKeys: [getListBuyingHousesQueryKey()],
   });
 
   return (
@@ -119,7 +119,7 @@ function BuyingHousesContent() {
                           className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={() => deleteMutation.mutate({ id: bh.id })}
+                        <button onClick={() => del.start(bh.id)}
                           className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -144,6 +144,8 @@ function BuyingHousesContent() {
         isSubmitting={createMutation.isPending || updateMutation.isPending}
         title={editBH ? "Edit Buying House" : "Add Buying House"}
       />
+
+      <DeleteImpactDialog {...del.dialogProps} />
     </div>
   );
 }
