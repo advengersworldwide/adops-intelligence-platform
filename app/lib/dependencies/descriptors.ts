@@ -251,6 +251,10 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     labelColumns: ["id"],
     labelWith: r => `Dashboard Layout #${r.id}`,
     href: null,
+    // Every other entry here records the slug its real DELETE route requires. This
+    // one is a guess: there is no DELETE route for dashboard layouts at all, and
+    // app/app/api/me/dashboard-layout/route.ts gates GET and PUT on requireAuth()
+    // alone. Replace it with the observed slug if such a route is ever added.
     deletePermission: "dashboard:view",
     deleteEndpoint: null,
     financial: false,
