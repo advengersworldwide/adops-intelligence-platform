@@ -3,6 +3,13 @@ import type { Permission } from "@/lib/rbac/catalog";
 export type Descriptor = {
   singular: string;
   plural: string;
+  /**
+   * REAL DB column names (snake_case), never Drizzle TS property names. These are
+   * interpolated through `sql.identifier()` — which double-quotes them, making
+   * Postgres match them case-sensitively — and `db.execute` returns rows keyed by
+   * exactly these names, so `labelWith` must read the same strings.
+   * `descriptors.test.ts` checks every entry against the live schema.
+   */
   labelColumns: string[];
   labelWith: (row: Record<string, unknown>) => string;
   href: ((id: number | string) => string) | null;
@@ -98,8 +105,8 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
   },
   billings: {
     singular: "Client Bill", plural: "Client Bills",
-    labelColumns: ["id", "invoiceCode"],
-    labelWith: r => str(r.invoiceCode) ?? `Billing #${r.id}`,
+    labelColumns: ["id", "invoice_code"],
+    labelWith: r => str(r.invoice_code) ?? `Billing #${r.id}`,
     href: id => `/billings?billing=${id}`,
     deletePermission: "billings:edit",
     deleteEndpoint: id => `/api/billings/${id}`,
@@ -143,8 +150,8 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
   },
   payments: {
     singular: "Client Payment", plural: "Client Payments",
-    labelColumns: ["id", "referenceCode"],
-    labelWith: r => str(r.referenceCode) ?? `Payment #${r.id}`,
+    labelColumns: ["id", "reference_code"],
+    labelWith: r => str(r.reference_code) ?? `Payment #${r.id}`,
     href: id => `/payments?payment=${id}`,
     deletePermission: "payments:edit",
     deleteEndpoint: id => `/api/payments/${id}`,
@@ -152,8 +159,8 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
   },
   partner_payments: {
     singular: "Partner Payment", plural: "Partner Payments",
-    labelColumns: ["id", "referenceCode"],
-    labelWith: r => str(r.referenceCode) ?? `Partner Payment #${r.id}`,
+    labelColumns: ["id", "reference_code"],
+    labelWith: r => str(r.reference_code) ?? `Partner Payment #${r.id}`,
     href: id => `/payments?partnerPayment=${id}`,
     deletePermission: "payments:edit",
     deleteEndpoint: id => `/api/partner-payments/${id}`,

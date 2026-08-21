@@ -16,6 +16,15 @@ const tables = Object.values(schema).filter(v => is(v, PgTable)) as PgTable[];
 
 export const allTableNames: readonly string[] = tables.map(getTableName);
 
+/**
+ * Real DB column names per table (snake_case), not Drizzle's TS property names.
+ * Anything that interpolates a column name into raw SQL — or reads a key off a
+ * `db.execute` row — must match these, so registries can be checked against them.
+ */
+export const columnsOf: ReadonlyMap<string, string[]> = new Map(
+  tables.map(t => [getTableName(t), getTableConfig(t).columns.map(c => c.name)]),
+);
+
 export const fkEdges: readonly FkEdge[] = tables.flatMap((table) => {
   const childTable = getTableName(table);
   return getTableConfig(table).foreignKeys.map((fk): FkEdge => {

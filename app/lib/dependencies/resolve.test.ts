@@ -51,7 +51,7 @@ describe("resolveImpact", () => {
     execute.mockImplementation(async (q: unknown) => {
       const text = String(q);
       if (text.includes("billings")) {
-        return text.includes("count") ? { rows: [{ n: 1 }] } : { rows: [{ id: 12, invoiceCode: "CBILL-0012" }] };
+        return text.includes("count") ? { rows: [{ n: 1 }] } : { rows: [{ id: 12, invoice_code: "CBILL-0012" }] };
       }
       return { rows: [{ n: 0 }] };
     });
