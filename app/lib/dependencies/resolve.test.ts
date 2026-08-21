@@ -119,6 +119,44 @@ describe("resolveImpact", () => {
     ]);
   });
 
+  it("gives a blocking billing record a working nested delete endpoint and a real label", async () => {
+    // billing_records.buying_house_id has no onDelete, so it blocks the buying
+    // house — and its only DELETE route is nested two params deep under the
+    // owning partner (platform_id). Without the row, the endpoint is unbuildable
+    // and the dialog renders a blocker with no action at all.
+    withRows({
+      "buying_houses.id=4": [{ id: 4, name: "Acme House" }],
+      "billing_records.buying_house_id=4": [
+        { id: 77, platform_id: 9, period: "2026-07", pins: 1200 },
+      ],
+    });
+
+    const impact = await resolveImpact("buying_houses", 4, ALL);
+    expect(impact.blockers).toHaveLength(1);
+    const node = impact.blockers[0]!;
+    expect(node.table).toBe("billing_records");
+    expect(node.deleteEndpoint).toBe("/api/partners/9/billing-records/77");
+    expect(node.href).toBe("/transactions");
+    expect(node.label).toBe("Billing Record #77 — 2026-07, 1200 pins");
+    expect(node.canDelete).toBe(true);
+  });
+
+  it("never tells the user to clear blockers the dialog offers no way to clear", async () => {
+    // 51 rows trips the truncation guard. billing_lines has no delete endpoint,
+    // so "delete some individually first" would be an instruction to nowhere.
+    const lines = Array.from({ length: 51 }, (_, i) => ({ id: i + 1 }));
+    withRows({
+      "partners.id=2": [{ id: 2, name: "Platform X" }],
+      "billing_lines.partner_id=2": lines,
+    });
+
+    const impact = await resolveImpact("partners", 2, ALL);
+    expect(impact.canDeleteAll).toBe(false);
+    expect(impact.blockedReason).toMatch(/their own pages/i);
+    expect(impact.blockedReason).not.toMatch(/from the list above/i);
+    expect(impact.blockers.every(n => n.deleteEndpoint === null)).toBe(true);
+  });
+
   it("produces a fingerprint that is order-independent", () => {
     const a = fingerprintOf([{ table: "billings", id: 2 }, { table: "clients", id: 1 }]);
     const b = fingerprintOf([{ table: "clients", id: 1 }, { table: "billings", id: 2 }]);

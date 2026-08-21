@@ -1,5 +1,13 @@
 import type { Permission } from "@/lib/rbac/catalog";
 
+/**
+ * `href` and `deleteEndpoint` receive the whole selected row, not just its id.
+ * Nested routes need more than the id — `billing_records` deletes through
+ * `/api/partners/[id]/billing-records/[recordId]`, which needs the owning
+ * partner as well — so anything they read must be listed in `labelColumns`.
+ */
+type RowUrl = (row: Record<string, unknown>) => string | null;
+
 export type Descriptor = {
   singular: string;
   plural: string;
@@ -12,9 +20,9 @@ export type Descriptor = {
    */
   labelColumns: string[];
   labelWith: (row: Record<string, unknown>) => string;
-  href: ((id: number | string) => string) | null;
+  href: RowUrl | null;
   deletePermission: Permission;
-  deleteEndpoint: ((id: number | string) => string) | null;
+  deleteEndpoint: RowUrl | null;
   financial: boolean;
 };
 
@@ -26,27 +34,27 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     singular: "Buying House", plural: "Buying Houses",
     labelColumns: ["id", "name"],
     labelWith: r => str(r.name) ?? `Buying House #${r.id}`,
-    href: id => `/buying-houses/${id}`,
+    href: r => `/buying-houses/${r.id}`,
     deletePermission: "buying-houses:delete",
-    deleteEndpoint: id => `/api/buying-houses/${id}`,
+    deleteEndpoint: r => `/api/buying-houses/${r.id}`,
     financial: false,
   },
   clients: {
     singular: "Client", plural: "Clients",
     labelColumns: ["id", "name"],
     labelWith: r => str(r.name) ?? `Client #${r.id}`,
-    href: id => `/clients/${id}`,
+    href: r => `/clients/${r.id}`,
     deletePermission: "clients:delete",
-    deleteEndpoint: id => `/api/clients/${id}`,
+    deleteEndpoint: r => `/api/clients/${r.id}`,
     financial: false,
   },
   partners: {
     singular: "Partner", plural: "Partners",
     labelColumns: ["id", "name"],
     labelWith: r => str(r.name) ?? `Partner #${r.id}`,
-    href: id => `/partners/${id}`,
+    href: r => `/partners/${r.id}`,
     deletePermission: "partners:delete",
-    deleteEndpoint: id => `/api/partners/${id}`,
+    deleteEndpoint: r => `/api/partners/${r.id}`,
     financial: false,
   },
   client_events: {
@@ -80,18 +88,18 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     singular: "Client PO", plural: "Client POs",
     labelColumns: ["id", "code"],
     labelWith: r => str(r.code) ?? `Client PO #${r.id}`,
-    href: id => `/purchase-orders?cpo=${id}`,
+    href: r => `/purchase-orders?cpo=${r.id}`,
     deletePermission: "purchase-orders:edit",
-    deleteEndpoint: id => `/api/client-purchase-orders/${id}`,
+    deleteEndpoint: r => `/api/client-purchase-orders/${r.id}`,
     financial: false,
   },
   partner_purchase_orders: {
     singular: "Partner PO", plural: "Partner POs",
     labelColumns: ["id", "code"],
     labelWith: r => str(r.code) ?? `Partner PO #${r.id}`,
-    href: id => `/purchase-orders?ppo=${id}`,
+    href: r => `/purchase-orders?ppo=${r.id}`,
     deletePermission: "purchase-orders:edit",
-    deleteEndpoint: id => `/api/partner-purchase-orders/${id}`,
+    deleteEndpoint: r => `/api/partner-purchase-orders/${r.id}`,
     financial: false,
   },
   partner_purchase_order_items: {
@@ -107,9 +115,9 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     singular: "Client Bill", plural: "Client Bills",
     labelColumns: ["id", "invoice_code"],
     labelWith: r => str(r.invoice_code) ?? `Billing #${r.id}`,
-    href: id => `/billings?billing=${id}`,
+    href: r => `/billings?billing=${r.id}`,
     deletePermission: "billings:edit",
-    deleteEndpoint: id => `/api/billings/${id}`,
+    deleteEndpoint: r => `/api/billings/${r.id}`,
     financial: true,
   },
   billing_lines: {
@@ -132,38 +140,47 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
   },
   billing_records: {
     singular: "Billing Record", plural: "Billing Records",
-    labelColumns: ["id"],
-    labelWith: r => `Billing Record #${r.id}`,
-    href: null,
+    // platform_id is the owning partner: billing_records has no top-level delete
+    // route, only the nested one below. period/pins carry the identity a bare
+    // "#id" cannot — a buying house can front 50 of these at once.
+    labelColumns: ["id", "platform_id", "period", "pins"],
+    labelWith: (r) => {
+      const detail = [str(r.period), typeof r.pins === "number" ? `${r.pins} pins` : null]
+        .filter(Boolean).join(", ");
+      return detail ? `Billing Record #${r.id} — ${detail}` : `Billing Record #${r.id}`;
+    },
+    href: () => "/transactions",
     deletePermission: "billings:edit",
-    deleteEndpoint: null,
+    deleteEndpoint: r => (r.platform_id == null
+      ? null
+      : `/api/partners/${r.platform_id}/billing-records/${r.id}`),
     financial: true,
   },
   partner_bills: {
     singular: "Partner Bill", plural: "Partner Bills",
     labelColumns: ["id", "code"],
     labelWith: r => str(r.code) ?? `Partner Bill #${r.id}`,
-    href: id => `/billings?partnerBill=${id}`,
+    href: r => `/billings?partnerBill=${r.id}`,
     deletePermission: "billings:edit",
-    deleteEndpoint: id => `/api/partner-bills/${id}`,
+    deleteEndpoint: r => `/api/partner-bills/${r.id}`,
     financial: true,
   },
   payments: {
     singular: "Client Payment", plural: "Client Payments",
     labelColumns: ["id", "reference_code"],
     labelWith: r => str(r.reference_code) ?? `Payment #${r.id}`,
-    href: id => `/payments?payment=${id}`,
+    href: r => `/payments?payment=${r.id}`,
     deletePermission: "payments:edit",
-    deleteEndpoint: id => `/api/payments/${id}`,
+    deleteEndpoint: r => `/api/payments/${r.id}`,
     financial: true,
   },
   partner_payments: {
     singular: "Partner Payment", plural: "Partner Payments",
     labelColumns: ["id", "reference_code"],
     labelWith: r => str(r.reference_code) ?? `Partner Payment #${r.id}`,
-    href: id => `/payments?partnerPayment=${id}`,
+    href: r => `/payments?partnerPayment=${r.id}`,
     deletePermission: "payments:edit",
-    deleteEndpoint: id => `/api/partner-payments/${id}`,
+    deleteEndpoint: r => `/api/partner-payments/${r.id}`,
     financial: true,
   },
   payment_billings: {
@@ -181,7 +198,7 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     labelWith: r => str(r.name) ?? `Cost Model #${r.id}`,
     href: null,
     deletePermission: "settings.catalogs:manage",
-    deleteEndpoint: id => `/api/cost-models/${id}`,
+    deleteEndpoint: r => `/api/cost-models/${r.id}`,
     financial: false,
   },
   cost_resources: {
@@ -190,7 +207,7 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     labelWith: r => str(r.name) ?? `Cost Resource #${r.id}`,
     href: null,
     deletePermission: "cost:edit",
-    deleteEndpoint: id => `/api/cost-resources/${id}`,
+    deleteEndpoint: r => `/api/cost-resources/${r.id}`,
     financial: false,
   },
   payment_terms: {
@@ -199,7 +216,7 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     labelWith: r => str(r.name) ?? `Payment Term #${r.id}`,
     href: null,
     deletePermission: "settings.catalogs:manage",
-    deleteEndpoint: id => `/api/payment-terms/${id}`,
+    deleteEndpoint: r => `/api/payment-terms/${r.id}`,
     financial: false,
   },
   tax_settings: {

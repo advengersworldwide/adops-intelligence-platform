@@ -54,10 +54,11 @@ function toNode(edge: FkEdge, row: Row, permissions: Set<string>): ImpactNode {
     id,
     label: d.labelWith(row),
     singular: d.singular,
-    href: d.href ? d.href(id) : null,
+    // Both take the whole row: nested delete routes need more than the id.
+    href: d.href?.(row) ?? null,
     canDelete: permissions.has(d.deletePermission),
     requiredPermission: d.deletePermission,
-    deleteEndpoint: d.deleteEndpoint ? d.deleteEndpoint(id) : null,
+    deleteEndpoint: d.deleteEndpoint?.(row) ?? null,
     children: [],
     truncated: false,
   };
@@ -173,8 +174,16 @@ export async function resolveImpact(table: string, id: number | string, permissi
     ...cascades.map(c => ({ table: c.table, id: `count:${c.count}` })),
   ];
 
+  // The dialog only renders a Delete button for a node that has both an endpoint
+  // and the permission, so only promise "delete some here" when at least one does.
+  const anyRowDeletableHere = (function has(ns: ImpactNode[]): boolean {
+    return ns.some(n => (n.deleteEndpoint !== null && n.canDelete) || has(n.children));
+  })(blockers);
+
   const blockedReason = truncated
-    ? "This entity has more dependents than can be safely reviewed at once. Delete some individually first."
+    ? anyRowDeletableHere
+      ? "This entity has more dependents than can be safely reviewed at once. Delete some from the list above, then reopen this dialog."
+      : "This entity has more dependents than can be safely reviewed at once, and none of them can be deleted from here. They have to be removed from their own pages first."
     : missing.size > 0
       ? "You do not have permission to delete every affected record."
       : null;
