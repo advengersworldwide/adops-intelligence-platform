@@ -63,7 +63,22 @@ function toNode(edge: FkEdge, row: Row, permissions: Set<string>): ImpactNode {
   };
 }
 
-async function resolveBlockers(table: string, id: unknown, permissions: Set<string>, depth: number): Promise<{ nodes: ImpactNode[]; truncated: boolean }> {
+/**
+ * `seen` holds `${table}:${id}` for every row already placed in the tree. Blocking
+ * edges form a DAG, not a tree — a billing is reached both directly from its client
+ * (`billings.client_id`) and again through that client's POs
+ * (`billings.client_purchase_order_id`) — so without this the same row is expanded
+ * twice and every count derived from the tree (totals.deletes, the "Delete All — N
+ * records" label, the per-table delete response) is inflated, the row renders twice,
+ * and both copies share one `${table}:${id}` pendingKey in the dialog.
+ *
+ * Depth-first discovery keeps the delete order valid: a row is placed the first time
+ * it is reachable, and `collectDeletableNodes` emits children before parents, so a
+ * deduplicated row is still emitted before every parent that it blocks.
+ */
+async function resolveBlockers(
+  table: string, id: unknown, permissions: Set<string>, depth: number, seen: Set<string>,
+): Promise<{ nodes: ImpactNode[]; truncated: boolean }> {
   if (depth >= MAX_DEPTH) return { nodes: [], truncated: true };
   const nodes: ImpactNode[] = [];
   let truncated = false;
@@ -77,8 +92,11 @@ async function resolveBlockers(table: string, id: unknown, permissions: Set<stri
       rows.length = MAX_ROWS_PER_LEVEL;
     }
     for (const row of rows) {
+      const key = `${edge.childTable}:${row.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       const node = toNode(edge, row, permissions);
-      const child = await resolveBlockers(edge.childTable, node.id, permissions, depth + 1);
+      const child = await resolveBlockers(edge.childTable, node.id, permissions, depth + 1, seen);
       node.children = child.nodes;
       node.truncated = child.truncated;
       if (child.truncated) truncated = true;
@@ -95,7 +113,10 @@ export async function resolveImpact(table: string, id: number | string, permissi
   const [targetRow] = await selectRows(table, "id", id, targetDesc.labelColumns, 1);
   if (!targetRow) throw new NotFoundError(`${targetDesc.singular} not found`);
 
-  const { nodes: blockers, truncated } = await resolveBlockers(table, id, permissions, 0);
+  // Seeded with the target so a self-referencing FK can never list the row as its
+  // own blocker; every blocker below is then placed at most once.
+  const { nodes: blockers, truncated } =
+    await resolveBlockers(table, id, permissions, 0, new Set([`${table}:${id}`]));
 
   const cascades: CascadeGroup[] = [];
   const nullifies: NullifyGroup[] = [];

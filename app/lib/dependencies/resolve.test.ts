@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Name, SQL } from "drizzle-orm";
 
 const execute = vi.fn();
 
@@ -16,24 +17,52 @@ vi.mock("@workspace/db", async () => {
 
 import { resolveImpact, collectDeletableNodes } from "./resolve";
 import { fingerprintOf } from "./fingerprint";
+import type { ImpactNode } from "./types";
 
 const ALL = new Set([
   "clients:delete", "clients:edit", "billings:edit", "purchase-orders:edit",
   "payments:edit", "partners:delete", "partners:edit", "buying-houses:delete",
 ]);
 
-/** Queue results in the order resolveImpact will consume them. */
-function queue(...results: Record<string, unknown>[][]) {
-  for (const rows of results) execute.mockResolvedValueOnce({ rows });
+type Row = Record<string, unknown>;
+
+/**
+ * `String(sql`...`)` is "[object Object]" — matching on query text silently matches
+ * nothing and drops every query into the catch-all, which then hands the resolver
+ * `{ n: 0 }` rows it reads as real rows with `id: undefined`. Parse the drizzle
+ * chunks instead so each fixture is keyed by the exact table/column/value queried.
+ */
+function parseQuery(q: unknown): { kind: "select" | "count"; key: string } {
+  const chunks = (q as SQL).queryChunks as unknown[];
+  const names = chunks
+    .filter((c): c is InstanceType<typeof Name> => c instanceof Name)
+    .map(n => n.value);
+  const params = chunks.filter(c => typeof c === "number" || typeof c === "string");
+  // selectRows interpolates its column list as a nested SQL; countRows never does.
+  const kind = chunks.some(c => c instanceof SQL) ? "select" : "count";
+  return { kind, key: `${names[0]}.${names[1]}=${String(params[0])}` };
 }
 
-beforeEach(() => execute.mockReset());
+/** Fixtures keyed `"<table>.<column>=<value>"`; anything unlisted returns no rows. */
+function withRows(fixtures: Record<string, Row[]>) {
+  execute.mockImplementation(async (q: unknown) => {
+    const { kind, key } = parseQuery(q);
+    const rows = fixtures[key] ?? [];
+    return kind === "count" ? { rows: [{ n: rows.length }] } : { rows };
+  });
+}
+
+function flatten(ns: ImpactNode[]): ImpactNode[] {
+  return ns.flatMap(n => [n, ...flatten(n.children)]);
+}
+
+// Braces matter: `() => execute.mockReset()` returns the mock, which vitest then
+// invokes as a cleanup hook — calling db.execute() with no arguments.
+beforeEach(() => { execute.mockReset(); });
 
 describe("resolveImpact", () => {
   it("returns an empty impact for an entity with no dependents", async () => {
-    queue([{ id: 5, name: "Unused Term" }]); // target row
-    // every dependent count query returns 0
-    execute.mockResolvedValue({ rows: [{ n: 0 }] });
+    withRows({ "payment_terms.id=5": [{ id: 5, name: "Unused Term" }] });
 
     const impact = await resolveImpact("payment_terms", 5, ALL);
     expect(impact.blockers).toEqual([]);
@@ -47,18 +76,47 @@ describe("resolveImpact", () => {
   });
 
   it("marks a node undeletable when the permission is missing", async () => {
-    queue([{ id: 1, name: "Acme" }]);
-    execute.mockImplementation(async (q: unknown) => {
-      const text = String(q);
-      if (text.includes("billings")) {
-        return text.includes("count") ? { rows: [{ n: 1 }] } : { rows: [{ id: 12, invoice_code: "CBILL-0012" }] };
-      }
-      return { rows: [{ n: 0 }] };
+    withRows({
+      "clients.id=1": [{ id: 1, name: "Acme" }],
+      "billings.client_id=1": [{ id: 12, invoice_code: "CBILL-0012" }],
     });
 
     const impact = await resolveImpact("clients", 1, new Set(["clients:delete"]));
+    // Exactly one blocker — the billing — and it is labelled from the real
+    // snake_case column the driver returns.
+    expect(impact.blockers.map(n => [n.table, n.id, n.label])).toEqual([
+      ["billings", 12, "CBILL-0012"],
+    ]);
+    expect(impact.blockers[0]!.canDelete).toBe(false);
     expect(impact.canDeleteAll).toBe(false);
-    expect(impact.missingPermissions).toContain("billings:edit");
+    expect(impact.missingPermissions).toEqual(["billings:edit"]);
+  });
+
+  it("expands a row reachable by two blocking paths exactly once", async () => {
+    // The guaranteed shape for any client that has been billed: billings.client_id
+    // reaches the billing straight from the client, and billings.client_purchase_order_id
+    // (notNull, restrict) reaches the very same row again through the client's CPO.
+    withRows({
+      "clients.id=1": [{ id: 1, name: "Acme" }],
+      "client_purchase_orders.client_id=1": [{ id: 31, code: "CPO-0031" }],
+      "billings.client_id=1": [{ id: 12, invoice_code: "CBILL-0012" }],
+      "billings.client_purchase_order_id=31": [{ id: 12, invoice_code: "CBILL-0012" }],
+    });
+
+    const impact = await resolveImpact("clients", 1, ALL);
+
+    const all = flatten(impact.blockers).map(n => `${n.table}:${n.id}`);
+    expect(all.filter(k => k === "billings:12")).toHaveLength(1);
+    expect(all.sort()).toEqual(["billings:12", "client_purchase_orders:31"]);
+    // 2 blockers + the client itself. Double-expansion reported 4.
+    expect(impact.totals.deletes).toBe(3);
+
+    // The deduplicated billing must still be deleted before the CPO it blocks.
+    const order = collectDeletableNodes(impact);
+    expect(order).toEqual([
+      { table: "billings", id: 12 },
+      { table: "client_purchase_orders", id: 31 },
+    ]);
   });
 
   it("produces a fingerprint that is order-independent", () => {
