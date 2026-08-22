@@ -1,5 +1,0 @@
-{
-  "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter @workspace/web... build",
-  "outputDirectory": "app/.next"
-}

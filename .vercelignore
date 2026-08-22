@@ -1,7 +1,19 @@
+# Dependencies — Vercel reinstalls from the lockfile
 **/node_modules
+
+# Build output — regenerated during the Vercel build
+**/.next
+**/dist
+**/*.tsbuildinfo
+
+# Local tooling, worktrees, and scratch artifacts (not needed for the build)
+.git
+.agents/
+.worktrees/
 graphify-out
 artifacts/mockup-sandbox
-lib/
-scripts/
 AUDIT.md
-.agents/
+legacy-media-backup.json
+
+# NOTE: lib/ and scripts/ are pnpm workspace members required by the
+# frozen install — they must NOT be ignored.

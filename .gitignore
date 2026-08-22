@@ -54,6 +54,13 @@ Thumbs.db
 # Subagent-driven development scratch (ledger, briefs, reports, review packages)
 .superpowers/
 
+# Vercel CLI link/config (project ids — do not commit)
+.vercel
+
 # Environment variable files — NEVER commit these
 .env*
 !.env.example
+
+# One-off dump taken when the legacy media tables were dropped. Kept on disk for
+# reference, deliberately not versioned (also excluded from the Vercel upload).
+legacy-media-backup.json
