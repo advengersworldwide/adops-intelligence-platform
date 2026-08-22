@@ -237,6 +237,23 @@ export const DESCRIPTORS: Record<string, Descriptor> = {
     deleteEndpoint: null, // keyed by email: /api/users/[email]
     financial: false,
   },
+  user_backup_codes: {
+    singular: "2FA Backup Code", plural: "2FA Backup Codes",
+    // Deliberately id-only: the table's other columns are code_hash (a secret,
+    // never surface it in a dependency preview) and used_at/created_at, neither
+    // of which identifies a row to a human any better than its id does.
+    labelColumns: ["id"],
+    labelWith: r => `Backup Code #${r.id}`,
+    href: null,
+    // user_id is FK'd to users with ON DELETE CASCADE, so these disappear with
+    // their owner and never block a user delete. There is no standalone DELETE
+    // route — regeneration goes through POST /api/users/2fa/backup-codes, which
+    // a user calls for themselves — so acting on another user's codes is a
+    // user-management action and carries the same permission as users.
+    deletePermission: "settings.users:manage",
+    deleteEndpoint: null,
+    financial: false,
+  },
   roles: {
     singular: "Role", plural: "Roles",
     labelColumns: ["id", "name"],
