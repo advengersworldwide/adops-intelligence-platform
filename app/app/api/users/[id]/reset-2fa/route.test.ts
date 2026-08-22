@@ -5,11 +5,15 @@ const updateSet = vi.fn();
 const deleteWhere = vi.fn();
 const authMock = vi.fn();
 
+const tx = {
+  update: () => ({ set: (s: unknown) => { updateSet(s); return { where: async () => undefined }; } }),
+  delete: () => ({ where: (...a: unknown[]) => { deleteWhere(...a); return Promise.resolve(undefined); } }),
+};
+
 vi.mock("@workspace/db", () => ({
   db: {
     select: () => ({ from: () => ({ where: () => userRow() }) }),
-    update: () => ({ set: (v: unknown) => { updateSet(v); return { where: async () => undefined }; } }),
-    delete: () => ({ where: (...a: unknown[]) => { deleteWhere(...a); return Promise.resolve(undefined); } }),
+    transaction: (cb: (tx: unknown) => Promise<void>) => cb(tx),
   },
   usersTable: "users",
   userBackupCodesTable: "backup",
@@ -74,10 +78,32 @@ describe("POST /api/users/[id]/reset-2fa", () => {
     expect((await call("abc")).status).toBe(400);
   });
 
-  it("also resets 2FA for a system account — unlike reset-password, there is no isSystem guard here", async () => {
+  it("refuses a non-system caller resetting a system account's 2FA", async () => {
+    authMock.mockResolvedValue({ user: { sub: 99, role: "Admin", isSystem: false } });
+    userRow.mockReturnValue([{ id: 5, username: "sys", isSystem: true, tokenVersion: 0 }]);
+    const res = await call();
+    expect(res.status).toBe(403);
+    expect(updateSet).not.toHaveBeenCalled();
+    expect(deleteWhere).not.toHaveBeenCalled();
+  });
+
+  it("allows a system caller to reset a system account's 2FA", async () => {
+    authMock.mockResolvedValue({ user: { sub: 99, role: "System Admin", isSystem: true } });
     userRow.mockReturnValue([{ id: 5, username: "sys", isSystem: true, tokenVersion: 0 }]);
     const res = await call();
     expect(res.status).toBe(200);
-    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ tokenVersion: 1 }));
+    expect(deleteWhere).toHaveBeenCalled();
+    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({
+      twoFactorSecret: null,
+      tokenVersion: 1,
+    }));
+  });
+
+  it("a non-system caller resetting a non-system target is unaffected by the system-account guard", async () => {
+    authMock.mockResolvedValue({ user: { sub: 99, role: "Admin", isSystem: false } });
+    userRow.mockReturnValue([{ id: 5, username: "target", isSystem: false, tokenVersion: 2 }]);
+    const res = await call();
+    expect(res.status).toBe(200);
+    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ tokenVersion: 3 }));
   });
 });
