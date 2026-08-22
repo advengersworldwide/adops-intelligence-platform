@@ -47,12 +47,17 @@ export async function POST(req: Request): Promise<Response> {
     // on a verification failure, so this is a hard 401, not a fallback.
     const challenge = readChallengeCookie(req);
     if (!challenge) return unauthenticated();
+    let claims: Awaited<ReturnType<typeof verifyChallenge>>;
     try {
-      totpDone = (await verifyChallenge(challenge, "password_change")).totpDone;
+      claims = await verifyChallenge(challenge, "password_change");
     } catch (err) {
       console.warn("[users/me/password] challenge re-verification failed", err);
       return unauthenticated();
     }
+    // Cross-check the challenge's own subject against the actor resolveActor
+    // resolved above, rather than trusting they match implicitly.
+    if (claims.sub !== userId) return unauthenticated();
+    totpDone = claims.totpDone;
   }
 
   const { success } = await checkRateLimit("password-change", String(userId));
