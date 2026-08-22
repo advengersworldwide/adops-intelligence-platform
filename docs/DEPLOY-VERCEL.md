@@ -90,8 +90,25 @@ canonical list.
 Run these **from your machine, pointed at the production `DATABASE_URL`**, before or right after
 the first deploy. Set `DATABASE_URL` in your shell to the production pooled string first.
 
+### ⚠️ If the database already has users, do NOT run `drizzle-kit push`
+
+[`lib/db/migrations/0008_auth_hardening.sql`](../lib/db/migrations/0008_auth_hardening.sql) adds
+`username` as `NOT NULL UNIQUE` through a **staged backfill** (`username = lower(trim(email))`)
+behind a collision guard. `push` performs a schema diff and never executes that file — it would
+try to add the column and its constraint in one step against populated rows and fail.
+
+Apply that file by hand instead (psql or the Supabase SQL editor). It is wrapped in a transaction
+and aborts before touching anything if two emails collide when lowercased and trimmed, so nothing
+is left half-applied.
+
+Then follow [the auth-hardening rollout checklist](superpowers/specs/2026-08-18-auth-hardening-ROLLOUT.md)
+for the rest of the sequence — notably that every existing user's username becomes their **email
+address**, and that an admin should enrol in 2FA and save the backup codes immediately.
+
+### Fresh database
+
 ```bash
-# 1. Create/update the schema
+# 1. Create the schema from scratch
 pnpm --filter @workspace/db push
 
 # 2. Seed default RBAC roles (System Admin / Operator / Viewer) + the admin user
