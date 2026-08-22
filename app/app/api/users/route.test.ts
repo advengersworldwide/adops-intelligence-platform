@@ -87,4 +87,18 @@ describe("POST /api/users", () => {
     authMock.mockResolvedValue(new Response("no", { status: 403 }));
     expect((await post(valid)).status).toBe(403);
   });
+
+  it("bumps tokenVersion on an update even when no password is supplied", async () => {
+    // An update is identified by email matching an existing row. A role change
+    // reaches a user through exactly this path — without a fresh tokenVersion,
+    // their existing session would keep the old role's authority until the JWT
+    // expires (up to 24h).
+    selectRows.mockReturnValue([
+      { id: 5, username: "ahmed", email: "ahmed@x.com", isSystem: false, tokenVersion: 3 },
+    ]);
+    const res = await post(valid);
+    expect(res.status).toBe(200);
+    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ tokenVersion: 4 }));
+    expect(updateSet.mock.calls[0][0]).not.toHaveProperty("password");
+  });
 });

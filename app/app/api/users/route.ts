@@ -76,13 +76,23 @@ export async function POST(req: Request): Promise<Response> {
         return NextResponse.json({ error: "That username is already taken" }, { status: 409 });
       }
 
-      const updates: Record<string, unknown> = { name, username, role, updatedAt: new Date() };
+      const updates: Record<string, unknown> = {
+        name,
+        username,
+        role,
+        updatedAt: new Date(),
+        // Bumped unconditionally, not only when a password is supplied: role
+        // authority is baked into the JWT, so a demotion made here would
+        // otherwise stay live under the user's existing session for up to 24h.
+        // An admin editing a user's record is exactly when that session should
+        // be re-established.
+        tokenVersion: byEmail.tokenVersion + 1,
+      };
       if (password) {
         const validation = await validatePassword(password);
         if (!validation.ok) return NextResponse.json({ errors: validation.errors }, { status: 400 });
         updates.password = await bcrypt.hash(password, BCRYPT_ROUNDS);
         updates.passwordChangedAt = new Date();
-        updates.tokenVersion = byEmail.tokenVersion + 1;
       }
       const [updated] = await db
         .update(usersTable)
