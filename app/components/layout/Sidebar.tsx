@@ -7,7 +7,7 @@ import {
   Upload, BarChart3, Settings, ChevronLeft, ChevronRight,
   Zap, LogOut, ChevronDown, ChevronUp,
   FileText, CreditCard, DollarSign, Wallet,
-  ClipboardList,
+  ClipboardList, ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -34,11 +34,21 @@ const financialsItems = [
   { href: "/cost", label: "Cost", icon: DollarSign, permission: "cost:view" },
 ] as const;
 
-const bottomNavItems = [
+// permission is optional: an item with no permission is always visible to any
+// signed-in user (auth is still enforced by middleware, just not RBAC).
+interface NavItem {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  permission?: Permission;
+}
+
+const bottomNavItems: NavItem[] = [
   { href: "/upload", label: "Upload Data", icon: Upload, permission: "upload:data" },
   { href: "/analytics", label: "Analytics", icon: BarChart3, permission: "analytics:view" },
   { href: "/settings", label: "Settings", icon: Settings, permission: "settings:view" },
-] as const;
+  { href: "/account", label: "Account Security", icon: ShieldCheck },
+];
 
 export default function Sidebar({ open, onToggle }: SidebarProps) {
   const pathname = usePathname();
@@ -56,8 +66,8 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
     ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
     : "U";
 
-  const renderItem = ({ href, label, icon: Icon, permission }: { href: string; label: string; icon: LucideIcon; permission: string }) => {
-    if (!canAccess(permission)) return null;
+  const renderItem = ({ href, label, icon: Icon, permission }: NavItem) => {
+    if (permission && !canAccess(permission)) return null;
     const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
     return (
       <Link key={href} href={href}>

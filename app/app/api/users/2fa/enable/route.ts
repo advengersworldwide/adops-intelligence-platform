@@ -1,0 +1,81 @@
+import { NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { db, usersTable, userBackupCodesTable } from "@workspace/db";
+import { resolveActor } from "@/lib/auth/actor";
+import { verifyTotp } from "@/lib/auth/totp";
+import { tryDecryptSecret } from "@/lib/auth/secret-crypto";
+import { generateBackupCodes, hashBackupCode } from "@/lib/auth/credentials";
+import { resolveNextStep, isPrivileged } from "@/lib/auth/next-step";
+import { issueSession, issueChallenge } from "@/lib/auth/session-issue";
+import { getRolePermissions } from "@/lib/rbac/role-permissions";
+
+export const runtime = "nodejs";
+// Backup-code hashing below is bulk bcrypt work (ten hashes per call).
+export const maxDuration = 30;
+
+export async function POST(req: Request): Promise<Response> {
+  const userId = await resolveActor(req, "totp_enroll");
+  if (!userId) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+
+  let body: { code?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  const code = String(body.code ?? "").trim();
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  if (!user.twoFactorSecret) {
+    return NextResponse.json({ error: "Start setup before enabling two-factor authentication" }, { status: 400 });
+  }
+  if (user.twoFactorEnabledAt) {
+    return NextResponse.json({ error: "Two-factor authentication is already enabled" }, { status: 400 });
+  }
+
+  // Requiring a valid code proves the user actually scanned the QR — otherwise
+  // we would lock them out of their own account at the next login.
+  const secret = tryDecryptSecret(user.twoFactorSecret, "2fa/enable");
+  const result = secret ? verifyTotp(secret, code, null) : { valid: false, step: null };
+  if (!result.valid) return NextResponse.json({ error: "Invalid code" }, { status: 401 });
+
+  const codes = generateBackupCodes();
+  const rows = await Promise.all(
+    codes.map(async (c) => ({ userId: user.id, codeHash: await hashBackupCode(c) })),
+  );
+  await db.insert(userBackupCodesTable).values(rows);
+
+  const enabledAt = new Date();
+  await db
+    .update(usersTable)
+    .set({
+      twoFactorEnabledAt: enabledAt,
+      lastTotpStep: result.step,
+      twoFactorFailedAttempts: 0,
+      twoFactorLockedUntil: null,
+    })
+    .where(eq(usersTable.id, user.id));
+
+  // On the *forced* enrolment path this user reached here with a totp_enroll
+  // challenge and no session at all. Without issuing the next step here, the
+  // client's only option is "/", which middleware bounces back to /login —
+  // making them sign in twice. Resolve and issue exactly as login/2fa and
+  // me/password already do.
+  const updatedUser = {
+    ...user,
+    twoFactorEnabledAt: enabledAt,
+    lastTotpStep: result.step,
+    twoFactorFailedAttempts: 0,
+    twoFactorLockedUntil: null,
+  };
+  const rolePerms = await getRolePermissions(user.role);
+  const privileged = isPrivileged(user.role, user.isSystem, rolePerms);
+  const step = resolveNextStep(updatedUser, privileged, true);
+
+  // Shown exactly once — they are hashed at rest and cannot be recovered.
+  // Carried on whichever response we return, since this is the only chance
+  // to show them.
+  if (step === "session") return issueSession(updatedUser, { backupCodes: codes });
+  return issueChallenge(user.id, step, true, { backupCodes: codes });
+}

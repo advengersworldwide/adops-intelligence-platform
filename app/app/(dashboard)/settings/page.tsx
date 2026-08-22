@@ -28,11 +28,14 @@ interface Role {
 }
 
 interface User {
+  id?: number;
   name: string;
+  username: string;
   email: string;
   role: string;
   isSystem?: boolean;
   password?: string;
+  twoFactorEnabled?: boolean;
 }
 
 // --- Auth API fetch helpers (replace @/lib/auth functions) ---
@@ -61,17 +64,38 @@ async function getUsers(): Promise<User[]> {
   return res.json();
 }
 
-async function saveUser(user: User): Promise<void> {
-  await fetch("/api/users", {
+async function saveUser(user: User): Promise<{ user?: User & { tempPassword?: string }; error?: string }> {
+  const res = await fetch("/api/users", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user),
   });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const error = typeof data?.error === "string"
+      ? data.error
+      : Array.isArray(data?.errors)
+        ? data.errors.join(" ")
+        : "Failed to save user";
+    return { error };
+  }
+  return { user: data };
 }
 
 async function deleteUser(email: string): Promise<boolean> {
   const res = await fetch(`/api/users/${encodeURIComponent(email)}`, { method: "DELETE" });
   return res.ok;
+}
+
+async function resetUserPassword(id: number): Promise<string | null> {
+  const res = await fetch(`/api/users/${id}/reset-password`, { method: "POST" });
+  if (!res.ok) return null;
+  return (await res.json()).tempPassword as string;
+}
+
+async function resetUserTwoFactor(id: number): Promise<{ ok: boolean; forbidden?: boolean }> {
+  const res = await fetch(`/api/users/${id}/reset-2fa`, { method: "POST" });
+  return { ok: res.ok, forbidden: res.status === 403 };
 }
 
 export default function SettingsPage() {
@@ -130,9 +154,11 @@ export default function SettingsPage() {
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newUserName, setNewUserName] = useState("");
+  const [newUserUsername, setNewUserUsername] = useState("");
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
   const [newUserRole, setNewUserRole] = useState("");
+  const [tempPasswordDialog, setTempPasswordDialog] = useState<{ username: string; tempPassword: string } | null>(null);
 
   // Catalog hooks
   const qc = useQueryClient();
@@ -264,6 +290,10 @@ export default function SettingsPage() {
       toast({ title: "Name cannot be empty", variant: "destructive" });
       return;
     }
+    if (!newUserUsername.trim()) {
+      toast({ title: "Username cannot be empty", variant: "destructive" });
+      return;
+    }
     if (!newUserEmail.trim()) {
       toast({ title: "Email cannot be empty", variant: "destructive" });
       return;
@@ -279,6 +309,7 @@ export default function SettingsPage() {
 
     const userObj: User = {
       name: newUserName.trim(),
+      username: newUserUsername.trim().toLowerCase(),
       email: newUserEmail.trim(),
       role: newUserRole,
       isSystem: editingUser?.isSystem || false
@@ -288,20 +319,29 @@ export default function SettingsPage() {
       userObj.password = newUserPassword;
     }
 
-    await saveUser(userObj);
+    const result = await saveUser(userObj);
+    if (result.error) {
+      toast({ title: "Could not save user", description: result.error, variant: "destructive" });
+      return;
+    }
     setUsers(await getUsers());
     setUserDialogOpen(false);
     setEditingUser(null);
     setNewUserName("");
+    setNewUserUsername("");
     setNewUserEmail("");
     setNewUserPassword("");
     setNewUserRole("");
+    if (result.user?.tempPassword) {
+      setTempPasswordDialog({ username: result.user.username, tempPassword: result.user.tempPassword });
+    }
     toast({ title: `User "${userObj.name}" saved successfully` });
   };
 
   const startEditUser = (u: User) => {
     setEditingUser(u);
     setNewUserName(u.name);
+    setNewUserUsername(u.username);
     setNewUserEmail(u.email);
     setNewUserPassword("");
     setNewUserRole(u.role);
@@ -710,6 +750,7 @@ export default function SettingsPage() {
               <Button size="sm" className="gap-1.5 text-xs bg-violet-600 hover:bg-violet-500 text-white" onClick={() => {
                 setEditingUser(null);
                 setNewUserName("");
+                setNewUserUsername("");
                 setNewUserEmail("");
                 setNewUserPassword("");
                 setNewUserRole(roles[0]?.name || "");
@@ -726,6 +767,7 @@ export default function SettingsPage() {
                     <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground">User Name</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground">Email Address</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground">Assigned Role</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground">Two-Factor</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
@@ -746,8 +788,58 @@ export default function SettingsPage() {
                           {u.role}
                         </span>
                       </td>
+                      <td className="px-5 py-3 text-xs">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                          u.twoFactorEnabled
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            : "bg-muted text-muted-foreground"
+                        }`}>
+                          {u.twoFactorEnabled ? "2FA on" : "2FA off"}
+                        </span>
+                      </td>
                       <td className="px-5 py-3 text-right text-sm">
                         <div className="flex justify-end gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            title="Reset password"
+                            disabled={u.isSystem || !u.id}
+                            onClick={async () => {
+                              if (!u.id) return;
+                              const temp = await resetUserPassword(u.id);
+                              if (temp) {
+                                setTempPasswordDialog({ username: u.username, tempPassword: temp });
+                              } else {
+                                toast({ title: "Reset failed", description: "Could not reset that password.", variant: "destructive" });
+                              }
+                            }}
+                          >
+                            <Key className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            title="Reset two-factor authentication"
+                            disabled={!u.twoFactorEnabled || !u.id}
+                            onClick={async () => {
+                              if (!u.id) return;
+                              const result = await resetUserTwoFactor(u.id);
+                              toast({
+                                title: result.ok ? "Two-factor reset" : "Reset failed",
+                                description: result.ok
+                                  ? `${u.username} will set up two-factor authentication again at next sign-in.`
+                                  : result.forbidden
+                                    ? "Only a system account can reset another system account's two-factor authentication."
+                                    : "Could not reset two-factor authentication.",
+                                variant: result.ok ? undefined : "destructive",
+                              });
+                              if (result.ok) setUsers(await getUsers());
+                            }}
+                          >
+                            <Shield className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -790,6 +882,21 @@ export default function SettingsPage() {
                       placeholder="e.g. John Doe"
                       className="text-sm h-9"
                     />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">Username</label>
+                    <Input
+                      required
+                      value={newUserUsername}
+                      onChange={e => setNewUserUsername(e.target.value.trim().toLowerCase())}
+                      placeholder="ahmed.khan"
+                      className="text-sm h-9"
+                      data-testid="user-username"
+                    />
+                    {newUserUsername && users.some(u => u.username === newUserUsername && u.id !== editingUser?.id) && (
+                      <p className="text-[11px] text-destructive">That username is already taken.</p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -848,6 +955,28 @@ export default function SettingsPage() {
                     </Button>
                   </DialogFooter>
                 </form>
+              </DialogContent>
+            </Dialog>
+
+            {/* One-time temp password display — shown after creating a user or resetting a password */}
+            <Dialog open={tempPasswordDialog !== null} onOpenChange={open => !open && setTempPasswordDialog(null)}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Temporary password for {tempPasswordDialog?.username}</DialogTitle>
+                </DialogHeader>
+                <p className="text-sm text-muted-foreground">
+                  Give this to the user directly. It won&apos;t be shown again, and they&apos;ll be asked
+                  to choose their own password the first time they sign in.
+                </p>
+                <code className="block rounded-lg bg-muted p-3 text-center text-base tracking-wider">
+                  {tempPasswordDialog?.tempPassword}
+                </code>
+                <DialogFooter>
+                  <Button onClick={() => {
+                    if (tempPasswordDialog) navigator.clipboard.writeText(tempPasswordDialog.tempPassword);
+                  }}>Copy</Button>
+                  <Button variant="outline" onClick={() => setTempPasswordDialog(null)}>Done</Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>

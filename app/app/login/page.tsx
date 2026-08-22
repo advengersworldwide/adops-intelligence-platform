@@ -1,18 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { Zap, Mail, Lock, AlertCircle, Eye, EyeOff, BarChart3, TrendingUp, DollarSign } from "lucide-react";
+import { Zap, User, Lock, AlertCircle, Eye, EyeOff, BarChart3, TrendingUp, DollarSign, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [stage, setStage] = useState<"credentials" | "totp">("credentials");
+  const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const routeNext = (next: string) => {
+    if (next === "session") { window.location.href = "/"; return; }
+    if (next === "password_change") { window.location.href = "/change-password"; return; }
+    if (next === "enroll_2fa") { window.location.href = "/enroll-2fa"; return; }
+    if (next === "totp") { setStage("totp"); setError(""); return; }
+    setError("Unexpected server response. Please try again.");
+  };
+
+  const handleCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -20,14 +30,38 @@ export default function LoginPage() {
       const res = await fetch("/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        body: JSON.stringify({ username: username.trim().toLowerCase(), password }),
       });
       if (res.ok) {
-        window.location.href = "/";
+        routeNext((await res.json()).next);
       } else if (res.status === 429) {
         setError("Too many attempts. Please try again later.");
       } else {
-        setError("Invalid email or password. Please try again.");
+        setError("Invalid username or password. Please try again.");
+      }
+    } catch {
+      setError("Unable to connect to server. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/users/login/2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.trim() }),
+      });
+      if (res.ok) {
+        routeNext((await res.json()).next);
+      } else if (res.status === 429) {
+        setError("Too many incorrect codes. Please try again in 15 minutes.");
+      } else {
+        setError("That code isn't valid. Check your authenticator app and try again.");
       }
     } catch {
       setError("Unable to connect to server. Please try again.");
@@ -130,14 +164,18 @@ export default function LoginPage() {
 
           {/* Header */}
           <div className="space-y-1.5">
-            <h2 className="text-2xl font-bold text-foreground">Sign in</h2>
+            <h2 className="text-2xl font-bold text-foreground">
+              {stage === "totp" ? "Two-factor verification" : "Sign in"}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Enter your credentials to access your workspace.
+              {stage === "totp"
+                ? "One more step to secure your account."
+                : "Enter your credentials to access your workspace."}
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={stage === "totp" ? handleCode : handleCredentials} className="space-y-5">
             {/* Error */}
             {error && (
               <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" data-testid="login-error">
@@ -146,71 +184,113 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Email */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground" htmlFor="login-email">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="login-email"
-                  type="email"
-                  required
-                  placeholder="you@advengers.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="pl-9 h-10 text-sm bg-card"
-                  data-testid="login-email"
-                />
-              </div>
-            </div>
+            {stage === "credentials" && (
+              <>
+                {/* Username */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground" htmlFor="login-username">
+                    Username
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="login-username"
+                      type="text"
+                      autoComplete="username"
+                      required
+                      placeholder="your.username"
+                      value={username}
+                      onChange={e => setUsername(e.target.value)}
+                      className="pl-9 h-10 text-sm bg-card"
+                      data-testid="login-username"
+                    />
+                  </div>
+                </div>
 
-            {/* Password */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-foreground" htmlFor="login-password">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                <Input
-                  id="login-password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  className="pl-9 pr-10 h-10 text-sm bg-card"
-                  data-testid="login-password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  tabIndex={-1}
+                {/* Password */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground" htmlFor="login-password">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    <Input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      className="pl-9 pr-10 h-10 text-sm bg-card"
+                      data-testid="login-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-10 text-sm font-semibold"
+                  data-testid="login-submit"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Signing in…
+                    </span>
+                  ) : "Sign in"}
+                </Button>
+              </>
+            )}
+
+            {stage === "totp" && (
+              <div className="space-y-5">
+                <div className="flex items-start gap-2.5 rounded-lg border border-border bg-muted/40 p-3">
+                  <ShieldCheck className="h-4 w-4 shrink-0 mt-0.5 text-muted-foreground" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Enter the 6-digit code from your authenticator app. You can also use one of your backup codes.
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-foreground" htmlFor="login-code">
+                    Verification code
+                  </label>
+                  <Input
+                    id="login-code"
+                    type="text"
+                    inputMode="text"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    required
+                    placeholder="123456"
+                    value={code}
+                    onChange={e => setCode(e.target.value)}
+                    className="h-10 text-sm bg-card tracking-widest"
+                    data-testid="login-code"
+                  />
+                </div>
+                <Button type="submit" disabled={isLoading}
+                  className="w-full h-10 text-sm font-semibold" data-testid="login-verify">
+                  {isLoading ? "Verifying…" : "Verify"}
+                </Button>
+                <button type="button" onClick={() => { setStage("credentials"); setCode(""); setError(""); }}
+                  className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors">
+                  Back to sign in
                 </button>
               </div>
-            </div>
-
-            {/* Submit */}
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-10 text-sm font-semibold"
-              data-testid="login-submit"
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Signing in…
-                </span>
-              ) : "Sign in"}
-            </Button>
+            )}
           </form>
 
           {/* Divider note */}

@@ -6,16 +6,59 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const apiDir = join(here, "..", "..", "app", "api");
 
-// Routes that are truly public (no auth required).
+// Routes exempt from the require*() guard check, in two kinds.
+//
+// PUBLIC_ALLOWLIST — no live session exists at the time these run, so
+// requireAuth/requireAdmin/requirePermission structurally cannot apply:
+// - public: healthz, login, logout
+// - login/2fa is pre-session by construction: it exchanges a short-lived
+//   challenge cookie (issued by login, verified via verifyChallenge) for the
+//   real session, so requireAuth/requireAdmin/requirePermission cannot apply —
+//   there is no session yet to check. It guards itself via the challenge
+//   token plus TOTP/backup-code verification and database-backed lockout.
+// - users/2fa/setup and users/2fa/enable authenticate via resolveActor, which
+//   is deliberately reachable two ways: an already-signed-in user turning 2FA
+//   on from settings (a real, tokenVersion-checked session exists), OR a
+//   half-authenticated user mid-login holding a totp_enroll challenge cookie
+//   (no session exists yet at all, same reasoning as login/2fa above).
+//   requireAuth/requireAdmin/requirePermission all assume a live session and
+//   return 401 outright when one is absent, so none of them can serve the
+//   challenge-cookie path. resolveActor performs its own revocation check on
+//   the session branch (via the same isCurrentSession tokenVersion
+//   comparison requireAuth uses internally) before falling back to the
+//   challenge cookie, so this is not a weaker guard than requireAuth — it is
+//   requireAuth's check plus a second, pre-session path requireAuth cannot
+//   offer. users/2fa/disable and users/2fa/backup-codes are NOT on this list:
+//   both are reachable only by an already-fully-authenticated user, so they
+//   call requireAuth directly like any other authenticated route and need no
+//   exemption.
+// - users/me/password is the same dual-auth shape as the 2fa/setup and
+//   2fa/enable routes above, for the same reason: it must serve both an
+//   already-signed-in user changing their password from settings AND a
+//   half-authenticated user mid-login holding a password_change challenge
+//   (issued when they are on a temporary/forced password). requireAuth
+//   structurally cannot serve the second case — it 401s outright when no
+//   session exists, and there is deliberately no session yet on that path.
+//   resolveActor is not a weaker stand-in for requireAuth here: on its
+//   session branch it performs the exact same tokenVersion revocation check
+//   requireAuth does internally (via the shared isCurrentSession), and it
+//   additionally covers the pre-session challenge path requireAuth has no
+//   way to serve.
+//
+// SELF_GUARDED_ROUTES (below) — a live session does exist, but the route
+// enforces it inline via getSession() rather than through requirePermission(),
+// because it needs the full permission context or special bootstrap behavior.
+// Those get a stricter second assertion, not a blanket exemption.
 const PUBLIC_ALLOWLIST = [
   "healthz/route.ts",
   "users/login/route.ts",
+  "users/login/2fa/route.ts",
   "users/logout/route.ts",
+  "users/2fa/setup/route.ts",
+  "users/2fa/enable/route.ts",
+  "users/me/password/route.ts",
 ];
 
-// Routes that self-guard inline (getSession + explicit auth enforcement).
-// These do not use requirePermission() because they need full permission context
-// or special bootstrap behavior. Each must have getSession( and the listed status codes.
 const SELF_GUARDED_ROUTES: { file: string; requiredStatusCodes: number[] }[] = [
   { file: "auth/me/route.ts", requiredStatusCodes: [401] },
   { file: "dependencies/route.ts", requiredStatusCodes: [401, 403] },
