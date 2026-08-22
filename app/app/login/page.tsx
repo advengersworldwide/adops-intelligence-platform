@@ -175,7 +175,7 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleCredentials} className="space-y-5">
+          <form onSubmit={stage === "totp" ? handleCode : handleCredentials} className="space-y-5">
             {/* Error */}
             {error && (
               <div className="flex items-start gap-2.5 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" data-testid="login-error">
@@ -281,7 +281,7 @@ export default function LoginPage() {
                     data-testid="login-code"
                   />
                 </div>
-                <Button type="button" onClick={handleCode} disabled={isLoading}
+                <Button type="submit" disabled={isLoading}
                   className="w-full h-10 text-sm font-semibold" data-testid="login-verify">
                   {isLoading ? "Verifying…" : "Verify"}
                 </Button>
