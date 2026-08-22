@@ -30,7 +30,9 @@ async function seedDefaults() {
   }
 
   const users = await db.select().from(usersTable);
-  const existingAdmin = users.find((u) => u.email === "admin@advengers.com");
+  const existingAdmin = users.find(
+    (u) => u.email === "admin@advengers.com" || u.username === "admin",
+  );
   if (!existingAdmin) {
     const adminPassword = process.env["ADMIN_DEFAULT_PASSWORD"];
     if (!adminPassword) {

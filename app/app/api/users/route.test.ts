@@ -61,6 +61,18 @@ describe("POST /api/users", () => {
     expect((await res.json()).error).toMatch(/username/i);
   });
 
+  it("rejects when the email matches one row and the username matches a different row", async () => {
+    selectRows.mockReturnValue([
+      { id: 10, username: "someoneelse", email: "ahmed@x.com", isSystem: false, tokenVersion: 0 },
+      { id: 20, username: "ahmed", email: "other@x.com", isSystem: false, tokenVersion: 0 },
+    ]);
+    const res = await post(valid);
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/username/i);
+    expect(insertValues).not.toHaveBeenCalled();
+    expect(updateSet).not.toHaveBeenCalled();
+  });
+
   it("requires a username", async () => {
     const res = await post({ name: "A", email: "a@x.com", role: "Viewer" });
     expect(res.status).toBe(400);
