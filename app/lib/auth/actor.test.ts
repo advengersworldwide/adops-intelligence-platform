@@ -8,7 +8,7 @@ vi.mock("@workspace/db", () => ({
 
 vi.mock("./session");
 
-import { resolveActor } from "./actor";
+import { resolveActor, readChallengeCookie } from "./actor";
 import { getSession } from "./session";
 import { signChallenge } from "./jwt";
 import { CHALLENGE_COOKIE } from "./cookies";
@@ -83,5 +83,34 @@ describe("resolveActor", () => {
     mockGetSession.mockResolvedValueOnce(null);
     const token = await signChallenge(5, "password_change");
     expect(await resolveActor(requestWithChallenge(token), "totp_enroll")).toBeNull();
+  });
+});
+
+describe("readChallengeCookie", () => {
+  it("does not match a differently-named cookie that merely ends with the challenge cookie's name", () => {
+    // Unanchored, `adops-challenge=([^;]+)` matches inside "xadops-challenge=..."
+    // too, since regex has no notion of cookie-name boundaries on its own.
+    const req = new Request("http://localhost/api/x", {
+      headers: { cookie: "xadops-challenge=attacker-controlled" },
+    });
+    expect(readChallengeCookie(req)).toBeNull();
+  });
+
+  it("matches the real cookie when it is not the first in the header", () => {
+    const req = new Request("http://localhost/api/x", {
+      headers: { cookie: `foo=1; ${CHALLENGE_COOKIE}=real-token` },
+    });
+    expect(readChallengeCookie(req)).toBe("real-token");
+  });
+
+  it("matches the real cookie when it is the first in the header", () => {
+    const req = new Request("http://localhost/api/x", {
+      headers: { cookie: `${CHALLENGE_COOKIE}=real-token; foo=1` },
+    });
+    expect(readChallengeCookie(req)).toBe("real-token");
+  });
+
+  it("returns null when there is no cookie header at all", () => {
+    expect(readChallengeCookie(new Request("http://localhost/api/x"))).toBeNull();
   });
 });

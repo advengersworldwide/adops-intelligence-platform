@@ -5,7 +5,9 @@ import { isCurrentSession } from "./require";
 
 export function readChallengeCookie(req: Request): string | null {
   const header = req.headers.get("cookie") ?? "";
-  const match = header.match(new RegExp(`${CHALLENGE_COOKIE}=([^;]+)`));
+  // Anchored on a cookie boundary (start-of-header or after "; ") so a cookie
+  // named e.g. "xadops-challenge" cannot match as a substring of its name.
+  const match = header.match(new RegExp(`(?:^|;\\s*)${CHALLENGE_COOKIE}=([^;]+)`));
   return match?.[1] ?? null;
 }
 
