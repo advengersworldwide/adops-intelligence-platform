@@ -55,7 +55,7 @@ async function call(code: string) {
 }
 
 describe("POST /api/users/2fa/enable", () => {
-  // These two hash ten real bcrypt codes at cost 12 (unmocked, per the "stores
+  // These two hash ten real bcrypt codes at cost 10 (unmocked, per the "stores
   // hashed, never plaintext" assertion below) — genuine CPU-bound crypto work
   // that comfortably exceeds vitest's 5000ms default on this machine.
   it("activates 2FA and returns exactly ten backup codes", async () => {
@@ -102,4 +102,30 @@ describe("POST /api/users/2fa/enable", () => {
     expect((await call("123456")).status).toBe(401);
     expect(updateSet).not.toHaveBeenCalled();
   });
+
+  // Forced enrolment reaches this route with a totp_enroll challenge and no
+  // session at all. Returning only { backupCodes } used to dead-end the flow
+  // at the login screen — the response must now resolve and issue the next
+  // step, exactly like login/2fa and me/password.
+  it("issues a real session cookie after activating 2FA, alongside the backup codes", async () => {
+    userRow.mockReturnValue([pendingUser]);
+    verifyTotpMock.mockReturnValue({ valid: true, step: 100 });
+    const res = await call("123456");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("set-cookie")).toContain("adops-session=");
+    const json = await res.json();
+    expect(json.next).toBe("session");
+    expect(json.backupCodes).toHaveLength(10);
+  }, 20000);
+
+  it("routes to password_change (not session) when the user still must change their password, and still carries backup codes", async () => {
+    userRow.mockReturnValue([{ ...pendingUser, mustChangePassword: true }]);
+    verifyTotpMock.mockReturnValue({ valid: true, step: 100 });
+    const res = await call("123456");
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.next).toBe("password_change");
+    expect(json.backupCodes).toHaveLength(10);
+    expect(res.headers.get("set-cookie")).not.toContain("adops-session=");
+  }, 20000);
 });

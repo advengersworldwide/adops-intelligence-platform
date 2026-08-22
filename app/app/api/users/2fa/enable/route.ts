@@ -5,8 +5,13 @@ import { resolveActor } from "@/lib/auth/actor";
 import { verifyTotp } from "@/lib/auth/totp";
 import { tryDecryptSecret } from "@/lib/auth/secret-crypto";
 import { generateBackupCodes, hashBackupCode } from "@/lib/auth/credentials";
+import { resolveNextStep, isPrivileged } from "@/lib/auth/next-step";
+import { issueSession, issueChallenge } from "@/lib/auth/session-issue";
+import { getRolePermissions } from "@/lib/rbac/role-permissions";
 
 export const runtime = "nodejs";
+// Backup-code hashing below is bulk bcrypt work (ten hashes per call).
+export const maxDuration = 30;
 
 export async function POST(req: Request): Promise<Response> {
   const userId = await resolveActor(req, "totp_enroll");
@@ -41,16 +46,36 @@ export async function POST(req: Request): Promise<Response> {
   );
   await db.insert(userBackupCodesTable).values(rows);
 
+  const enabledAt = new Date();
   await db
     .update(usersTable)
     .set({
-      twoFactorEnabledAt: new Date(),
+      twoFactorEnabledAt: enabledAt,
       lastTotpStep: result.step,
       twoFactorFailedAttempts: 0,
       twoFactorLockedUntil: null,
     })
     .where(eq(usersTable.id, user.id));
 
+  // On the *forced* enrolment path this user reached here with a totp_enroll
+  // challenge and no session at all. Without issuing the next step here, the
+  // client's only option is "/", which middleware bounces back to /login —
+  // making them sign in twice. Resolve and issue exactly as login/2fa and
+  // me/password already do.
+  const updatedUser = {
+    ...user,
+    twoFactorEnabledAt: enabledAt,
+    lastTotpStep: result.step,
+    twoFactorFailedAttempts: 0,
+    twoFactorLockedUntil: null,
+  };
+  const rolePerms = await getRolePermissions(user.role);
+  const privileged = isPrivileged(user.role, user.isSystem, rolePerms);
+  const step = resolveNextStep(updatedUser, privileged, true);
+
   // Shown exactly once — they are hashed at rest and cannot be recovered.
-  return NextResponse.json({ backupCodes: codes });
+  // Carried on whichever response we return, since this is the only chance
+  // to show them.
+  if (step === "session") return issueSession(updatedUser, { backupCodes: codes });
+  return issueChallenge(user.id, step, true, { backupCodes: codes });
 }

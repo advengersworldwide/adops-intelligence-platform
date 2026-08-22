@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,22 @@ export default function Enroll2faPage() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  // React Strict Mode double-invokes effects in dev, and this one calls a POST
+  // endpoint that overwrites two_factor_secret every time it runs. A second,
+  // unguarded call would rewrite the secret out from under the QR code already
+  // on screen, so the code the user scanned no longer verifies. Ref (not
+  // state) because the guard must be synchronous and must not itself trigger
+  // a re-render/re-run.
+  const setupStarted = useRef(false);
+  // Where to send the user once 2FA is confirmed enabled — set from the
+  // server's response, the same way the login page routes on `next` rather
+  // than assuming session is always the outcome (a forced password change can
+  // still be pending).
+  const [nextStep, setNextStep] = useState<string | null>(null);
 
   useEffect(() => {
+    if (setupStarted.current) return;
+    setupStarted.current = true;
     (async () => {
       try {
         const res = await fetch("/api/users/2fa/setup", { method: "POST" });
@@ -45,13 +59,25 @@ export default function Enroll2faPage() {
         body: JSON.stringify({ code: code.trim() }),
       });
       const json = await res.json().catch(() => ({}));
-      if (res.ok) { setBackupCodes(json.backupCodes ?? []); setStage("codes"); return; }
+      if (res.ok) {
+        setBackupCodes(json.backupCodes ?? []);
+        setNextStep(json.next ?? "session");
+        setStage("codes");
+        return;
+      }
       setError(json.error ?? "That code isn't valid. Try the next one your app shows.");
     } catch {
       setError("Unable to connect to server.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const routeNext = () => {
+    if (nextStep === "password_change") { window.location.href = "/change-password"; return; }
+    // "session" is the common case; any other/unexpected value still lands
+    // safely on "/" rather than stranding the user on this page.
+    window.location.href = "/";
   };
 
   const copyCodes = async () => {
@@ -135,7 +161,7 @@ export default function Enroll2faPage() {
               <span>I&apos;ve saved these codes somewhere safe.</span>
             </label>
 
-            <Button type="button" disabled={!saved} onClick={() => { window.location.href = "/"; }}
+            <Button type="button" disabled={!saved} onClick={routeNext}
               className="w-full h-10 text-sm font-semibold" data-testid="enroll-done">
               Continue to dashboard
             </Button>
