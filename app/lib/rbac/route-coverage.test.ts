@@ -31,6 +31,18 @@ const apiDir = join(here, "..", "..", "app", "api");
 //   both are reachable only by an already-fully-authenticated user, so they
 //   call requireAuth directly like any other authenticated route and need no
 //   exemption.
+// - users/me/password is the same dual-auth shape as the 2fa/setup and
+//   2fa/enable routes above, for the same reason: it must serve both an
+//   already-signed-in user changing their password from settings AND a
+//   half-authenticated user mid-login holding a password_change challenge
+//   (issued when they are on a temporary/forced password). requireAuth
+//   structurally cannot serve the second case — it 401s outright when no
+//   session exists, and there is deliberately no session yet on that path.
+//   resolveActor is not a weaker stand-in for requireAuth here: on its
+//   session branch it performs the exact same tokenVersion revocation check
+//   requireAuth does internally (via the shared isCurrentSession), and it
+//   additionally covers the pre-session challenge path requireAuth has no
+//   way to serve.
 const PUBLIC_ALLOWLIST = [
   "healthz/route.ts",
   "users/login/route.ts",
@@ -39,6 +51,7 @@ const PUBLIC_ALLOWLIST = [
   "auth/me/route.ts",
   "users/2fa/setup/route.ts",
   "users/2fa/enable/route.ts",
+  "users/me/password/route.ts",
 ];
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];

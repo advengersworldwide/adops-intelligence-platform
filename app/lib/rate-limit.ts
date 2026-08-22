@@ -1,11 +1,12 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-type Bucket = "login" | "global";
+type Bucket = "login" | "global" | "password-change";
 
 const LIMITS: Record<Bucket, { tokens: number; window: `${number} ${"s" | "m"}` }> = {
   login: { tokens: 10, window: "15 m" }, // mirrors old express loginLimiter
   global: { tokens: 100, window: "1 m" },
+  "password-change": { tokens: 5, window: "15 m" },
 };
 
 let redis: Redis | null = null;
