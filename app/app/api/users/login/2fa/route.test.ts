@@ -153,4 +153,25 @@ describe("POST /api/users/login/2fa", () => {
     const wrong = await signChallenge(1, "password_change");
     expect((await call("123456", wrong)).status).toBe(401);
   });
+
+  it("persists the failure counter before the backup-code loop, even when a backup code is also checked and fails", async () => {
+    // The bcrypt-heavy backup-code loop runs after this — a request timeout
+    // mid-loop must not leave the counter unincremented. Asserting inside the
+    // backupRows() mock proves the increment landed before the loop even
+    // started reading codes, not merely "by the time the request finished".
+    userRow.mockReturnValue([enrolledUser]);
+    verifyTotpMock.mockReturnValue({ valid: false, step: null });
+    const { hashBackupCode } = await import("@/lib/auth/credentials");
+    const seededHash = await hashBackupCode("WXYZ-9999"); // a real hash the submitted code will not match
+    backupRows.mockImplementation(() => {
+      expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ twoFactorFailedAttempts: 1 }));
+      return [{ id: 9, codeHash: seededHash, usedAt: null }];
+    });
+    const res = await call("ABCD-2345", await challengeFor(1)); // does not match the seeded code
+    expect(res.status).toBe(401);
+    // Exactly one write to the users table: the pre-loop increment. No
+    // trailing "reset to 0" call, since nothing ultimately succeeded.
+    expect(updateSet).toHaveBeenCalledTimes(1);
+    expect(updateSet).toHaveBeenCalledWith(expect.objectContaining({ twoFactorFailedAttempts: 1 }));
+  }, 20000);
 });

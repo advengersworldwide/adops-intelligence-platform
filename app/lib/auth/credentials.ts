@@ -8,7 +8,15 @@ import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "./password-policy";
  */
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const BACKUP_CODE_COUNT = 10;
-const BCRYPT_ROUNDS = 12;
+/**
+ * Lower than the cost-12 used for passwords: a backup code's defense is its
+ * 40 bits of CSPRNG entropy from a 32-character alphabet, not KDF cost. At
+ * cost 12 a login's worst case (TOTP fails, then all ten unused codes are
+ * checked) is ~4.7s of bcrypt alone — long enough to risk a platform request
+ * timeout landing mid-loop. Cost 10 cuts that roughly 4x while leaving the
+ * entropy, not the hash cost, as the actual line of defense.
+ */
+const BCRYPT_ROUNDS = 10;
 
 const TEMP_PASSWORD_ALPHABET =
   "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";

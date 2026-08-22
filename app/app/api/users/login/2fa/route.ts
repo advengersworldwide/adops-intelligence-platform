@@ -11,6 +11,8 @@ import { issueSession, issueChallenge } from "@/lib/auth/session-issue";
 import { getRolePermissions } from "@/lib/rbac/role-permissions";
 
 export const runtime = "nodejs";
+// The backup-code fallback loop below is bulk bcrypt work (up to ten compares).
+export const maxDuration = 30;
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
@@ -51,6 +53,23 @@ export async function POST(req: Request): Promise<Response> {
   const secret = tryDecryptSecret(user.twoFactorSecret, "login/2fa");
   const totp = secret ? verifyTotp(secret, code, user.lastTotpStep ?? null) : { valid: false, step: null };
 
+  if (!totp.valid) {
+    // Persisted immediately, before the backup-code loop below — not after it.
+    // That loop is bulk bcrypt work (up to ten compares against unused codes),
+    // and a request timeout mid-loop must not skip this write, or the
+    // five-attempt lockout would silently never engage. maxDuration above and
+    // the lower backup-code bcrypt cost (credentials.ts) both shrink that
+    // risk, but this ordering is the actual guarantee.
+    const attempts = user.twoFactorFailedAttempts + 1;
+    await db
+      .update(usersTable)
+      .set({
+        twoFactorFailedAttempts: attempts,
+        twoFactorLockedUntil: attempts >= MAX_ATTEMPTS ? new Date(Date.now() + LOCKOUT_MS) : null,
+      })
+      .where(eq(usersTable.id, user.id));
+  }
+
   let matchedBackupCodeId: number | null = null;
   if (!totp.valid) {
     const unused = await db
@@ -66,19 +85,13 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   if (!totp.valid && matchedBackupCodeId === null) {
-    const attempts = user.twoFactorFailedAttempts + 1;
-    await db
-      .update(usersTable)
-      .set({
-        twoFactorFailedAttempts: attempts,
-        twoFactorLockedUntil: attempts >= MAX_ATTEMPTS ? new Date(Date.now() + LOCKOUT_MS) : null,
-      })
-      .where(eq(usersTable.id, user.id));
+    // The failure counter above is already persisted — nothing left to do here.
     return INVALID();
   }
 
-  // Success — clear the counters and record the consumed step so the same code
-  // cannot be replayed inside its remaining validity window.
+  // Success — clear the counters (undoing the pre-loop increment above, if a
+  // backup code is what actually succeeded) and record the consumed step so
+  // the same code cannot be replayed inside its remaining validity window.
   await db
     .update(usersTable)
     .set({
