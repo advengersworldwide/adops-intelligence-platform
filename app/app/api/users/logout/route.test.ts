@@ -9,4 +9,15 @@ describe("POST /api/users/logout", () => {
     expect(cookie).toContain("adops-session=");
     expect(cookie).toContain("Max-Age=0");
   });
+
+  it("also expires a leftover challenge cookie", async () => {
+    // A user who abandons login mid-2FA and then signs out (e.g. from another
+    // tab with a live session) would otherwise leave a live totp/password_change/
+    // enroll_2fa challenge cookie behind for up to its 10-minute TTL.
+    const { POST } = await import("./route");
+    const res = await POST();
+    const challengeCookie = res.headers.getSetCookie().find((c) => c.startsWith("adops-challenge="));
+    expect(challengeCookie).toBeDefined();
+    expect(challengeCookie).toContain("Max-Age=0");
+  });
 });
