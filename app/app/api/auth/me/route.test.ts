@@ -4,7 +4,7 @@ const selectRow = vi.fn();
 
 vi.mock("@workspace/db", () => ({
   db: { select: () => ({ from: () => ({ where: () => selectRow() }) }) },
-  usersTable: { id: "id" },
+  usersTable: { id: "id", tokenVersion: "tokenVersion" },
 }));
 vi.mock("@/lib/auth/session");
 vi.mock("@/lib/rbac/role-permissions");
@@ -26,6 +26,16 @@ beforeEach(() => {
   selectRow.mockReset();
 });
 
+/**
+ * isCurrentSession (require.ts) runs its own db.select() alongside this
+ * route's own row fetch, both against the same mocked selectRow() — so the
+ * queued row must persist across calls rather than being consumed by the
+ * first (mockReturnValue, not mockReturnValueOnce).
+ */
+function mockDbUserRow(row: { id: number; username: string; tokenVersion: number; twoFactorEnabledAt: Date | null }) {
+  selectRow.mockReturnValue([row]);
+}
+
 describe("GET /api/auth/me", () => {
   it("401 when unauthenticated", async () => {
     mockGetSession.mockResolvedValueOnce(null);
@@ -35,14 +45,14 @@ describe("GET /api/auth/me", () => {
 
   it("401 when the token version has been revoked", async () => {
     mockGetSession.mockResolvedValueOnce({ sub: 2, name: "V", username: "v", email: "v@x.com", role: "Viewer", isSystem: false, tokenVersion: 1 });
-    selectRow.mockReturnValueOnce([{ id: 2, username: "v", tokenVersion: 0, twoFactorEnabledAt: null }]);
+    mockDbUserRow({ id: 2, username: "v", tokenVersion: 0, twoFactorEnabledAt: null });
     const res = await GET();
     expect(res.status).toBe(401);
   });
 
   it("returns the role's permission set for a normal user", async () => {
     mockGetSession.mockResolvedValueOnce({ sub: 2, name: "V", username: "v", email: "v@x.com", role: "Viewer", isSystem: false, tokenVersion: 0 });
-    selectRow.mockReturnValueOnce([{ id: 2, username: "v", tokenVersion: 0, twoFactorEnabledAt: null }]);
+    mockDbUserRow({ id: 2, username: "v", tokenVersion: 0, twoFactorEnabledAt: null });
     mockGetRolePermissions.mockResolvedValueOnce(["clients:view"]);
     mockEffectivePermissions.mockReturnValueOnce(new Set(["clients:view"]));
     const res = await GET();
@@ -54,7 +64,7 @@ describe("GET /api/auth/me", () => {
 
   it("returns the full catalog for a system admin, including 2FA state", async () => {
     mockGetSession.mockResolvedValueOnce({ sub: 1, name: "A", username: "admin", email: "a@x.com", role: "System Admin", isSystem: true, tokenVersion: 0 });
-    selectRow.mockReturnValueOnce([{ id: 1, username: "admin", tokenVersion: 0, twoFactorEnabledAt: new Date() }]);
+    mockDbUserRow({ id: 1, username: "admin", tokenVersion: 0, twoFactorEnabledAt: new Date() });
     mockGetRolePermissions.mockResolvedValueOnce([]);
     mockEffectivePermissions.mockReturnValueOnce(new Set(["settings.roles:manage"]));
     const res = await GET();
