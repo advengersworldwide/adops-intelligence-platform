@@ -31,7 +31,9 @@ export async function middleware(req: NextRequest): Promise<NextResponse> {
 
 export const config = {
   matcher: [
-    // Guard all page routes except login, api, and static/internal assets.
-    "/((?!login|api|_next/static|_next/image|favicon.ico).*)",
+    // Guard all page routes except login, the mid-login challenge pages, api,
+    // and static/internal assets. change-password and enroll-2fa authenticate
+    // via the challenge cookie, which is not a session.
+    "/((?!login|change-password|enroll-2fa|api|_next/static|_next/image|favicon.ico).*)",
   ],
 };
