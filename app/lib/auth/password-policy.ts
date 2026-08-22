@@ -54,7 +54,7 @@ export async function validatePassword(password: string): Promise<PasswordValida
     errors.push(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
   }
   if (Buffer.byteLength(password, "utf8") > MAX_PASSWORD_LENGTH) {
-    errors.push(`Password must be at most ${MAX_PASSWORD_LENGTH} characters.`);
+    errors.push(`Password must be at most ${MAX_PASSWORD_LENGTH} bytes (some characters, like emoji, take up more than one byte).`);
   }
 
   // Only spend a network call on a password that is otherwise acceptable.
