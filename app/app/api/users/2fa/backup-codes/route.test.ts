@@ -4,11 +4,16 @@ const userRow = vi.fn();
 const deleteWhere = vi.fn();
 const insertValues = vi.fn();
 
+const tx = {
+  delete: () => ({ where: (...a: unknown[]) => { deleteWhere(...a); return Promise.resolve(undefined); } }),
+  insert: () => ({ values: async (v: unknown) => { insertValues(v); } }),
+};
+
 vi.mock("@workspace/db", () => ({
   db: {
     select: () => ({ from: () => ({ where: () => userRow() }) }),
-    delete: () => ({ where: (...a: unknown[]) => { deleteWhere(...a); return Promise.resolve(undefined); } }),
-    insert: () => ({ values: async (v: unknown) => { insertValues(v); } }),
+    // Delete-then-insert now runs inside db.transaction, matching reset-2fa.
+    transaction: (cb: (tx: unknown) => Promise<void>) => cb(tx),
   },
   usersTable: "users",
   userBackupCodesTable: "backup",
@@ -43,7 +48,7 @@ async function call() {
 }
 
 describe("POST /api/users/2fa/backup-codes", () => {
-  // Hashes ten real bcrypt codes at cost 12 (unmocked, per the "codeHash
+  // Hashes ten real bcrypt codes at cost 10 (unmocked, per the "codeHash
   // matches a real bcrypt hash" assertion below) — genuine CPU-bound crypto
   // work that comfortably exceeds vitest's 5000ms default on this machine.
   it("regenerates: deletes prior codes, inserts ten new hashed ones, returns them once", async () => {
