@@ -19,7 +19,6 @@ import { PermissionGuard } from "@/components/PermissionGuard";
 import { useCan } from "@/lib/auth/user-context";
 import { visibleTabs, SETTINGS_TABS } from "@/lib/rbac/tabs";
 import { RolePermissionEditor } from "@/components/settings/RolePermissionEditor";
-import { AccountSecurity } from "@/components/settings/AccountSecurity";
 import { ALL_PERMISSIONS } from "@/lib/rbac/catalog";
 
 interface Role {
@@ -104,14 +103,12 @@ export default function SettingsPage() {
   const { toast } = useToast();
 
   // Active settings tabs — filtered by the caller's settings.* permissions.
-  const [activeTab, setActiveTab] = useState<"general" | "roles" | "users" | "costModels" | "paymentTerms" | "security">("general");
+  const [activeTab, setActiveTab] = useState<"general" | "roles" | "users" | "costModels" | "paymentTerms">("general");
   const can = useCan();
   const settingsTabs = visibleTabs(SETTINGS_TABS, can);
-  // "Security" is every user's own account — it is never permission-gated, unlike the tabs above.
-  const displayTabs = [...settingsTabs, { id: "security", label: "Security" }];
-  const active = displayTabs.some((t) => t.id === activeTab)
+  const active = settingsTabs.some((t) => t.id === activeTab)
     ? activeTab
-    : ((displayTabs[0]?.id ?? "general") as typeof activeTab);
+    : ((settingsTabs[0]?.id ?? "general") as typeof activeTab);
 
   // General Settings States
   const [alertNegative, setAlertNegative] = useState(
@@ -369,9 +366,9 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground">Manage your platform preferences, configurations, and user rights</p>
         </div>
 
-        {/* Settings Navigation Tabs — role-permitted tabs plus the always-visible Security tab */}
+        {/* Settings Navigation Tabs — only the ones this role may access */}
         <div className="flex border-b border-border">
-          {displayTabs.map(tab => (
+          {settingsTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
@@ -1004,17 +1001,6 @@ export default function SettingsPage() {
             onDelete={(id) => deletePaymentTermM.mutate({ id })}
             withDays
           />
-        )}
-
-        {/* SECURITY TAB — every user manages their own account, so this is not permission-gated */}
-        {active === "security" && (
-          <div className="max-w-2xl space-y-6">
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Security</h2>
-              <p className="text-sm text-muted-foreground">Manage your password and two-factor authentication.</p>
-            </div>
-            <AccountSecurity />
-          </div>
         )}
       </div>
     </PermissionGuard>
