@@ -26,7 +26,9 @@ export function resolveNextStep(
   privileged: boolean,
   totpDone: boolean,
 ): NextStep {
-  // 1. Second factor first — see the note in the plan on intercepted temp passwords.
+  // 1. Second factor first. When an admin resets a user's password, the temporary password
+  // is handed over out-of-band and may be intercepted. Checking TOTP before password change
+  // means an intercepted temp password alone cannot set a new password and lock out the owner.
   if (user.twoFactorEnabledAt && !totpDone) return "totp";
   // 2. Then any forced password change.
   if (user.mustChangePassword) return "password_change";
