@@ -39,6 +39,7 @@ async function seedDefaults() {
       const hashedPassword = await bcrypt.hash(adminPassword, 12);
       await db.insert(usersTable).values({
         name: "System Admin",
+        username: "admin",
         email: "admin@advengers.com",
         password: hashedPassword,
         role: "System Admin",
