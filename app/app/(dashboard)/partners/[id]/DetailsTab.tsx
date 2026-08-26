@@ -21,14 +21,12 @@ export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
   const [kyc, setKyc] = useState<KycState>(() => kycFromRecord(partner));
   const [paymentTermsId, setPaymentTermsId] = useState<string>(partner.paymentTermsId != null ? String(partner.paymentTermsId) : "none");
   const [codePrefix, setCodePrefix] = useState<string>(partner.codePrefix ?? "");
-  const [platformBulkDiscountPct, setPlatformBulkDiscountPct] = useState<string>(partner.platformBulkDiscountPct != null ? String(partner.platformBulkDiscountPct) : "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setKyc(kycFromRecord(partner));
     setPaymentTermsId(partner.paymentTermsId != null ? String(partner.paymentTermsId) : "none");
     setCodePrefix(partner.codePrefix ?? "");
-    setPlatformBulkDiscountPct(partner.platformBulkDiscountPct != null ? String(partner.platformBulkDiscountPct) : "");
   }, [partner]);
 
   async function handleSave() {
@@ -42,7 +40,6 @@ export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
         ...kycToPayload(kyc),
         paymentTermsId: paymentTermsId === "none" ? null : parseInt(paymentTermsId, 10),
         codePrefix,
-        platformBulkDiscountPct: platformBulkDiscountPct.trim() !== "" ? parseFloat(platformBulkDiscountPct) : null,
       }});
       await qc.invalidateQueries({ queryKey: getGetPartnerQueryKey(partner.id) });
       toast({ title: "Changes saved" });
@@ -71,13 +68,8 @@ export default function PartnerDetailsTab({ partner }: { partner: Partner }) {
           </SelectContent>
         </Select>
       </div>
-      <div className="rounded-lg border border-border bg-card p-5 max-w-xs space-y-1.5">
-        <span className="text-xs font-medium text-muted-foreground">Bulk Discount %</span>
-        <Input type="number" step="0.01" value={platformBulkDiscountPct} disabled={!canEdit}
-          onChange={e => setPlatformBulkDiscountPct(e.target.value)} placeholder="e.g. 5" />
-        <p className="text-xs text-muted-foreground">Discount taken from this partner, applied to their payout on billing-record uploads.</p>
-      </div>
       {canEdit && <div className="flex justify-end"><Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button></div>}
     </div>
   );
 }
+

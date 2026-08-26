@@ -61,10 +61,15 @@ export function CreateBillingDialog({ open, editBilling, onClose, onSuccess }: {
     }
   }, [open, editBilling]);
 
+  const selectedClient = clients?.find(x => x.id === clientId);
+
   useEffect(() => {
     if (clientId && clients) {
       const c = clients.find(x => x.id === clientId);
-      if (c?.bulkDiscountPct != null && !editBilling) setBd(c.bulkDiscountPct);
+      if (!editBilling) {
+        const discount = c?.buyingHouseBulkDiscountPct != null ? Number(c.buyingHouseBulkDiscountPct) : 0;
+        setBd(discount);
+      }
     }
   }, [clientId, clients, editBilling]);
 
@@ -204,9 +209,19 @@ export function CreateBillingDialog({ open, editBilling, onClose, onSuccess }: {
               <Input type="number" step="0.0001" value={forexSellingRate || ""} onChange={e => setForexSell(parseFloat(e.target.value) || 0)} /></label>
             <label className="text-xs space-y-1"><span className="text-muted-foreground">Forex Buying</span>
               <Input type="number" step="0.0001" value={forexBuyingRate || ""} onChange={e => setForexBuy(parseFloat(e.target.value) || 0)} /></label>
-            <label className="text-xs space-y-1"><span className="text-muted-foreground">Bulk Discount %</span>
-              <Input type="number" step="0.01" value={bulkDiscountPct || ""} onChange={e => setBd(parseFloat(e.target.value) || 0)} /></label>
+            <div className="space-y-1">
+              <label className="text-xs space-y-1 block">
+                <span className="text-muted-foreground">Agency Bulk Discount %</span>
+                <Input type="number" step="0.01" value={bulkDiscountPct || ""} onChange={e => setBd(parseFloat(e.target.value) || 0)} />
+              </label>
+              {selectedClient?.buyingHouseName ? (
+                <p className="text-[11px] text-muted-foreground">Inherited from {selectedClient.buyingHouseName}</p>
+              ) : selectedClient ? (
+                <p className="text-[11px] text-muted-foreground">Direct client (0%)</p>
+              ) : null}
+            </div>
           </div>
+
 
           <label className="flex items-center gap-2 text-xs">
             <Checkbox checked={whtApplied} onCheckedChange={v => setWht(Boolean(v))} /> Apply Withholding Tax gross-up

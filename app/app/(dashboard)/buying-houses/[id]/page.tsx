@@ -11,10 +11,12 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useHasPermission } from "@/lib/auth/user-context";
 import { KycFields, kycFromRecord, kycToPayload, type KycState, EMPTY_KYC } from "@/components/KycFields";
 import { PermissionGuard } from "@/components/PermissionGuard";
+
 
 function BuyingHouseDetailPage({ id }: { id: number }) {
   const qc = useQueryClient();
@@ -26,11 +28,13 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
   const updateBH = useUpdateBuyingHouse();
 
   const [kyc, setKyc] = useState<KycState>(EMPTY_KYC);
+  const [bulkDiscountPct, setBulkDiscountPct] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!bh) return;
     setKyc(kycFromRecord(bh));
+    setBulkDiscountPct(bh.bulkDiscountPct != null ? String(bh.bulkDiscountPct) : "");
   }, [bh]);
 
   async function handleSave() {
@@ -40,6 +44,7 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
       await updateBH.mutateAsync({ id, data: {
         name: bh.name,
         ...kycToPayload(kyc),
+        bulkDiscountPct: bulkDiscountPct.trim() !== "" ? parseFloat(bulkDiscountPct) : null,
       }});
       await qc.invalidateQueries({ queryKey: getGetBuyingHouseQueryKey(id) });
       toast({ title: "Changes saved" });
@@ -73,6 +78,28 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
 
       {/* Details — KYC */}
       <KycFields value={kyc} onChange={setKyc} disabled={!canEdit} />
+
+      {/* Commercial Terms / Bulk Discount */}
+      <div className="rounded-lg border border-border bg-card p-5 max-w-sm space-y-2">
+        <h3 className="text-sm font-semibold text-foreground">Commercial Terms</h3>
+        <label className="block space-y-1.5">
+          <span className="text-xs font-medium text-muted-foreground">Bulk Discount %</span>
+          <Input
+            type="number"
+            step="0.01"
+            min={0}
+            max={100}
+            value={bulkDiscountPct}
+            disabled={!canEdit}
+            onChange={e => setBulkDiscountPct(e.target.value)}
+            placeholder="e.g. 10"
+          />
+        </label>
+        <p className="text-xs text-muted-foreground">
+          Master discount rate automatically inherited by all clients assigned to this agency.
+        </p>
+      </div>
+
       {/* Clients under this buying house */}
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="px-5 py-3 border-b border-border bg-muted/30">
@@ -103,6 +130,7 @@ function BuyingHouseDetailPage({ id }: { id: number }) {
     </div>
   );
 }
+
 
 export default function BuyingHouseDetailRoute() {
   const { id } = useParams<{ id: string }>();

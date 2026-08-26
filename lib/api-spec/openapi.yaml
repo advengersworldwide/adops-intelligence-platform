@@ -2097,6 +2097,7 @@ components:
         salesTaxNumber: { type: ["string", "null"] }
         ntnNumber: { type: ["string", "null"] }
         bulkDiscountPct: { type: ["number", "null"] }
+        buyingHouseBulkDiscountPct: { type: ["number", "null"] }
         paymentTermsId: { type: ["integer", "null"] }
         paymentTermName: { type: ["string", "null"] }
         createdAt: { type: string }
@@ -2181,6 +2182,7 @@ components:
         iban: { type: ["string", "null"] }
         salesTaxNumber: { type: ["string", "null"] }
         ntnNumber: { type: ["string", "null"] }
+        bulkDiscountPct: { type: ["number", "null"] }
         createdAt: { type: string }
 
     BuyingHouseInput:
@@ -2201,6 +2203,8 @@ components:
         iban: { type: ["string", "null"] }
         salesTaxNumber: { type: ["string", "null"] }
         ntnNumber: { type: ["string", "null"] }
+        bulkDiscountPct: { type: ["number", "null"] }
+
 
     BuyingHouseAnalytics:
       type: object

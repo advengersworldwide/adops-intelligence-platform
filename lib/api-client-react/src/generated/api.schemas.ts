@@ -129,6 +129,8 @@ export interface Client {
   /** @nullable */
   bulkDiscountPct?: number | null;
   /** @nullable */
+  buyingHouseBulkDiscountPct?: number | null;
+  /** @nullable */
   paymentTermsId?: number | null;
   /** @nullable */
   paymentTermName?: string | null;
@@ -252,6 +254,8 @@ export interface BuyingHouse {
   salesTaxNumber?: string | null;
   /** @nullable */
   ntnNumber?: string | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
   createdAt: string;
 }
 
@@ -284,6 +288,8 @@ export interface BuyingHouseInput {
   salesTaxNumber?: string | null;
   /** @nullable */
   ntnNumber?: string | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }
 
 export interface BuyingHouseTrendPoint {

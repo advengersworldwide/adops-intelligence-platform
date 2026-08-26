@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { DashboardWidget } from "@/components/dashboard/DashboardWidget";
 
 export function Alerts() {
-  const { data: alerts } = useGetAlerts();
+  const { data: alerts, isLoading } = useGetAlerts();
   const hasAlerts = !!alerts && alerts.length > 0;
 
   // Most severe first (critical before warning); order is otherwise preserved.
@@ -16,7 +16,7 @@ export function Alerts() {
   );
 
   return (
-    <DashboardWidget title="Alerts" isEmpty={!hasAlerts} emptyLabel="No active alerts">
+    <DashboardWidget title="Alerts" loading={isLoading} isEmpty={!isLoading && !hasAlerts} emptyLabel="No active alerts">
       <div className="flex h-full flex-col">
         <div className="flex items-center gap-2 mb-3 -mt-1 shrink-0">
           <AlertTriangle className="h-4 w-4 text-amber-500" />

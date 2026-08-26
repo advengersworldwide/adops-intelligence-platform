@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import type { FlatImportDescriptor, ImportScope, ImportSession, RowResult } from "../types";
 import { normalizeName } from "./cpo-helpers";
 import { clientBillingSummaryColumns } from "./client-billing-summary.columns";
-import { db, billingRecordsTable, partnersTable, clientsTable, costModelsTable, taxSettingsTable } from "@workspace/db";
+import { db, billingRecordsTable, partnersTable, clientsTable, buyingHousesTable, costModelsTable, taxSettingsTable } from "@workspace/db";
 
 const PERIOD_RE = /^\d{4}-\d{2}$/;
 
@@ -106,10 +106,16 @@ export const clientBillingSummaryDescriptor: FlatImportDescriptor<Ctx, Payload> 
     let client: Ctx["client"] = null;
     if (scope.clientId != null) {
       const [c] = await db
-        .select({ id: clientsTable.id, name: clientsTable.name, buyingHouseId: clientsTable.buyingHouseId, bulkDiscountPct: clientsTable.bulkDiscountPct })
+        .select({ id: clientsTable.id, name: clientsTable.name, buyingHouseId: clientsTable.buyingHouseId })
         .from(clientsTable).where(eq(clientsTable.id, scope.clientId));
-      if (c) client = { id: c.id, name: c.name, buyingHouseId: c.buyingHouseId ?? null, bulkDiscountPct: c.bulkDiscountPct != null ? Number(c.bulkDiscountPct) : 0 };
+      let bulkDiscountPct = 0;
+      if (c?.buyingHouseId != null) {
+        const [bh] = await db.select({ bulkDiscountPct: buyingHousesTable.bulkDiscountPct }).from(buyingHousesTable).where(eq(buyingHousesTable.id, c.buyingHouseId));
+        if (bh?.bulkDiscountPct != null) bulkDiscountPct = Number(bh.bulkDiscountPct);
+      }
+      if (c) client = { id: c.id, name: c.name, buyingHouseId: c.buyingHouseId ?? null, bulkDiscountPct };
     }
+
 
     const partners = await db.select({ id: partnersTable.id, name: partnersTable.name, disc: partnersTable.platformBulkDiscountPct }).from(partnersTable);
     const partnersByName = new Map<string, Array<{ id: number; platformBulkDiscountPct: number }>>();

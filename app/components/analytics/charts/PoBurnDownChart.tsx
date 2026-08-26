@@ -3,14 +3,22 @@
 import type { PoPacing } from "@workspace/api-client-react";
 import { formatMoney } from "@/lib/analytics/currency";
 
-export function PoBurnDownChart({ pos, currency }: { pos: PoPacing[]; currency?: string }) {
+export function PoBurnDownChart({
+  pos,
+  currency,
+  flat = false,
+}: {
+  pos: PoPacing[];
+  currency?: string;
+  flat?: boolean;
+}) {
   if (!pos || pos.length === 0) {
-    return <p className="py-12 text-center text-sm text-muted-foreground">No partner purchase orders for selected period</p>;
+    return <p className="py-8 text-center text-xs text-muted-foreground">No partner purchase orders for selected period</p>;
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h2 className="mb-2 text-sm font-semibold text-foreground">PO Burn-Down Pacing</h2>
+    <div className={flat ? "space-y-4" : "rounded-2xl border border-border bg-card p-5 shadow-sm"}>
+      {!flat && <h2 className="mb-2 text-sm font-semibold text-foreground">PO Burn-Down Pacing</h2>}
       <div className="mb-4 flex flex-wrap gap-3 text-[10px] text-muted-foreground">
         <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "hsl(160,84%,39%)" }} /> On pace</span>
         <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ backgroundColor: "hsl(0,84%,60%)" }} /> Overpacing</span>

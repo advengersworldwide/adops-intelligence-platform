@@ -11,6 +11,7 @@ export function KpiMargin() {
   return (
     <DashboardWidget fill={false}>
       <KpiCard
+        flat
         title="Margin %"
         value={adjustedSummary ? `${adjustedSummary.marginPct.toFixed(1)}%` : "0%"}
         icon={<BarChart2 className="h-4 w-4" />}

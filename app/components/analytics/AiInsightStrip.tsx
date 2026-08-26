@@ -15,6 +15,7 @@ export interface AiInsight {
 export interface AiInsightStripProps {
   insights: AiInsight[];
   loading?: boolean;
+  hideHeader?: boolean;
 }
 
 const DOT_CLASSES: Record<AiInsightSentiment, string> = {
@@ -23,15 +24,17 @@ const DOT_CLASSES: Record<AiInsightSentiment, string> = {
   neutral: "bg-muted-foreground",
 };
 
-export function AiInsightStrip({ insights, loading }: AiInsightStripProps) {
+export function AiInsightStrip({ insights, loading, hideHeader = false }: AiInsightStripProps) {
   if (!loading && insights.length === 0) return null;
 
   return (
     <div>
-      <div className="mb-3 flex items-center gap-1.5">
-        <Sparkles className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-semibold text-foreground">What changed</h3>
-      </div>
+      {!hideHeader && (
+        <div className="mb-3 flex items-center gap-1.5">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">What changed</h3>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {loading

@@ -16,6 +16,7 @@ export function KpiRevenue() {
   return (
     <DashboardWidget fill={false}>
       <KpiCard
+        flat
         title="Total Revenue"
         value={adjustedSummary ? formatMoney(adjustedSummary.totalRevenue, baseCurrency) : formatMoney(0, baseCurrency)}
         delta={adjustedSummary?.revenueChange}

@@ -15,16 +15,18 @@ export interface KpiCardProps {
   sparkline?: number[];
   loading?: boolean;
   icon?: React.ReactNode;
+  flat?: boolean;
+  className?: string;
 }
 
-export function KpiCard({ title, value, delta, positive, sparkline, loading, icon }: KpiCardProps) {
+export function KpiCard({ title, value, delta, positive, sparkline, loading, icon, flat = false, className }: KpiCardProps) {
   const rawId = useId();
   const gradientId = `kpi-spark-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
   const hasDelta = delta != null;
   const hasSparkline = !!sparkline?.length;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+    <div className={cn(flat ? "flex h-full flex-col justify-between" : "rounded-2xl border border-border bg-card p-4 shadow-sm", className)}>
       <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs font-medium text-muted-foreground">{title}</p>

@@ -43,6 +43,8 @@ export interface Client {
   /** @nullable */
   bulkDiscountPct?: number | null;
   /** @nullable */
+  buyingHouseBulkDiscountPct?: number | null;
+  /** @nullable */
   paymentTermsId?: number | null;
   /** @nullable */
   paymentTermName?: string | null;

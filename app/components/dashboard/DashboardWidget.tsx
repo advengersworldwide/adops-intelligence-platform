@@ -24,7 +24,7 @@ export function DashboardWidget({
       </div>
       <div className="flex min-h-0 flex-1 flex-col p-4">
         {title && <h3 className="mb-3 shrink-0 text-sm font-semibold text-foreground">{title}</h3>}
-        <div className={fill ? "min-h-0 flex-1" : ""}>
+        <div className={fill ? "flex min-h-0 flex-1 flex-col" : "flex min-h-0 flex-1 flex-col justify-between"}>
           <WidgetErrorBoundary title={title ?? "Widget"}>
             {loading ? (
               <Skeleton className="h-full min-h-[80px] w-full" />

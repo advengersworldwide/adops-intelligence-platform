@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Sun, Moon, Monitor, Bell, Shield, Database, Palette, Globe, Plus, Trash2, Pencil, Users as UsersIcon, Key } from "lucide-react";
+import { Sun, Moon, Monitor, Palette, Globe, Plus, Trash2, Pencil, Users as UsersIcon, Key, Shield } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Switch } from "@/components/ui/switch";
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -111,19 +111,6 @@ export default function SettingsPage() {
     : ((settingsTabs[0]?.id ?? "general") as typeof activeTab);
 
   // General Settings States
-  const [alertNegative, setAlertNegative] = useState(
-    () => typeof window !== "undefined" ? localStorage.getItem("adops-alert-negative") !== "false" : true
-  );
-  const [alertLowMargin, setAlertLowMargin] = useState(
-    () => typeof window !== "undefined" ? localStorage.getItem("adops-alert-low-margin") !== "false" : true
-  );
-  const [weeklyReport, setWeeklyReport] = useState(
-    () => typeof window !== "undefined" ? localStorage.getItem("adops-weekly-report") === "true" : false
-  );
-  const [analyticsCollection, setAnalyticsCollection] = useState(
-    () => typeof window !== "undefined" ? localStorage.getItem("adops-analytics-collection") === "true" : false
-  );
-
   const [baseCurrency, setBaseCurrency] = useState<string>(
     () => (typeof window !== "undefined" ? localStorage.getItem("adops-base-currency") : null) || "PKR"
   );
@@ -141,6 +128,7 @@ export default function SettingsPage() {
     }
     return { usd: 1.0, eur: 0.92, gbp: 0.79, inr: 83.0, jpy: 155.0, cad: 1.36, aud: 1.50, pkr: 278.0, sar: 3.75, aed: 3.67 };
   });
+
 
   // RBAC Roles States
   const [roles, setRoles] = useState<Role[]>([]);
@@ -417,79 +405,12 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Notifications */}
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-4">
-                  <Bell className="h-4 w-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold text-foreground">Notifications</h2>
-                </div>
-                <div className="space-y-3">
-                  {[
-                    {
-                      label: "Alert on negative profit",
-                      description: "Notify when any campaign goes negative",
-                      checked: alertNegative,
-                      onChange: (v: boolean) => { setAlertNegative(v); localStorage.setItem("adops-alert-negative", String(v)); },
-                    },
-                    {
-                      label: "Low margin warnings",
-                      description: "Alert when margin drops below 10%",
-                      checked: alertLowMargin,
-                      onChange: (v: boolean) => { setAlertLowMargin(v); localStorage.setItem("adops-alert-low-margin", String(v)); },
-                    },
-                    {
-                      label: "Weekly performance report",
-                      description: "Receive summary every Monday",
-                      checked: weeklyReport,
-                      onChange: (v: boolean) => { setWeeklyReport(v); localStorage.setItem("adops-weekly-report", String(v)); },
-                    },
-                  ].map(item => (
-                    <div key={item.label} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                      <div className="pr-4">
-                        <p className="text-sm font-medium text-foreground">{item.label}</p>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                      </div>
-                      <Switch
-                        checked={item.checked}
-                        onCheckedChange={item.onChange}
-                        data-testid={`switch-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Tax Settings */}
+              <TaxSettingsCard />
             </div>
 
             {/* Right Column */}
             <div className="space-y-6">
-              {/* Data & Privacy */}
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-4">
-                  <Shield className="h-4 w-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold text-foreground">Data &amp; Privacy</h2>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between py-2 border-b border-border">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Data Retention</p>
-                      <p className="text-xs text-muted-foreground">Keep transaction data for</p>
-                    </div>
-                    <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium">24 months</span>
-                  </div>
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Analytics</p>
-                      <p className="text-xs text-muted-foreground">Usage data collection</p>
-                    </div>
-                    <Switch
-                      checked={analyticsCollection}
-                      onCheckedChange={(v) => { setAnalyticsCollection(v); localStorage.setItem("adops-analytics-collection", String(v)); }}
-                      data-testid="switch-analytics-collection"
-                    />
-                  </div>
-                </div>
-              </div>
-
               {/* Currency Settings */}
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="flex items-center gap-2 mb-4">
@@ -577,34 +498,10 @@ export default function SettingsPage() {
                   )}
                 </div>
               </div>
-
-              {/* Tax Settings */}
-              <TaxSettingsCard />
-
-              {/* About */}
-              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div className="flex items-center gap-2 mb-4">
-                  <Database className="h-4 w-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold text-foreground">About</h2>
-                </div>
-                <div className="space-y-2.5 text-sm">
-                  <div className="flex justify-between py-1 border-b border-border/50">
-                    <span className="text-muted-foreground">Version</span>
-                    <span className="font-medium text-foreground">1.0.0</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-border/50">
-                    <span className="text-muted-foreground">Stack</span>
-                    <span className="font-medium text-foreground">Next.js + Express + PostgreSQL</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-muted-foreground">Platform</span>
-                    <span className="font-medium text-foreground">AdOps Intelligence</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         )}
+
 
         {/* ROLES & RIGHTS MANAGEMENT TAB */}
         {active === "roles" && (

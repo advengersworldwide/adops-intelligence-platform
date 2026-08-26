@@ -18,7 +18,7 @@ export function KpiCashPosition() {
   const cash = sum(aging?.ar) - sum(aging?.ap) * usdToPkr;
   return (
     <DashboardWidget fill={false}>
-      <KpiCard title="Cash Position" value={formatMoney(cash, "PKR")} icon={<Wallet className="h-4 w-4" />} loading={isLoading} />
+      <KpiCard flat title="Cash Position" value={formatMoney(cash, "PKR")} icon={<Wallet className="h-4 w-4" />} loading={isLoading} />
     </DashboardWidget>
   );
 }

@@ -8,13 +8,13 @@ import { useDashboardRange } from "@/lib/dashboard/range-context";
 
 export function PlatformPerformance() {
   const range = useDashboardRange();
-  const { data: byPlatform } = useGetAnalyticsByPartner(range as never);
+  const { data: byPlatform, isLoading } = useGetAnalyticsByPartner(range as never);
 
   return (
     <DashboardWidget
       title="Platform Performance"
-      loading={!byPlatform}
-      isEmpty={byPlatform?.length === 0}
+      loading={isLoading}
+      isEmpty={!isLoading && (!byPlatform || byPlatform.length === 0)}
       emptyLabel="No platform data yet"
     >
       <ResponsiveContainer width="100%" height="100%">

@@ -22,18 +22,31 @@ const BUCKET_COLOR: Record<keyof AgingBuckets, string> = {
 
 const BUCKET_ORDER: (keyof AgingBuckets)[] = ["0-30", "31-60", "61-90", "90+"];
 
-export function AgingBars({ buckets, currency, title }: { buckets: AgingBuckets; currency?: string; title?: string }) {
+export function AgingBars({
+  buckets,
+  currency,
+  title,
+  flat = false,
+  height,
+}: {
+  buckets: AgingBuckets;
+  currency?: string;
+  title?: string;
+  flat?: boolean;
+  height?: number | string;
+}) {
   const rows = BUCKET_ORDER.map((bucket) => ({ bucket, amount: buckets[bucket] }));
   const hasData = rows.some((r) => r.amount > 0);
+  const chartHeight = height ?? (flat ? 140 : 220);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      {title ? <h2 className="mb-4 text-sm font-semibold text-foreground">{title}</h2> : null}
+    <div className={flat ? "flex h-full flex-col min-h-0" : "rounded-2xl border border-border bg-card p-5 shadow-sm"}>
+      {title ? <h3 className={flat ? "mb-2 text-xs font-semibold text-muted-foreground" : "mb-4 text-sm font-semibold text-foreground"}>{title}</h3> : null}
       {!hasData ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">No outstanding balances for selected period</p>
+        <p className="py-6 text-center text-xs text-muted-foreground">No outstanding balances</p>
       ) : (
         <>
-        <ResponsiveChart width="100%" height={220}>
+        <ResponsiveChart width="100%" height={chartHeight}>
           <BarChart data={rows} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis

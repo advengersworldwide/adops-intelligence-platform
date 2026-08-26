@@ -20,7 +20,9 @@ function mapBH(bh: typeof buyingHousesTable.$inferSelect) {
     address: bh.address, pocName: bh.pocName, pocNumber: bh.pocNumber, pocEmail: bh.pocEmail,
     companyEmail: bh.companyEmail, companyNumber: bh.companyNumber, bankName: bh.bankName,
     bankAccountNumber: bh.bankAccountNumber, bankAddress: bh.bankAddress, swiftCode: bh.swiftCode, iban: bh.iban,
-    salesTaxNumber: bh.salesTaxNumber, ntnNumber: bh.ntnNumber, createdAt: bh.createdAt.toISOString(),
+    salesTaxNumber: bh.salesTaxNumber, ntnNumber: bh.ntnNumber,
+    bulkDiscountPct: bh.bulkDiscountPct != null ? Number(bh.bulkDiscountPct) : null,
+    createdAt: bh.createdAt.toISOString(),
   };
 }
 
@@ -50,6 +52,8 @@ export async function POST(req: Request): Promise<Response> {
     companyEmail: d.companyEmail ?? null, companyNumber: d.companyNumber ?? null, bankName: d.bankName ?? null,
     bankAccountNumber: d.bankAccountNumber ?? null, bankAddress: d.bankAddress ?? null, swiftCode: d.swiftCode ?? null,
     iban: d.iban ?? null, salesTaxNumber: d.salesTaxNumber ?? null, ntnNumber: d.ntnNumber ?? null,
+    bulkDiscountPct: d.bulkDiscountPct != null ? String(d.bulkDiscountPct) : null,
   }).returning();
   return NextResponse.json(GetBuyingHouseResponse.parse({ ...mapBH(row), clientCount: 0, netMarginPkr: 0 }), { status: 201 });
 }
+

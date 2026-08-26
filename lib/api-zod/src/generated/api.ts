@@ -40,6 +40,7 @@ export const ListClientsResponseItem = zod.object({
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
   "bulkDiscountPct": zod.number().nullish(),
+  "buyingHouseBulkDiscountPct": zod.number().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -93,6 +94,7 @@ export const GetClientResponse = zod.object({
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
   "bulkDiscountPct": zod.number().nullish(),
+  "buyingHouseBulkDiscountPct": zod.number().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -155,6 +157,7 @@ export const UpdateClientResponse = zod.object({
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
   "bulkDiscountPct": zod.number().nullish(),
+  "buyingHouseBulkDiscountPct": zod.number().nullish(),
   "paymentTermsId": zod.number().nullish(),
   "paymentTermName": zod.string().nullish(),
   "createdAt": zod.string()
@@ -1117,6 +1120,7 @@ export const ListBuyingHousesResponseItem = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 export const ListBuyingHousesResponse = zod.array(ListBuyingHousesResponseItem)
@@ -1142,7 +1146,8 @@ export const CreateBuyingHouseBody = zod.object({
   "swiftCode": zod.string().nullish(),
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
-  "ntnNumber": zod.string().nullish()
+  "ntnNumber": zod.string().nullish(),
+  "bulkDiscountPct": zod.number().nullish()
 })
 
 
@@ -1171,6 +1176,7 @@ export const GetBuyingHouseResponse = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 
@@ -1199,7 +1205,8 @@ export const UpdateBuyingHouseBody = zod.object({
   "swiftCode": zod.string().nullish(),
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
-  "ntnNumber": zod.string().nullish()
+  "ntnNumber": zod.string().nullish(),
+  "bulkDiscountPct": zod.number().nullish()
 })
 
 export const UpdateBuyingHouseResponse = zod.object({
@@ -1220,6 +1227,7 @@ export const UpdateBuyingHouseResponse = zod.object({
   "iban": zod.string().nullish(),
   "salesTaxNumber": zod.string().nullish(),
   "ntnNumber": zod.string().nullish(),
+  "bulkDiscountPct": zod.number().nullish(),
   "createdAt": zod.string()
 })
 

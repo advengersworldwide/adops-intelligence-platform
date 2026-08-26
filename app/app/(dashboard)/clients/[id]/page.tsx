@@ -37,7 +37,6 @@ function DetailsTab({ clientId }: { clientId: number }) {
   const updateClient = useUpdateClient();
 
   const [kyc, setKyc] = useState<KycState>(EMPTY_KYC);
-  const [bulkDiscountPct, setBulkDiscountPct] = useState("");
   const [paymentTermsId, setPaymentTermsId] = useState("none");
   const [codePrefix, setCodePrefix] = useState("");
   const [saving, setSaving] = useState(false);
@@ -45,7 +44,6 @@ function DetailsTab({ clientId }: { clientId: number }) {
   useEffect(() => {
     if (!client) return;
     setKyc(kycFromRecord(client));
-    setBulkDiscountPct(client.bulkDiscountPct != null ? String(client.bulkDiscountPct) : "");
     setPaymentTermsId(client.paymentTermsId != null ? String(client.paymentTermsId) : "none");
     setCodePrefix(client.codePrefix ?? "");
   }, [client]);
@@ -61,7 +59,6 @@ function DetailsTab({ clientId }: { clientId: number }) {
       await updateClient.mutateAsync({ id: clientId, data: {
         ...kycToPayload(kyc),
         codePrefix,
-        bulkDiscountPct: bulkDiscountPct.trim() !== "" ? parseFloat(bulkDiscountPct) : null,
         paymentTermsId: paymentTermsId === "none" ? null : parseInt(paymentTermsId, 10),
       }});
       await qc.invalidateQueries({ queryKey: getGetClientQueryKey(clientId) });
@@ -82,13 +79,23 @@ function DetailsTab({ clientId }: { clientId: number }) {
         <p className="text-xs text-muted-foreground">2–4 letters/numbers. e.g. EP-0126-0001</p>
       </div>
       <div className="rounded-lg border border-border bg-card p-5 space-y-4">
-        <h3 className="text-sm font-semibold text-foreground">Tax Rates & Payment</h3>
+        <h3 className="text-sm font-semibold text-foreground">Payment &amp; Commercial Terms</h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block space-y-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Bulk Discount %</span>
-            <Input type="number" step="0.01" min={0} value={bulkDiscountPct} disabled={!canEdit}
-              onChange={e => setBulkDiscountPct(e.target.value)} placeholder="e.g. 5" />
-          </label>
+          <div className="space-y-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Agency Bulk Discount</span>
+            <div className="rounded-md border border-border/80 bg-muted/40 px-3 py-2 text-xs">
+              {client?.buyingHouseName ? (
+                <span>
+                  <span className="font-semibold text-foreground">
+                    {client.buyingHouseBulkDiscountPct != null ? `${client.buyingHouseBulkDiscountPct}%` : "0%"}
+                  </span>{" "}
+                  <span className="text-muted-foreground">(Inherited from {client.buyingHouseName})</span>
+                </span>
+              ) : (
+                <span className="text-muted-foreground">0% (Direct Client — No Agency)</span>
+              )}
+            </div>
+          </div>
           <div className="space-y-1.5">
             <span className="text-xs font-medium text-muted-foreground">Payment Terms</span>
             <Select value={paymentTermsId} onValueChange={setPaymentTermsId} disabled={!canEdit}>
@@ -102,6 +109,7 @@ function DetailsTab({ clientId }: { clientId: number }) {
         </div>
       </div>
       {canEdit && <div className="flex justify-end"><Button onClick={handleSave} disabled={saving}>{saving ? "Saving…" : "Save Changes"}</Button></div>}
+
 
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="px-5 py-3 border-b border-border bg-muted/30">

@@ -49,6 +49,8 @@
     "@types/papaparse": "^5.5.2",
     "@upstash/ratelimit": "^2.0.5",
     "@upstash/redis": "^1.34.3",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "@workspace/api-client-react": "workspace:*",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",

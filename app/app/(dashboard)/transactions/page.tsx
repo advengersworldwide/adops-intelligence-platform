@@ -382,9 +382,10 @@ function AddRecordDialog({ open, onClose, platforms, buyingHouses, clients, onSu
       form.setValue("salesTaxPct", 0);
       form.setValue("withholdingTaxPct", 0);
       form.setValue("remittanceTaxPct", 0);
-      form.setValue("bulkDiscountPct", 0);
+      form.setValue("bulkDiscountPct", selectedBH.bulkDiscountPct != null ? Number(selectedBH.bulkDiscountPct) : 0);
     }
   }, [selectedBHId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   useEffect(() => {
     if (selectedPlatform) {

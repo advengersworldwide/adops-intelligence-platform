@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Search } from "lucide-react";
+import { Plus, Trash2, Search, ChevronRight } from "lucide-react";
 import Link from "next/link";
+
 import {
   useListPartners, useCreatePartner,
   getListPartnersQueryKey,
@@ -32,7 +33,6 @@ const createSchema = z.object({
   pocEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   companyEmail: z.string().email("Invalid email").optional().or(z.literal("")),
   companyNumber: z.string().regex(/^[+\d\s()\-]*$/, "Invalid phone number").optional().or(z.literal("")),
-  platformBulkDiscountPct: z.string().optional(),
 });
 type CreateForm = z.infer<typeof createSchema>;
 
@@ -62,7 +62,10 @@ function PartnersPage() {
   });
 
   const filtered = platforms?.filter(p =>
-    p.name.toLowerCase().includes(search.toLowerCase())
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    (p.codePrefix ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (p.pocName ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (p.companyEmail ?? "").toLowerCase().includes(search.toLowerCase())
   ) ?? [];
 
   return (
@@ -70,10 +73,10 @@ function PartnersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Partners</h1>
-          <p className="text-sm text-muted-foreground">{platforms?.length ?? 0} DSP partners</p>
+          <p className="text-sm text-muted-foreground">{platforms?.length ?? 0} partners total</p>
         </div>
         {canEdit && (
-          <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-platform-btn">
+          <Button size="sm" className="gap-1.5 text-xs" onClick={() => setCreateOpen(true)} data-testid="create-partner-btn">
             <Plus className="h-3.5 w-3.5" /> Add Partner
           </Button>
         )}
@@ -81,14 +84,15 @@ function PartnersPage() {
 
       <div className="relative w-72">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Search partners..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 text-sm" />
+        <Input placeholder="Search partners..." value={search} onChange={e => setSearch(e.target.value)}
+          className="pl-9 text-sm" data-testid="partner-search" />
       </div>
 
       <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Payment Terms", canEdit ? "Actions" : null]
+              {["Name", "POC", "Contact", "Created", canEdit ? "Actions" : null]
                 .filter((h): h is string => h !== null)
                 .map(h => (
                   <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
@@ -97,31 +101,29 @@ function PartnersPage() {
           </thead>
           <tbody>
             {isLoading ? (
-              [...Array(3)].map((_, i) => (
+              [...Array(4)].map((_, i) => (
                 <tr key={i} className="border-b border-border">
-                  {[...Array(3)].map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-20" /></td>)}
+                  {[...Array(5)].map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-24" /></td>)}
                 </tr>
               ))
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={3} className="px-5 py-10 text-center text-sm text-muted-foreground">No partners found</td></tr>
+              <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">No partners found</td></tr>
             ) : (
               filtered.map(p => (
-                <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors" data-testid={`platform-row-${p.id}`}>
-                  <td className="px-5 py-3 text-sm font-medium">
-                    <Link href={`/partners/${p.id}`} className="text-foreground hover:text-primary hover:underline">
-                      {p.name}
+                <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors" data-testid={`partner-row-${p.id}`}>
+                  <td className="px-5 py-3 text-sm font-medium text-foreground">
+                    <Link href={`/partners/${p.id}`} className="flex items-center gap-1 hover:text-primary">
+                      {p.name} <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                     </Link>
                   </td>
-                  <td className="px-5 py-3 text-sm text-muted-foreground">
-                    {p.paymentTermName ?? "—"}
-                  </td>
+                  <td className="px-5 py-3 text-sm text-muted-foreground">{p.pocName ?? "—"}</td>
+                  <td className="px-5 py-3 text-sm text-muted-foreground">{p.companyEmail ?? p.pocEmail ?? "—"}</td>
+                  <td className="px-5 py-3 text-xs text-muted-foreground">{new Date(p.createdAt).toLocaleDateString()}</td>
                   {canEdit && (
                     <td className="px-5 py-3">
-                      <button
-                        onClick={() => del.start(p.id)}
+                      <button onClick={() => del.start(p.id)}
                         className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                        data-testid={`delete-platform-${p.id}`}
-                      >
+                        data-testid={`delete-partner-${p.id}`}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </td>
@@ -137,8 +139,7 @@ function PartnersPage() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onSubmit={(data) => {
-          const { platformBulkDiscountPct, ...rest } = data;
-          createMutation.mutate({ data: { ...rest, platformBulkDiscountPct: platformBulkDiscountPct && platformBulkDiscountPct.trim() !== "" ? Number(platformBulkDiscountPct) : null } });
+          createMutation.mutate({ data });
         }}
         isSubmitting={createMutation.isPending}
       />
@@ -154,7 +155,7 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
 }) {
   const form = useForm<CreateForm>({
     resolver: zodResolver(createSchema),
-    defaultValues: { name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "", platformBulkDiscountPct: "" },
+    defaultValues: { name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" },
   });
 
   const nameValue = form.watch("name");
@@ -165,7 +166,7 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
   }, [nameValue, form]);
 
   useEffect(() => {
-    if (open) form.reset({ name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "", platformBulkDiscountPct: "" });
+    if (open) form.reset({ name: "", codePrefix: "", address: "", pocName: "", pocNumber: "", pocEmail: "", companyEmail: "", companyNumber: "" });
   }, [open, form]);
 
   return (
@@ -187,14 +188,6 @@ function CreatePlatformDialog({ open, onClose, onSubmit, isSubmitting }: {
                     data-testid="partner-prefix-input" />
                 </FormControl>
                 <p className="text-xs text-muted-foreground">2–4 letters/numbers. Used to generate partner PO codes (e.g. SB-0126-0001).</p>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="platformBulkDiscountPct" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Bulk Discount %</FormLabel>
-                <FormControl><Input type="number" step="0.01" placeholder="0" {...field} /></FormControl>
-                <p className="text-xs text-muted-foreground">Discount taken from this partner, applied to their payout on billing-record uploads.</p>
                 <FormMessage />
               </FormItem>
             )} />

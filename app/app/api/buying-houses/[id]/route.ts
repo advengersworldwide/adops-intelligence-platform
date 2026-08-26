@@ -21,7 +21,9 @@ function mapBH(bh: typeof buyingHousesTable.$inferSelect) {
     address: bh.address, pocName: bh.pocName, pocNumber: bh.pocNumber, pocEmail: bh.pocEmail,
     companyEmail: bh.companyEmail, companyNumber: bh.companyNumber, bankName: bh.bankName,
     bankAccountNumber: bh.bankAccountNumber, bankAddress: bh.bankAddress, swiftCode: bh.swiftCode, iban: bh.iban,
-    salesTaxNumber: bh.salesTaxNumber, ntnNumber: bh.ntnNumber, createdAt: bh.createdAt.toISOString(),
+    salesTaxNumber: bh.salesTaxNumber, ntnNumber: bh.ntnNumber,
+    bulkDiscountPct: bh.bulkDiscountPct != null ? Number(bh.bulkDiscountPct) : null,
+    createdAt: bh.createdAt.toISOString(),
   };
 }
 
@@ -58,6 +60,7 @@ export async function PATCH(
   const updates: Record<string, unknown> = { name: d.name };
   const kycKeys = ["address","pocName","pocNumber","pocEmail","companyEmail","companyNumber","bankName","bankAccountNumber","bankAddress","swiftCode","iban","salesTaxNumber","ntnNumber"] as const;
   for (const k of kycKeys) if ((d as Record<string, unknown>)[k] !== undefined) updates[k] = (d as Record<string, unknown>)[k];
+  if (d.bulkDiscountPct !== undefined) updates.bulkDiscountPct = d.bulkDiscountPct != null ? String(d.bulkDiscountPct) : null;
   const [row] = await db.update(buyingHousesTable).set(updates).where(eq(buyingHousesTable.id, p.data.id)).returning();
   if (!row) return NextResponse.json({ error: "Buying house not found" }, { status: 404 });
   const [{ clientCount }] = await db.select({ clientCount: count() }).from(clientsTable).where(eq(clientsTable.buyingHouseId, row.id));

@@ -37,5 +37,7 @@ export interface BuyingHouse {
   salesTaxNumber?: string | null;
   /** @nullable */
   ntnNumber?: string | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
   createdAt: string;
 }

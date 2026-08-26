@@ -35,4 +35,6 @@ export interface BuyingHouseInput {
   salesTaxNumber?: string | null;
   /** @nullable */
   ntnNumber?: string | null;
+  /** @nullable */
+  bulkDiscountPct?: number | null;
 }

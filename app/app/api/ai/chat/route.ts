@@ -7,33 +7,53 @@ import { buildContext } from "@/lib/ai-context";
 
 export const runtime = "nodejs";
 
+const MODEL = process.env.GROQ_CHAT_MODEL || "openai/gpt-oss-120b";
+
 let _groq: Groq | null = null;
 function getGroq(): Groq {
-  if (!_groq) _groq = new Groq({ apiKey: process.env["GROQ"]! });
+  if (!_groq) {
+    const key = process.env.GROQ || process.env.GROQ_API_KEY;
+    _groq = new Groq({ apiKey: key });
+  }
   return _groq;
 }
 
 let _ratelimit: Ratelimit | null = null;
-function getRatelimit(): Ratelimit {
-  if (!_ratelimit) {
+function getRatelimit(): Ratelimit | null {
+  if (_ratelimit) return _ratelimit;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  try {
+    const redis = new Redis({ url, token });
     _ratelimit = new Ratelimit({
-      redis: Redis.fromEnv(),
+      redis,
       limiter: Ratelimit.slidingWindow(20, "1 m"),
+      prefix: "rl:ai:chat",
     });
+    return _ratelimit;
+  } catch {
+    return null;
   }
-  return _ratelimit;
 }
 
 export async function POST(req: Request): Promise<Response> {
   const auth = await requireAuth();
   if (isAuthError(auth)) return auth;
 
-  const groqKey = process.env["GROQ"];
+  const groqKey = process.env.GROQ || process.env.GROQ_API_KEY;
   if (!groqKey) return NextResponse.json({ error: "AI service not configured" }, { status: 500 });
 
-  const { success } = await getRatelimit().limit(`ai:${auth.user.sub}`);
-  if (!success) {
-    return NextResponse.json({ error: "Too many requests. Please wait before sending another message." }, { status: 429 });
+  try {
+    const limiter = getRatelimit();
+    if (limiter) {
+      const { success } = await limiter.limit(`ai:${auth.user.sub}`);
+      if (!success) {
+        return NextResponse.json({ error: "Too many requests. Please wait before sending another message." }, { status: 429 });
+      }
+    }
+  } catch (err) {
+    console.warn("[AI Chat] Rate limit check failed, failing open:", err);
   }
 
   let body: unknown;
@@ -53,9 +73,11 @@ export async function POST(req: Request): Promise<Response> {
   try {
     const systemPrompt = await buildContext();
     const stream = await getGroq().chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: MODEL,
       messages: [{ role: "system", content: systemPrompt }, ...trimmedHistory, { role: "user", content: message.trim() }],
-      stream: true, temperature: 0.3, max_tokens: 300,
+      stream: true,
+      temperature: 0.3,
+      max_tokens: 500,
     });
 
     const encoder = new TextEncoder();
@@ -78,7 +100,8 @@ export async function POST(req: Request): Promise<Response> {
     return new Response(readableStream, {
       headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no" },
     });
-  } catch {
-    return NextResponse.json({ error: "AI service unavailable" }, { status: 500 });
+  } catch (err) {
+    console.error("[AI Chat Error]:", err);
+    return NextResponse.json({ error: "AI service unavailable. Please try again." }, { status: 500 });
   }
 }

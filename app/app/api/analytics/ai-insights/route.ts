@@ -13,23 +13,34 @@ import { monthOf } from "@/lib/analytics/record-filters";
 export const runtime = "nodejs";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const MODEL = "llama-3.1-8b-instant";
+const MODEL = process.env.GROQ_INSIGHTS_MODEL || "groq/compound";
 
 let _groq: Groq | null = null;
 function getGroq(): Groq {
-  if (!_groq) _groq = new Groq({ apiKey: process.env["GROQ"]! });
+  if (!_groq) {
+    const key = process.env.GROQ || process.env.GROQ_API_KEY;
+    _groq = new Groq({ apiKey: key });
+  }
   return _groq;
 }
 
 let _ratelimit: Ratelimit | null = null;
-function getRatelimit(): Ratelimit {
-  if (!_ratelimit) {
+function getRatelimit(): Ratelimit | null {
+  if (_ratelimit) return _ratelimit;
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+  try {
+    const redis = new Redis({ url, token });
     _ratelimit = new Ratelimit({
-      redis: Redis.fromEnv(),
+      redis,
       limiter: Ratelimit.slidingWindow(20, "1 m"),
+      prefix: "rl:ai:insights",
     });
+    return _ratelimit;
+  } catch {
+    return null;
   }
-  return _ratelimit;
 }
 
 function toIsoDate(d: Date): string {
@@ -79,12 +90,15 @@ export async function GET(): Promise<Response> {
   const auth = await requirePermission("analytics:view");
   if (isAuthError(auth)) return auth;
 
-  const groqKey = process.env["GROQ"];
+  const groqKey = process.env.GROQ || process.env.GROQ_API_KEY;
   if (!groqKey) return NextResponse.json([]);
 
   try {
-    const { success } = await getRatelimit().limit(`ai-insights:${auth.user.sub}`);
-    if (!success) return NextResponse.json([]);
+    const limiter = getRatelimit();
+    if (limiter) {
+      const { success } = await limiter.limit(`ai-insights:${auth.user.sub}`);
+      if (!success) return NextResponse.json([]);
+    }
 
     const now = new Date();
     const currentEnd = toIsoDate(now);
@@ -124,7 +138,7 @@ export async function GET(): Promise<Response> {
         { role: "user", content: JSON.stringify(stats) },
       ],
       temperature: 0.4,
-      max_tokens: 400,
+      max_tokens: 600,
     });
 
     const text = completion.choices[0]?.message?.content ?? "";

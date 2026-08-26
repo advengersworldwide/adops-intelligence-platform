@@ -4,12 +4,14 @@ import { useGetAging } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { formatMoney, DEFAULT_RATES } from "@/lib/analytics/currency";
 import { DashboardWidget } from "@/components/dashboard/DashboardWidget";
+import { useDashboardRange } from "@/lib/dashboard/range-context";
 
 const sumBuckets = (b?: { "0-30": number; "31-60": number; "61-90": number; "90+": number }) =>
   b ? b["0-30"] + b["31-60"] + b["61-90"] + b["90+"] : 0;
 
 export function WorkingCapital() {
-  const { data: aging } = useGetAging();
+  const range = useDashboardRange();
+  const { data: aging, isLoading } = useGetAging(range as never);
 
   const rawRates = typeof window !== "undefined" ? localStorage.getItem("adops-exchange-rates") : null;
   const rates = rawRates ? JSON.parse(rawRates) : DEFAULT_RATES;
@@ -21,7 +23,7 @@ export function WorkingCapital() {
   const cashPosition = arPkr - apPkr;
 
   return (
-    <DashboardWidget title="Working Capital">
+    <DashboardWidget title="Working Capital" loading={isLoading} isEmpty={!isLoading && !aging}>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <p className="text-xs text-muted-foreground">Receivables</p>

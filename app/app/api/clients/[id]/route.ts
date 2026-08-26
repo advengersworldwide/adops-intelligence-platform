@@ -9,9 +9,14 @@ export const runtime = "nodejs";
 
 async function mapRow(r: typeof clientsTable.$inferSelect) {
   let buyingHouseName: string | null = null;
+  let buyingHouseBulkDiscountPct: number | null = null;
   if (r.buyingHouseId != null) {
-    const [bh] = await db.select({ name: buyingHousesTable.name }).from(buyingHousesTable).where(eq(buyingHousesTable.id, r.buyingHouseId));
+    const [bh] = await db.select({
+      name: buyingHousesTable.name,
+      bulkDiscountPct: buyingHousesTable.bulkDiscountPct,
+    }).from(buyingHousesTable).where(eq(buyingHousesTable.id, r.buyingHouseId));
     buyingHouseName = bh?.name ?? null;
+    buyingHouseBulkDiscountPct = bh?.bulkDiscountPct != null ? Number(bh.bulkDiscountPct) : null;
   }
   let paymentTermName: string | null = null;
   if (r.paymentTermsId != null) {
@@ -26,10 +31,12 @@ async function mapRow(r: typeof clientsTable.$inferSelect) {
     swiftCode: r.swiftCode, iban: r.iban,
     salesTaxNumber: r.salesTaxNumber, ntnNumber: r.ntnNumber,
     bulkDiscountPct: r.bulkDiscountPct != null ? Number(r.bulkDiscountPct) : null,
+    buyingHouseBulkDiscountPct,
     paymentTermsId: r.paymentTermsId ?? null, paymentTermName,
     createdAt: r.createdAt.toISOString(),
   };
 }
+
 
 export async function GET(
   _req: Request,

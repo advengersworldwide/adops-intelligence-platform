@@ -48,11 +48,18 @@ export default function FloatingChat() {
       });
 
       if (!res.ok || !res.body) {
+        let errorMsg = "Sorry, I could not reach the AI service. Please try again.";
+        try {
+          const errData = await res.json();
+          if (errData?.error) errorMsg = errData.error;
+        } catch {
+          // ignore json parse error
+        }
         setMessages(prev => {
           const updated = [...prev];
           updated[updated.length - 1] = {
             ...updated[updated.length - 1],
-            content: "Sorry, I could not reach the AI service. Please try again.",
+            content: errorMsg,
           };
           return updated;
         });

@@ -82,21 +82,23 @@ export function StatusFunnel({
   byStatus,
   byCollection,
   currency,
+  flat = false,
 }: {
   byStatus: FunnelStage[];
   byCollection: FunnelStage[];
   currency?: string;
+  flat?: boolean;
 }) {
   const hasData =
     (byStatus?.some((s) => s.count > 0) ?? false) || (byCollection?.some((s) => s.count > 0) ?? false);
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <h2 className="mb-4 text-sm font-semibold text-foreground">Invoice Status Funnel</h2>
+    <div className={flat ? "space-y-4" : "rounded-2xl border border-border bg-card p-5 shadow-sm"}>
+      {!flat && <h2 className="mb-4 text-sm font-semibold text-foreground">Invoice Status Funnel</h2>}
       {!hasData ? (
-        <p className="py-12 text-center text-sm text-muted-foreground">No invoices for selected period</p>
+        <p className="py-8 text-center text-xs text-muted-foreground">No invoices for selected period</p>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-4">
           <FunnelRow title="By Status" stages={byStatus ?? []} colors={STATUS_COLOR} currency={currency} />
           <FunnelRow title="By Collection" stages={byCollection ?? []} colors={COLLECTION_COLOR} currency={currency} />
         </div>

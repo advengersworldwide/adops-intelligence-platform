@@ -8,12 +8,10 @@ import "react-resizable/css/styles.css";
 import { PermissionGuard } from "@/components/PermissionGuard";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { usePermissionSet } from "@/lib/auth/user-context";
 import { useDashboardLayout } from "@/lib/dashboard/use-dashboard-layout";
 import { visibleWidgetIds } from "@/lib/dashboard/role-gating";
-import { resolvePreset } from "@/lib/dashboard/presets";
 import { widgetRegistry, widgetList } from "@/components/dashboard/widget-registry";
 import { DashboardDateRange } from "@/components/dashboard/DashboardDateRange";
 import { DashboardRangeContext, computePreset, type DashRange } from "@/lib/dashboard/range-context";
@@ -66,17 +64,6 @@ function DashboardContent() {
           <p className="text-sm text-muted-foreground">AdOps Intelligence Overview</p>
         </div>
         <div className="flex items-center gap-2">
-          <Select
-            value={dash.preset ?? undefined}
-            onValueChange={(key) => dash.applyPreset(resolvePreset(key as "exec" | "ops" | "finance", perms.has))}
-          >
-            <SelectTrigger className="h-8 w-[120px] text-xs" data-testid="focus-select"><SelectValue placeholder="Focus" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="exec">Exec</SelectItem>
-              <SelectItem value="ops">Ops</SelectItem>
-              <SelectItem value="finance">Finance</SelectItem>
-            </SelectContent>
-          </Select>
           <DashboardDateRange
             value={rangeKey}
             onChange={(k, r) => {

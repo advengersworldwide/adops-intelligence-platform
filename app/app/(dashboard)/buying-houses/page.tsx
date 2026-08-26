@@ -24,12 +24,14 @@ import { DeleteImpactDialog } from "@/components/ui/delete-impact-dialog";
 
 const bhSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  bulkDiscountPct: z.number().min(0).max(100).nullable().optional(),
 });
 type BHForm = z.infer<typeof bhSchema>;
 
 interface BHRow {
   id: number;
   name: string;
+  bulkDiscountPct?: number | null;
   clientCount: number;
   netMarginPkr: number;
   createdAt: string;
@@ -85,7 +87,7 @@ function BuyingHousesContent() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              {["Name", "Clients", "Net Margin (PKR)", canEdit ? "Actions" : null].filter((h): h is string => h !== null).map(h => (
+              {["Name", "Bulk Discount", "Clients", "Net Margin (PKR)", canEdit ? "Actions" : null].filter((h): h is string => h !== null).map(h => (
                 <th key={h} className="px-5 py-3 text-left text-xs font-medium text-muted-foreground">{h}</th>
               ))}
             </tr>
@@ -94,11 +96,11 @@ function BuyingHousesContent() {
             {isLoading ? (
               [...Array(3)].map((_, i) => (
                 <tr key={i} className="border-b border-border">
-                  {[...Array(4)].map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-24" /></td>)}
+                  {[...Array(5)].map((_, j) => <td key={j} className="px-5 py-3"><Skeleton className="h-4 w-24" /></td>)}
                 </tr>
               ))
             ) : !buyingHouses?.length ? (
-              <tr><td colSpan={4} className="px-5 py-10 text-center text-sm text-muted-foreground">No buying houses yet</td></tr>
+              <tr><td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">No buying houses yet</td></tr>
             ) : (
               buyingHouses.map(bh => (
                 <tr key={bh.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
@@ -106,6 +108,13 @@ function BuyingHousesContent() {
                     <Link href={`/buying-houses/${bh.id}`} className="flex items-center gap-1 hover:text-primary">
                       {bh.name} <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                     </Link>
+                  </td>
+                  <td className="px-5 py-3 text-sm text-muted-foreground">
+                    {bh.bulkDiscountPct != null ? (
+                      <span className="inline-flex items-center rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                        {bh.bulkDiscountPct}%
+                      </span>
+                    ) : "—"}
                   </td>
                   <td className="px-5 py-3 text-sm text-muted-foreground">{bh.clientCount}</td>
                   <td className="px-5 py-3 text-sm font-medium"
@@ -136,7 +145,7 @@ function BuyingHousesContent() {
       <BHDialog
         open={createOpen || !!editBH}
         onClose={() => { setCreateOpen(false); setEditBH(null); }}
-        defaultValues={editBH ? { name: editBH.name } : undefined}
+        defaultValues={editBH ? { name: editBH.name, bulkDiscountPct: editBH.bulkDiscountPct ?? null } : undefined}
         onSubmit={(data) => {
           if (editBH) updateMutation.mutate({ id: editBH.id, data });
           else createMutation.mutate({ data });
@@ -156,10 +165,10 @@ function BHDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, title 
 }) {
   const form = useForm<BHForm>({
     resolver: zodResolver(bhSchema),
-    defaultValues: defaultValues ?? { name: "" },
+    defaultValues: defaultValues ?? { name: "", bulkDiscountPct: null },
   });
   useEffect(() => {
-    if (open) form.reset(defaultValues ?? { name: "" });
+    if (open) form.reset(defaultValues ?? { name: "", bulkDiscountPct: null });
   }, [open, defaultValues, form]);
 
   return (
@@ -172,6 +181,24 @@ function BHDialog({ open, onClose, defaultValues, onSubmit, isSubmitting, title 
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl><Input placeholder="e.g. Starcom, GroupM" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="bulkDiscountPct" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Bulk Discount % <span className="text-muted-foreground">(optional)</span></FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    max={100}
+                    placeholder="e.g. 10"
+                    value={field.value ?? ""}
+                    onChange={e => field.onChange(e.target.value === "" ? null : parseFloat(e.target.value))}
+                  />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">Agreed master bulk discount rate for all clients under this agency.</p>
                 <FormMessage />
               </FormItem>
             )} />
@@ -193,3 +220,4 @@ export default function BuyingHousesPage() {
     </PermissionGuard>
   );
 }
+

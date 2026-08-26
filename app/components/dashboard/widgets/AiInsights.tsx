@@ -7,7 +7,7 @@ export function AiInsights() {
   const { data, isLoading } = useGetAiInsights();
   return (
     <DashboardWidget title="What changed" loading={isLoading} isEmpty={!isLoading && (!data || data.length === 0)}>
-      <AiInsightStrip insights={data ?? []} />
+      <AiInsightStrip hideHeader insights={data ?? []} />
     </DashboardWidget>
   );
 }
